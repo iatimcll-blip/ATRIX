@@ -87,6 +87,9 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; color: #fff; font-weight: 600; flex-shrink: 0;
 }
+.nav-logo {
+  width: 118px; height: 34px; object-fit: contain; display: block;
+}
 .nav-brand-text { font-size: 14px; font-weight: 600; color: var(--tx); letter-spacing: -.01em; }
 .nav-brand-sub { font-size: 10px; color: var(--tx3); letter-spacing: .01em; }
 
@@ -556,11 +559,7 @@ body.is-admin .admin-only { display: flex; }
 <!-- ═══ NAVBAR ═══ -->
 <nav class="navbar">
   <div class="nav-brand">
-    <div class="nav-brand-icon">A</div>
-    <div>
-      <div class="nav-brand-text">ATRIX</div>
-      <div class="nav-brand-sub">Painel B2B</div>
-    </div>
+    <img class="nav-logo" src="assets/mcll-logo.png" alt="MCLL Monitoramento B2B">
   </div>
 
   <div class="nav-tabs">
@@ -697,13 +696,13 @@ body.is-admin .admin-only { display: flex; }
           <div id="causa-enc"></div>
         </div>
         <div class="card">
-          <div class="card-hd"><span class="card-title">Distribuição SLA</span></div>
-          <div class="cw"><canvas id="ch-enc" role="img" aria-label="Distribuição SLA encerrados">Gráfico.</canvas></div>
+          <div class="card-hd"><span class="card-title">Distribuição por regra SLA</span></div>
+          <div class="cw"><canvas id="ch-enc" role="img" aria-label="Distribuição por regra de SLA encerrados">Gráfico.</canvas></div>
         </div>
       </div>
       <div class="g2">
         <div class="card">
-          <div class="card-hd"><span class="card-title">Meta B2B ≤8h — desempenho global</span></div>
+          <div class="card-hd"><span class="card-title">Análise de prazo e outlier</span></div>
           <div id="meta8-enc"></div>
         </div>
         <div class="card">
@@ -883,6 +882,18 @@ function cnt(arr,key){const r={};arr.forEach(d=>{if(d[key])r[d[key]]=(r[d[key]]|
 function se(obj){return Object.entries(obj).sort((a,b)=>b[1]-a[1])}
 function now2(){const n=new Date();return n.toLocaleDateString('pt-BR')+' '+n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
 function normCluster(c){return(c==='AM INT'||c==='AP')?'AM/AP':c}
+function encBucket(h){if(h>24)return'outlier';if(h>8)return'intermediario';return'prazo'}
+function pp(v){return v.toFixed(1).replace('.',',')}
+function encRuleStats(d){
+  const total=d.length||0;
+  const prazo=d.filter(x=>encBucket(x.tempoTotal)==='prazo').length;
+  const intermediario=d.filter(x=>encBucket(x.tempoTotal)==='intermediario').length;
+  const outlier=d.filter(x=>encBucket(x.tempoTotal)==='outlier').length;
+  const fora8=intermediario+outlier;
+  const pct=n=>total?n/total*100:0;
+  const pPrazo=pct(prazo),pInter=pct(intermediario),pOut=pct(outlier),pFora8=pct(fora8);
+  return{total,prazo,intermediario,outlier,fora8,pPrazo,pInter,pOut,pFora8,gapPrazo:Math.max(0,85-pPrazo),excessoOutlier:Math.max(0,pOut-2)};
+}
 function parseOpeningDate(v){if(v===undefined||v===null||v==='')return null;if(v instanceof Date&&!isNaN(v))return v;if(typeof v==='number'&&isFinite(v)){const d=new Date(Math.round((v-25569)*86400*1000));return isNaN(d)?null:d}const raw=String(v).trim();if(!raw)return null;const iso=new Date(raw);if(!isNaN(iso))return iso;const m=raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);if(!m)return null;const y=Number(m[3].length===2?'20'+m[3]:m[3]);const d=new Date(y,Number(m[2])-1,Number(m[1]),Number(m[4]||0),Number(m[5]||0),Number(m[6]||0));return isNaN(d)?null:d}
 function hoursSince(d){return d?Math.max(0,(Date.now()-d.getTime())/3600000):0}
 function statusSla(slaH,mop){const m={'SLN MA':8,'SLN PA':8,'GIGA+ MA':8,'GIGA+ PI':8,'ADX':4};return slaH>(m[mop]||8)?'FORA DO PRAZO':'NO PRAZO'}
@@ -904,7 +915,7 @@ function restoreState(){
       document.getElementById('dash-ab').style.display='block';
     }
     if(Array.isArray(st.dEnc)&&st.dEnc.length){
-      dEnc=st.dEnc;
+      dEnc=st.dEnc.map(d=>({...d,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}));
       document.getElementById('nb-enc').textContent=dEnc.length;
       document.getElementById('ft-enc').textContent='Base restaurada em '+now2();
       fillFiltersEnc();fillWeekSelector();fillClusterSelector();
@@ -986,8 +997,8 @@ function procEnc(raw,fname){
     const agingRaw=String(r['aging_ccs']||'').trim();
     const faixa=AGING_MAP[agingRaw]||cf(ph(r['tempo_b2b']||0));
     const tempoTotal=typeof r['tempo_total']==='number'?r['tempo_total']:ph(r['tempo_total']);
-    const dentro8h=r['dentro_8h']===1||r['dentro_8h']==='1'||r['dentro_8h']===true;
-    const outlier24h=r['outlier_24h']===1||r['outlier_24h']==='1';
+    const dentro8h=encBucket(tempoTotal)==='prazo';
+    const outlier24h=encBucket(tempoTotal)==='outlier';
     return{protocolo,cliente,uf,cidade,cluster,clusterCalc,clusterNome,causaRaiz,semana,segmento,faixa,tempoTotal,dentro8h,outlier24h};
   });
   document.getElementById('nb-enc').textContent=dEnc.length;
@@ -1145,29 +1156,26 @@ function rBanner(d){
 }
 
 function rMetEnc(d){
-  const t=d.length,d8=d.filter(x=>x.dentro8h).length,ol=d.filter(x=>x.outlier24h).length;
+  const s=encRuleStats(d);
   const vs=d.map(x=>x.tempoTotal).filter(v=>v>0);
   const avg=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:0;
-  const p8=Math.round(d8/Math.max(t,1)*100);
   document.getElementById('mrow-enc').innerHTML=`
-    <div class="mc c-teal"><div class="mc-label">Total encerrados</div><div class="mc-val" style="color:var(--teal-dk)"><b>${t}</b></div><div class="mc-sub">chamados fechados</div></div>
-    <div class="mc c-green"><div class="mc-label">Dentro de 8h</div><div class="mc-val" style="color:var(--green-dk)"><b>${d8}</b></div><div class="mc-sub"><span class="tag tag-green">${p8}%</span> meta ≥85%</div></div>
-    <div class="mc c-orange"><div class="mc-label">Fora de 8h</div><div class="mc-val" style="color:var(--orange)"><b>${t-d8}</b></div><div class="mc-sub"><span class="tag tag-orange">${100-p8}%</span> do total</div></div>
-    <div class="mc c-red"><div class="mc-label">Outlier &gt;24h</div><div class="mc-val" style="color:var(--red)"><b>${ol}</b></div><div class="mc-sub"><span class="tag tag-red">${Math.round(ol/Math.max(t,1)*100)}%</span> do total</div></div>
-    <div class="mc c-orange"><div class="mc-label">Tempo médio</div><div class="mc-val" style="color:var(--orange)">${fh(avg)}</div><div class="mc-sub">tempo total médio</div></div>`;
+    <div class="mc c-teal"><div class="mc-label">Total encerrados</div><div class="mc-val" style="color:var(--teal-dk)"><b>${s.total}</b></div><div class="mc-sub">chamados fechados</div></div>
+    <div class="mc c-green"><div class="mc-label">Prazo ≤8h</div><div class="mc-val" style="color:var(--green-dk)"><b>${s.prazo}</b></div><div class="mc-sub"><span class="tag tag-green">${pp(s.pPrazo)}%</span> ${s.gapPrazo?pp(s.gapPrazo)+' p.p. fora da meta':'meta atingida'}</div></div>
+    <div class="mc c-orange"><div class="mc-label">8h a 24h</div><div class="mc-val" style="color:var(--orange)"><b>${s.intermediario}</b></div><div class="mc-sub"><span class="tag tag-orange">${pp(s.pInter)}%</span> fora da meta 8h</div></div>
+    <div class="mc c-red"><div class="mc-label">Outlier &gt;24h</div><div class="mc-val" style="color:var(--red)"><b>${s.outlier}</b></div><div class="mc-sub"><span class="tag tag-red">${pp(s.pOut)}%</span> ${s.excessoOutlier?pp(s.excessoOutlier)+' p.p. acima do max. 2%':'dentro do max. 2%'}</div></div>
+    <div class="mc c-orange"><div class="mc-label">Tempo medio</div><div class="mc-val" style="color:var(--orange)">${fh(avg)}</div><div class="mc-sub">tempo total medio</div></div>`;
 }
 
 function rPillEnc(d){
-  const t=d.length||1,d8=d.filter(x=>x.dentro8h).length;
-  const tc=se(cnt(d,'cluster'))[0]||['—',0];
-  const causa=se(cnt(d,'causaRaiz'))[0]||['—',0];
+  const s=encRuleStats(d);
+  const tc=se(cnt(d,'cluster'))[0]||['-',0];
   document.getElementById('prow-enc').innerHTML=`
-    <div class="pc"><div class="pico pi-g"><i class="ti ti-circle-check"></i></div><div><div class="pv">${d8}</div><div class="ps">Dentro de 8h <b>(${Math.round(d8/t*100)}%)</b> · meta ≥85%</div></div></div>
-    <div class="pc"><div class="pico pi-r"><i class="ti ti-alert-triangle"></i></div><div><div class="pv">${t-d8}</div><div class="ps">Fora de 8h <b>(${Math.round((t-d8)/t*100)}%)</b></div></div></div>
-    <div class="pc"><div class="pico pi-b"><i class="ti ti-map-pin"></i></div><div><div class="pv" style="font-size:14px;letter-spacing:-.01em">${tc[0]}</div><div class="ps">${tc[1]} chamados · cluster maior</div></div></div>
-    <div class="pc"><div class="pico pi-o"><i class="ti ti-tools"></i></div><div><div class="pv">${causa[1]}</div><div class="ps">${causa[0]||'—'}</div></div></div>`;
+    <div class="pc"><div class="pico pi-g"><i class="ti ti-circle-check"></i></div><div><div class="pv">${s.prazo}</div><div class="ps">Prazo ≤8h <b>(${pp(s.pPrazo)}%)</b> · meta ≥85%</div></div></div>
+    <div class="pc"><div class="pico pi-o"><i class="ti ti-clock-exclamation"></i></div><div><div class="pv">${s.intermediario}</div><div class="ps">8h a 24h <b>(${pp(s.pInter)}%)</b> fora da meta</div></div></div>
+    <div class="pc"><div class="pico pi-r"><i class="ti ti-alert-triangle"></i></div><div><div class="pv">${s.outlier}</div><div class="ps">Outlier &gt;24h <b>(${pp(s.pOut)}%)</b> · max. 2%</div></div></div>
+    <div class="pc"><div class="pico pi-b"><i class="ti ti-map-pin"></i></div><div><div class="pv" style="font-size:14px;letter-spacing:-.01em">${tc[0]}</div><div class="ps">${tc[1]} chamados · cluster maior</div></div></div>`;
 }
-
 function rClusterCards(d){
   const grp={};
   d.forEach(x=>{
@@ -1206,8 +1214,8 @@ function rCausaEnc(d){
 }
 
 function rMeta8(d){
-  const t=d.length||1,d8=d.filter(x=>x.dentro8h).length,fo=t-d8;
-  const pct=Math.round(d8/t*100);
+  const s=encRuleStats(d);
+  const pct=s.pPrazo;
   const met=pct>=85;
   const r=36,circ=2*Math.PI*r;
   const dash=circ*(pct/100);
@@ -1220,27 +1228,28 @@ function rMeta8(d){
           <circle cx="40" cy="40" r="${r}" fill="none" stroke="${ringC}" stroke-width="7"
             stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"/>
         </svg>
-        <div class="meta-num" style="color:${ringC}">${pct}%</div>
-        <div class="meta-lbl">8h SLA</div>
+        <div class="meta-num" style="color:${ringC}">${pp(pct)}%</div>
+        <div class="meta-lbl">Prazo</div>
       </div>
       <div class="meta-detail">
         <div class="meta-tag" style="background:${met?'var(--green-bg)':'var(--red-bg)'};color:${met?'var(--green-dk)':'var(--red-dk)'}">
           <i class="ti ti-${met?'check':'x'}" style="font-size:11px"></i>
-          ${met?'Meta ≥85% atingida':'Meta ≥85% não atingida'}
+          ${met?'Meta ≥85% atingida':'Faltam '+pp(s.gapPrazo)+' p.p. para a meta de prazo'}
         </div>
-        <div class="brow"><div class="blbl">Dentro de 8h</div><div class="btrk"><div class="bfil" style="width:${pct}%;background:var(--green)"></div></div><div class="bn">${d8}</div></div>
-        <div class="brow"><div class="blbl">Fora de 8h</div><div class="btrk"><div class="bfil" style="width:${100-pct}%;background:var(--red)"></div></div><div class="bn">${fo}</div></div>
-        <div style="font-size:9px;color:var(--tx3);margin-top:8px">B2B Reparo ≤8h: meta ≥85% · B2B Outlier &gt;24h: máx 2%</div>
+        <div class="brow"><div class="blbl">Prazo ≤8h</div><div class="btrk"><div class="bfil" style="width:${Math.min(100,s.pPrazo)}%;background:var(--green)"></div></div><div class="bn">${s.prazo} · ${pp(s.pPrazo)}%</div></div>
+        <div class="brow"><div class="blbl">8h a 24h</div><div class="btrk"><div class="bfil" style="width:${Math.min(100,s.pInter)}%;background:var(--orange)"></div></div><div class="bn">${s.intermediario} · ${pp(s.pInter)}%</div></div>
+        <div class="brow"><div class="blbl">Outlier &gt;24h</div><div class="btrk"><div class="bfil" style="width:${Math.min(100,s.pOut)}%;background:var(--red)"></div></div><div class="bn">${s.outlier} · ${pp(s.pOut)}%</div></div>
+        <div style="font-size:9px;color:var(--tx3);margin-top:8px">Fora da meta 8h: ${s.fora8} chamados (${pp(s.pFora8)}%) · Outlier acima do limite: ${pp(s.excessoOutlier)} p.p.</div>
       </div>
     </div>`;
 }
 
 function rChEnc(d){
-  const c={};SLA_ORDER.forEach(f=>c[f]=0);d.forEach(x=>{if(x.faixa)c[x.faixa]=(c[x.faixa]||0)+1});
+  const s=encRuleStats(d);
   if(chEnc){chEnc.destroy();chEnc=null}
   const ctx=document.getElementById('ch-enc');if(!ctx)return;
   const dk=document.body.dataset.theme==='dark';
-  chEnc=new Chart(ctx,{type:'bar',data:{labels:SLA_ORDER.map(f=>f.replace(/[🔴🟠🟡🟢🔵]\s*/,'')),datasets:[{data:SLA_ORDER.map(f=>c[f]),backgroundColor:SLA_ORDER.map(f=>SLA_CLR[f]),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93'}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:1}}}}});
+  chEnc=new Chart(ctx,{type:'bar',data:{labels:['Prazo ≤8h','8h a 24h','Outlier >24h'],datasets:[{data:[s.prazo,s.intermediario,s.outlier],backgroundColor:['#34c759','#ff9500','#ff3b30'],borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93'}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:1}}}}});
 }
 
 function rChSem(){
