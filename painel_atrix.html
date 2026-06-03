@@ -605,12 +605,7 @@ body.is-admin .admin-only { display: flex; }
       <i class="ti ti-circle-check"></i> Encerrados
       <span class="ntab-badge nb-green" id="nb-enc">0</span>
     </button>
-    <button class="ntab" id="ntab-wpp" onclick="switchTab('whatsapp')">
-      <i class="ti ti-brand-whatsapp"></i> WhatsApp
-      <span class="ntab-badge nb-blue" id="nb-wpp">0</span>
-    </button>
     <button class="ntab" id="ntab-rede" onclick="switchTab('rede')"><i class="ti ti-router"></i> Rede</button>
-    <button class="ntab" onclick="switchTab('abertos')"><i class="ti ti-clock-hour-4"></i> SLA Ao Vivo</button>
     <button class="ntab" onclick="switchTab('encerrados')"><i class="ti ti-chart-bar"></i> Performance</button>
     <button class="ntab" onclick="switchTab('encerrados')"><i class="ti ti-trend-up"></i> Evolução</button>
   </div>
@@ -935,8 +930,9 @@ function encRuleStats(d){
 }
 function parseOpeningDate(v){if(v===undefined||v===null||v==='')return null;if(v instanceof Date&&!isNaN(v))return v;if(typeof v==='number'&&isFinite(v)){const d=new Date(Math.round((v-25569)*86400*1000));return isNaN(d)?null:d}const raw=String(v).trim();if(!raw)return null;const iso=new Date(raw);if(!isNaN(iso))return iso;const m=raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);if(!m)return null;const y=Number(m[3].length===2?'20'+m[3]:m[3]);const d=new Date(y,Number(m[2])-1,Number(m[1]),Number(m[4]||0),Number(m[5]||0),Number(m[6]||0));return isNaN(d)?null:d}
 function hoursSince(d){return d?Math.max(0,(Date.now()-d.getTime())/3600000):0}
-function statusSla(slaH,mop){const m={'SLN MA':8,'SLN PA':8,'GIGA+ MA':8,'GIGA+ PI':8,'ADX':4};return slaH>(m[mop]||8)?'FORA DO PRAZO':'NO PRAZO'}
-function refreshAbTimes(){dAb.forEach(d=>{if(!d.openedAt)return;d.slaH=hoursSince(d.openedAt);d.faixa=cf(d.slaH);d.statusSla=statusSla(d.slaH,d.mop)})}
+function slaBaseLimit(r){const v=gv(r,['SLA','SLA Base','SLA Meta','Meta SLA','Prazo SLA','SLA Prazo','SLA Contratado','SLA Limite','SLA limite (h)','Prazo (h)','Prazo']);return v===''?0:ph(v)}
+function statusSla(slaH,mop,limitH){const m={'SLN MA':8,'SLN PA':8,'GIGA+ MA':8,'GIGA+ PI':8,'ADX':4};const lim=limitH||m[mop]||8;return slaH>lim?'FORA DO PRAZO':'NO PRAZO'}
+function refreshAbTimes(){dAb.forEach(d=>{if(!d.openedAt)return;d.slaH=hoursSince(d.openedAt);d.faixa=cf(d.slaH);d.statusSla=statusSla(d.slaH,d.mop,d.slaLimitH)})}
 function startRefresh(){if(refreshTimer)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!dAb.length)return;refreshAbTimes();renderAllAb()},60000)}
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():''}))}
@@ -946,7 +942,7 @@ function restoreState(){
     const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;
     const st=JSON.parse(raw);
     if(Array.isArray(st.dAb)&&st.dAb.length){
-      dAb=st.dAb.map((d,i)=>({...d,rowKey:d.rowKey??i,openedAt:d.openedAt?new Date(d.openedAt):null}));
+      dAb=st.dAb.map((d,i)=>({...d,rowKey:d.rowKey??i,openedAt:d.openedAt?new Date(d.openedAt):null,slaLimitH:d.slaLimitH||0}));
       document.getElementById('nb-ab').textContent=dAb.length;
       document.getElementById('ft-ab').textContent='Base restaurada em '+now2();
       fillFiltersAb();renderAllAb();startRefresh();
@@ -1002,15 +998,16 @@ function procAb(raw,fname){
     const substatus=String(gv(r,['Substatus','SUBSTATUS'])||'').trim();
     const link=bestLink(gv(r,['Link Atrix','LINK','Link','Ticket Bdesk']),id);
     const openedAt=parseOpeningDate(gv(r,['Abertura do Ticket','Abertura','Data Abertura','Data de Abertura','Data/Hora Abertura']));
-    const slaRaw=gv(r,['SLA (h)','SLA(h)','SLA_H','SLA','SLA Formatado','Tempo']);
+    const slaLimitH=slaBaseLimit(r);
+    const slaRaw=gv(r,['SLA (h)','SLA(h)','SLA_H','SLA Formatado','Tempo','Tempo SLA','Tempo Decorrido']);
     const originalSlaH=typeof slaRaw==='number'?slaRaw:ph(slaRaw);
-    const slaH=openedAt?hoursSince(openedAt):originalSlaH;
+    const slaH=openedAt?hoursSince(openedAt):(originalSlaH||slaLimitH);
     const faixaRaw=String(gv(r,['Faixa SLA','Faixa_SLA','FAIXA SLA'])||'').trim();
     const faixa=SLA_ORDER.find(f=>nk(faixaRaw).includes(nk(f)))||cf(slaH);
     let mop=String(gv(r,['MOP/EPS (Regra)','MOP/EPS','MOP_EPS'])||'').trim();
     if(!mop)mop=iMop(uf,regiao);
-    const ss=statusSla(slaH,mop);
-    return{rowKey,id,cliente,uf,cidade,regiao,substatus,link,openedAt,originalSlaH,slaH,faixa,mop,statusSla:ss};
+    const ss=statusSla(slaH,mop,slaLimitH);
+    return{rowKey,id,cliente,uf,cidade,regiao,substatus,link,openedAt,originalSlaH,slaLimitH,slaH,faixa,mop,statusSla:ss};
   });
   document.getElementById('nb-ab').textContent=dAb.length;
   document.getElementById('ft-ab').textContent='Atualizado em '+now2();
