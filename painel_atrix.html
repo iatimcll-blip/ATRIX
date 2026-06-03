@@ -478,6 +478,12 @@ tbody tr:hover td { background: var(--surface2); }
       <option value="">Todas as semanas</option>
     </select>
   </div>
+  <div class="week-select-wrap" id="cluster-wrap" style="display:none">
+    <span class="week-label"><i class="ti ti-map-pin" style="font-size:13px;vertical-align:-2px"></i> Cluster</span>
+    <select class="week-select" id="cluster-selector" onchange="onClusterChange()">
+      <option value="">Todos os clusters</option>
+    </select>
+  </div>
 
   <div class="nav-right">
     <label class="upload-pill up-ab" for="file-ab"><i class="ti ti-upload"></i>Abertos</label>
@@ -663,6 +669,7 @@ let dAb=[],dEnc=[];
 let scAb='slaH',sdAb=-1,scEnc='tempoTotal',sdEnc=-1;
 let chAb=null,chEnc=null,chSem=null;
 let selWeek='';
+let selCluster='';
 let refreshTimer=null;
 
 /* ─── HELPERS ─── */
@@ -758,28 +765,47 @@ function procEnc(raw,fname){
   });
   document.getElementById('nb-enc').textContent=dEnc.length;
   document.getElementById('ft-enc').textContent='Atualizado em '+now2();
-  fillFiltersEnc();fillWeekSelector();
+  fillFiltersEnc();fillWeekSelector();fillClusterSelector();
   renderAllEnc();
   document.getElementById('empty-enc').style.display='none';
   document.getElementById('dash-enc').style.display='block';
-  document.getElementById('week-wrap').style.display=
-    document.getElementById('panel-encerrados').classList.contains('active')?'flex':'none';
+  const showControls=document.getElementById('panel-encerrados').classList.contains('active');
+  document.getElementById('week-wrap').style.display=showControls?'flex':'none';
+  document.getElementById('cluster-wrap').style.display=showControls?'flex':'none';
 }
 
-/* ─── WEEK SELECTOR ─── */
+/* ─── WEEK / CLUSTER SELECTORS ─── */
 function fillWeekSelector(){
   const semanas=[...new Set(dEnc.map(d=>d.semana).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
   const sel=document.getElementById('week-selector');
   sel.innerHTML='<option value="">Todas as semanas</option>'+semanas.map(s=>`<option value="${s}">${s}</option>`).join('');
   selWeek='';
 }
+function fillClusterSelector(){
+  const allC=[...new Set(dEnc.map(d=>d.cluster).filter(Boolean))];
+  const clusters=CLUSTER_ORDER.filter(c=>allC.includes(c));
+  const sel=document.getElementById('cluster-selector');
+  sel.innerHTML='<option value="">Todos os clusters</option>'+clusters.map(c=>`<option value="${eh(c)}">${eh(c)}</option>`).join('');
+  selCluster='';
+}
 function onWeekChange(){
   selWeek=document.getElementById('week-selector').value;
   renderAllEnc();
 }
+function onClusterChange(){
+  selCluster=document.getElementById('cluster-selector').value;
+  const tableCluster=document.getElementById('fe-cluster');
+  if(tableCluster) tableCluster.value='';
+  renderAllEnc();
+}
 
-/* filtered enc by week */
+/* filtered enc by global selectors */
 function encWeek(){return selWeek?dEnc.filter(d=>d.semana===selWeek):dEnc}
+function encScope(){
+  let f=encWeek();
+  if(selCluster) f=f.filter(d=>d.cluster===selCluster);
+  return f;
+}
 
 /* ─── RENDER ABERTOS ─── */
 function renderAllAb(){refreshAbTimes();rMetAb();rPillAb();rSlaAb();rRegAb();rMopAb();rSubAb();rChAb();renderTAb()}
@@ -862,7 +888,7 @@ function sAb(c){scAb===c?sdAb*=-1:(scAb=c,sdAb=-1);renderTAb()}
 
 /* ─── RENDER ENCERRADOS ─── */
 function renderAllEnc(){
-  const d=encWeek();
+  const d=encScope();
   rBanner(d);rMetEnc(d);rPillEnc(d);rClusterCards(d);
   rSlaEnc(d);rCausaEnc(d);rMeta8(d);rChEnc(d);rChSem();
   rSegEnc(d);rUfEnc(d);renderTEnc();
@@ -870,9 +896,10 @@ function renderAllEnc(){
 
 function rBanner(d){
   const el=document.getElementById('week-banner-enc');
-  if(selWeek){
+  if(selWeek||selCluster){
     const total=d.length,d8=d.filter(x=>x.dentro8h).length,pct=Math.round(d8/Math.max(total,1)*100);
-    el.innerHTML=`<div class="week-banner"><i class="ti ti-calendar-week"></i><span class="wb-label">${selWeek}</span><span class="wb-sub">— ${total} chamados encerrados · ${d8} dentro de 8h (${pct}%)</span></div>`;
+    const label=[selWeek||'Todas as semanas',selCluster||'Todos os clusters'].join(' · ');
+    el.innerHTML=`<div class="week-banner"><i class="ti ti-filter"></i><span class="wb-label">${eh(label)}</span><span class="wb-sub">— ${total} chamados encerrados · ${d8} dentro de 8h (${pct}%)</span></div>`;
   }else{
     el.innerHTML=`<div class="week-banner all"><i class="ti ti-calendar"></i><span class="wb-label">Todas as semanas</span><span class="wb-sub">— ${dEnc.length} chamados no período completo</span></div>`;
   }
@@ -977,8 +1004,9 @@ function rChEnc(d){
 }
 
 function rChSem(){
-  /* always show full semana evolution, highlight selected week */
-  const semD=cnt(dEnc,'semana');
+  /* show weekly evolution for the selected cluster, highlighting selected week */
+  const base=selCluster?dEnc.filter(d=>d.cluster===selCluster):dEnc;
+  const semD=cnt(base,'semana');
   const labels=Object.keys(semD).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
   const vals=labels.map(k=>semD[k]);
   const bgColors=labels.map(k=>selWeek?( k===selWeek?'#007aff':'rgba(0,122,255,.2)' ):'#007aff');
@@ -1017,7 +1045,7 @@ function gFEnc(){
   const ca=document.getElementById('fe-causa').value,uf=document.getElementById('fe-uf').value;
   const sm=document.getElementById('fe-semana').value,sg=document.getElementById('fe-seg').value;
   const srch=(document.getElementById('f-srch-enc').value||'').toLowerCase();
-  let f=encWeek();
+  let f=encScope();
   if(cl)f=f.filter(d=>d.cluster===cl);if(ag)f=f.filter(d=>d.faixa===ag);
   if(ca)f=f.filter(d=>d.causaRaiz===ca);if(uf)f=f.filter(d=>d.uf===uf);
   if(sm)f=f.filter(d=>d.semana===sm);if(sg)f=f.filter(d=>d.segmento===sg);
@@ -1027,7 +1055,7 @@ function gFEnc(){
 
 function renderTEnc(){
   const f=gFEnc();
-  document.getElementById('cnt-enc').textContent=f.length+' de '+(selWeek?encWeek().length:dEnc.length)+' chamados';
+  document.getElementById('cnt-enc').textContent=f.length+' de '+encScope().length+' chamados';
   const CCLR={'MA CAP':'#007aff','MA INT':'#5ac8fa','PA CAP':'#af52de','PA INT':'#bf5af2','PI CAP':'#ff6b35','PI INT':'#ff9f0a','AM/AP':'#34c759'};
   document.getElementById('tb-enc').innerHTML=f.map(d=>{
     const bc=SLA_BADGE[d.faixa]||'b-blue';
@@ -1053,7 +1081,7 @@ function exportCSV(tipo){
   const csv=[hdr,...data].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='atrix_'+tipo+'_'+(selWeek||'all')+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  a.download='atrix_'+tipo+'_'+(selWeek||'all')+'_'+(selCluster||'allclusters')+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
 }
 
 /* ─── NAV & THEME ─── */
@@ -1063,13 +1091,15 @@ function switchTab(tab){
   document.getElementById('ntab-'+(isAb?'ab':'enc')).classList.add('active');
   document.getElementById('panel-abertos').classList.toggle('active',isAb);
   document.getElementById('panel-encerrados').classList.toggle('active',!isAb);
-  document.getElementById('week-wrap').style.display=(!isAb&&dEnc.length>0)?'flex':'none';
+  const showEncControls=!isAb&&dEnc.length>0;
+  document.getElementById('week-wrap').style.display=showEncControls?'flex':'none';
+  document.getElementById('cluster-wrap').style.display=showEncControls?'flex':'none';
 }
 function toggleTheme(){
   const dk=document.body.dataset.theme==='dark';
   document.body.dataset.theme=dk?'light':'dark';
   document.getElementById('ti-icon').className=dk?'ti ti-moon':'ti ti-sun';
-  setTimeout(()=>{if(chAb)rChAb();if(chEnc&&dEnc.length)rChEnc(encWeek());if(chSem&&dEnc.length)rChSem();},60);
+  setTimeout(()=>{if(chAb)rChAb();if(chEnc&&dEnc.length)rChEnc(encScope());if(chSem&&dEnc.length)rChSem();},60);
 }
 </script>
 </body>
