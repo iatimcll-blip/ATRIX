@@ -798,6 +798,14 @@ function onClusterChange(){
   if(tableCluster) tableCluster.value='';
   renderAllEnc();
 }
+function selectClusterCard(cluster){
+  selCluster = selCluster === cluster ? '' : cluster;
+  const sel=document.getElementById('cluster-selector');
+  if(sel) sel.value=selCluster;
+  const tableCluster=document.getElementById('fe-cluster');
+  if(tableCluster) tableCluster.value='';
+  renderAllEnc();
+}
 
 /* filtered enc by global selectors */
 function encWeek(){return selWeek?dEnc.filter(d=>d.semana===selWeek):dEnc}
@@ -936,16 +944,17 @@ function rClusterCards(d){
     if(!grp[k])grp[k]={total:0,dentro:0,outlier:0};
     grp[k].total++;if(x.dentro8h)grp[k].dentro++;if(x.outlier24h)grp[k].outlier++;
   });
-  document.getElementById('cluster-cards').innerHTML=CLUSTER_ORDER.map(k=>{
+  const cardOrder=selCluster?[selCluster]:CLUSTER_ORDER;
+  document.getElementById('cluster-cards').innerHTML=cardOrder.map(k=>{
     const g=grp[k]||{total:0,dentro:0,outlier:0};
     const pct=g.total?Math.round(g.dentro/g.total*100):0;
     const cls=pct>=85?'met':pct>=70?'warn':'unmet';
     const barC=pct>=85?'var(--green)':pct>=70?'var(--orange)':'var(--red)';
     const ci=CLUSTER_INFO[k]||{clr:'#8e8e93',desc:k};
-    return`<div class="cc ${cls}">
+    return`<div class="cc ${cls}" onclick="selectClusterCard('${eh(k)}')" title="${selCluster?'Clique para limpar o filtro':'Clique para analisar somente este cluster'}" style="cursor:pointer">
       <div class="cc-stripe" style="background:${ci.clr}"></div>
-      <div class="cc-name">${k}</div>
-      <div class="cc-desc">${ci.desc}</div>
+      <div class="cc-name">${eh(k)}</div>
+      <div class="cc-desc">${eh(ci.desc)}</div>
       <div class="cc-pct"><b>${pct}%</b></div>
       <div class="cc-bar-bg"><div class="cc-bar-fill" style="width:${pct}%;background:${barC}"></div></div>
       <div class="cc-info"><span>${g.dentro}/${g.total}</span><span>≥85%</span></div>
