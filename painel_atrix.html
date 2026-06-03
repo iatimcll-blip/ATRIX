@@ -394,8 +394,83 @@ tbody tr:hover td { background: var(--surface2); }
   outline: none; cursor: pointer;
 }
 .substatus-select:focus { border-color: var(--blue); }
+.readonly .upload-pill,
+.readonly .empty-btn { display: none !important; }
+.substatus-readonly {
+  display: inline-flex; align-items: center;
+  max-width: 160px; padding: 4px 8px;
+  border-radius: 8px; background: var(--surface2);
+  color: var(--tx2); font-size: 11px;
+}
 .nores { text-align: center; padding: 2.5rem; color: var(--tx3); }
 .nores i { font-size: 28px; opacity: .2; display: block; margin: 0 auto 8px; }
+
+/* LOGIN */
+.login-screen {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(242,242,247,.94);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+}
+[data-theme=dark] .login-screen { background: rgba(0,0,0,.82); }
+.login-card {
+  width: min(380px,100%); background: var(--surface);
+  border: .5px solid var(--bd); border-radius: 18px;
+  box-shadow: var(--shadow-lg); padding: 24px;
+}
+.login-logo {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: linear-gradient(135deg,var(--teal),var(--blue));
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 800; margin-bottom: 14px;
+}
+.login-title { font-size: 20px; font-weight: 700; color: var(--tx); letter-spacing: -.02em; }
+.login-sub { font-size: 12px; color: var(--tx3); margin: 5px 0 18px; line-height: 1.5; }
+.login-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.login-field label { font-size: 10px; color: var(--tx3); font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+.login-field input {
+  height: 40px; border-radius: 10px; border: .5px solid var(--bd2);
+  background: var(--surface2); color: var(--tx); padding: 0 12px;
+  font: inherit; outline: none;
+}
+.login-field input:focus { border-color: var(--blue); }
+.login-error { min-height: 17px; font-size: 11px; color: var(--red); margin-bottom: 8px; }
+.login-action {
+  width: 100%; height: 40px; border: 0; border-radius: 20px;
+  background: var(--blue); color: #fff; font: inherit;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.user-panel {
+  position: fixed; inset: 0; z-index: 999; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+  background: rgba(0,0,0,.28);
+}
+.user-card {
+  width: min(520px,100%); max-height: 86vh; overflow: auto;
+  background: var(--surface); border: .5px solid var(--bd);
+  border-radius: 16px; box-shadow: var(--shadow-lg); padding: 18px;
+}
+.user-card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.user-card-title { font-size: 16px; font-weight: 700; color: var(--tx); }
+.user-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 14px; }
+.user-form input {
+  height: 34px; border-radius: 9px; border: .5px solid var(--bd2);
+  background: var(--surface2); color: var(--tx); padding: 0 10px;
+  font: inherit; font-size: 12px; outline: none;
+}
+.user-form button,.mini-btn {
+  border: .5px solid var(--bd2); border-radius: 9px; background: var(--surface2);
+  color: var(--tx2); font: inherit; font-size: 12px; font-weight: 700;
+  padding: 0 12px; cursor: pointer;
+}
+.user-form button { background: var(--blue); color: #fff; border-color: var(--blue); }
+.user-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-top: .5px solid var(--bd); font-size: 12px;
+}
+.user-role { color: var(--tx3); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+.admin-only { display: none; }
+body.is-admin .admin-only { display: flex; }
 
 /* ─── CHART WRAP ─── */
 .cw { position: relative; width: 100%; height: 150px; }
@@ -436,6 +511,8 @@ tbody tr:hover td { background: var(--surface2); }
   .prow{grid-template-columns:repeat(2,1fr)}
   .nav-brand-sub{display:none}
   .week-label{display:none}
+  .user-form{grid-template-columns:1fr}
+  .user-form button{height:34px}
 }
 </style>
 </head>
@@ -443,6 +520,38 @@ tbody tr:hover td { background: var(--surface2); }
 
 <input type="file" id="file-ab" accept=".xlsx,.xls" style="display:none">
 <input type="file" id="file-enc" accept=".xlsx,.xls" style="display:none">
+<div class="login-screen" id="login-screen">
+  <form class="login-card" onsubmit="loginUser(event)">
+    <div class="login-logo">A</div>
+    <div class="login-title">Acesso ATRIX</div>
+    <div class="login-sub">Entre com seu usuario e senha para visualizar o painel B2B.</div>
+    <div class="login-field">
+      <label for="login-user">Usuario</label>
+      <input id="login-user" autocomplete="username" required>
+    </div>
+    <div class="login-field">
+      <label for="login-pass">Senha</label>
+      <input id="login-pass" type="password" autocomplete="current-password" required>
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <button class="login-action" type="submit">Entrar</button>
+  </form>
+</div>
+
+<div class="user-panel" id="user-panel">
+  <div class="user-card">
+    <div class="user-card-hd">
+      <div class="user-card-title">Usuarios do painel</div>
+      <button class="mini-btn" onclick="closeUserPanel()">Fechar</button>
+    </div>
+    <div class="user-form">
+      <input id="new-user" placeholder="Novo usuario">
+      <input id="new-pass" type="password" placeholder="Senha">
+      <button onclick="createSecondaryUser()">Criar</button>
+    </div>
+    <div id="users-list"></div>
+  </div>
+</div>
 
 <!-- ═══ NAVBAR ═══ -->
 <nav class="navbar">
@@ -488,8 +597,10 @@ tbody tr:hover td { background: var(--surface2); }
   <div class="nav-right">
     <label class="upload-pill up-ab" for="file-ab"><i class="ti ti-upload"></i>Abertos</label>
     <label class="upload-pill up-enc" for="file-enc"><i class="ti ti-upload"></i>Encerrados</label>
+    <div class="nav-btn admin-only" onclick="openUserPanel()" title="Usuarios"><i class="ti ti-users"></i></div>
     <div class="nav-btn" onclick="toggleTheme()" title="Tema"><i class="ti ti-moon" id="ti-icon"></i></div>
-    <div class="avatar-btn">MR</div>
+    <div class="nav-btn" onclick="logoutUser()" title="Sair"><i class="ti ti-logout"></i></div>
+    <div class="avatar-btn" id="avatar-label">--</div>
   </div>
 </nav>
 
@@ -672,6 +783,91 @@ let selWeek='';
 let selCluster='';
 let refreshTimer=null;
 const STORAGE_KEY='atrix:painel:bases:v1';
+const USERS_KEY='atrix:usuarios:v1';
+const SESSION_KEY='atrix:sessao:v1';
+let currentUser=null;
+
+/* LOGIN E PERMISSOES */
+function encPass(v){return btoa(unescape(encodeURIComponent(String(v||''))))}
+function defaultAdmin(){return{username:'admin',pass:encPass('atrix@2026'),role:'admin'}}
+function getUsers(){
+  let users=[];
+  try{users=JSON.parse(localStorage.getItem(USERS_KEY)||'[]')}catch{users=[]}
+  if(!Array.isArray(users))users=[];
+  if(!users.some(u=>u.username==='admin'))users.unshift(defaultAdmin());
+  saveUsers(users);
+  return users;
+}
+function saveUsers(users){localStorage.setItem(USERS_KEY,JSON.stringify(users))}
+function canEdit(){return currentUser&&currentUser.role==='admin'}
+function initials(name){return String(name||'--').split(/[.\s_-]+/).filter(Boolean).slice(0,2).map(s=>s[0]).join('').toUpperCase()||'--'}
+function applyPermissions(){
+  document.body.classList.toggle('is-admin',!!canEdit());
+  document.body.classList.toggle('readonly',!!currentUser&&!canEdit());
+  const av=document.getElementById('avatar-label');if(av)av.textContent=initials(currentUser&&currentUser.username);
+  if(dAb.length)renderTAb();
+}
+function showLogin(msg){
+  currentUser=null;
+  document.body.classList.remove('is-admin','readonly');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-error').textContent=msg||'';
+  setTimeout(()=>document.getElementById('login-user').focus(),50);
+}
+function hideLogin(){document.getElementById('login-screen').style.display='none';document.getElementById('login-error').textContent=''}
+function loginUser(ev){
+  if(ev)ev.preventDefault();
+  const username=document.getElementById('login-user').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  const user=getUsers().find(u=>u.username.toLowerCase()===username.toLowerCase()&&u.pass===encPass(pass));
+  if(!user){showLogin('Usuario ou senha invalidos.');return}
+  currentUser=user;
+  localStorage.setItem(SESSION_KEY,user.username);
+  document.getElementById('login-pass').value='';
+  hideLogin();restoreState();applyPermissions();
+}
+function logoutUser(){
+  localStorage.removeItem(SESSION_KEY);
+  if(refreshTimer)clearInterval(refreshTimer);
+  closeUserPanel();showLogin('');
+}
+function initAuth(){
+  const users=getUsers();
+  const saved=localStorage.getItem(SESSION_KEY);
+  const user=users.find(u=>u.username===saved);
+  if(!user){showLogin('');return}
+  currentUser=user;
+  hideLogin();restoreState();applyPermissions();
+}
+function openUserPanel(){
+  if(!canEdit())return;
+  renderUsers();
+  document.getElementById('user-panel').style.display='flex';
+}
+function closeUserPanel(){document.getElementById('user-panel').style.display='none'}
+function createSecondaryUser(){
+  if(!canEdit())return;
+  const username=document.getElementById('new-user').value.trim();
+  const pass=document.getElementById('new-pass').value.trim();
+  if(!/^[a-z0-9._-]{3,30}$/i.test(username)){alert('Use um usuario com 3 a 30 caracteres, sem espacos.');return}
+  if(pass.length<4){alert('Informe uma senha com pelo menos 4 caracteres.');return}
+  const users=getUsers();
+  if(users.some(u=>u.username.toLowerCase()===username.toLowerCase())){alert('Usuario ja existe.');return}
+  users.push({username,pass:encPass(pass),role:'viewer'});
+  saveUsers(users);
+  document.getElementById('new-user').value='';
+  document.getElementById('new-pass').value='';
+  renderUsers();
+}
+function deleteUser(username){
+  if(!canEdit()||username==='admin')return;
+  saveUsers(getUsers().filter(u=>u.username!==username));
+  renderUsers();
+}
+function renderUsers(){
+  const users=getUsers();
+  document.getElementById('users-list').innerHTML=users.map(u=>`<div class="user-row"><div><b>${eh(u.username)}</b><div class="user-role">${u.role==='admin'?'Administrador':'Visualizacao'}</div></div>${u.username==='admin'?'<span class="user-role">fixo</span>':`<button class="mini-btn" onclick="deleteUser('${eh(u.username)}')">Excluir</button>`}</div>`).join('');
+}
 
 /* ─── HELPERS ─── */
 function ph(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number')return v;const s=String(v);const m=s.match(/(\d+)h\s*(\d+)m/);if(m)return+m[1]+(+m[2])/60;return parseFloat(s.replace(',','.'))||0}
@@ -731,12 +927,14 @@ function listRows(entries,clrFn){
 
 /* ─── FILE INPUTS ─── */
 document.getElementById('file-ab').addEventListener('change',function(e){
+  if(!canEdit()){alert('Seu usuario possui acesso somente para visualizacao.');this.value='';return}
   const f=e.target.files[0];if(!f)return;
   const rd=new FileReader();
   rd.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'array'});const sn=wb.SheetNames.find(n=>n.toUpperCase()==='BASE')||wb.SheetNames[0];const ws=wb.Sheets[sn];procAb(applyTicketLinks(XLSX.utils.sheet_to_json(ws,{defval:''}),ws),f.name)}catch(er){alert('Erro: '+er.message)}};
   rd.readAsArrayBuffer(f);this.value='';
 });
 document.getElementById('file-enc').addEventListener('change',function(e){
+  if(!canEdit()){alert('Seu usuario possui acesso somente para visualizacao.');this.value='';return}
   const f=e.target.files[0];if(!f)return;
   const rd=new FileReader();
   rd.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'array'});const sn=wb.SheetNames.find(n=>n.toUpperCase().includes('BASE'))||wb.SheetNames[0];procEnc(XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:''}),f.name)}catch(er){alert('Erro: '+er.message)}};
@@ -900,7 +1098,7 @@ function fillFiltersAb(){
   document.getElementById('f-faixa').innerHTML='<option value="">Todas as faixas</option>'+SLA_ORDER.map(f=>`<option value="${eh(f)}">${eh(f)}</option>`).join('');
 }
 function getSubstatusOptions(current){const subs=[...new Set(dAb.map(d=>d.substatus).filter(Boolean))].sort();if(current&&!subs.includes(current))subs.unshift(current);return subs.map(s=>`<option value="${eh(s)}"${s===current?' selected':''}>${eh(s)}</option>`).join('')}
-function updateSubstatus(rowKey,value){const item=dAb.find(d=>d.rowKey===rowKey);if(!item)return;item.substatus=value;fillFiltersAb();renderAllAb();saveState()}
+function updateSubstatus(rowKey,value){if(!canEdit())return;const item=dAb.find(d=>d.rowKey===rowKey);if(!item)return;item.substatus=value;fillFiltersAb();renderAllAb();saveState()}
 function gFAb(){
   const mop=document.getElementById('f-mop').value,faixa=document.getElementById('f-faixa').value;
   const sub=document.getElementById('f-sub').value,uf=document.getElementById('f-uf').value;
@@ -921,7 +1119,7 @@ function renderTAb(){
     const cleanLink=safeUrl(d.link);
     const lk=cleanLink?`<a class="lbtn" href="${eh(cleanLink)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" style="font-size:13px"></i></a>`:'';
     const idHtml=cleanLink?`<a href="${eh(cleanLink)}" target="_blank" rel="noopener noreferrer" title="Abrir ticket">${eh(d.id)}</a>`:eh(d.id);
-    const subHtml=`<select class="substatus-select" title="Alterar substatus" onchange="updateSubstatus(${d.rowKey}, this.value)">${getSubstatusOptions(d.substatus)}</select>`;
+    const subHtml=canEdit()?`<select class="substatus-select" title="Alterar substatus" onchange="updateSubstatus(${d.rowKey}, this.value)">${getSubstatusOptions(d.substatus)}</select>`:`<span class="substatus-readonly">${eh(d.substatus||'Sem substatus')}</span>`;
     return`<tr><td class="tid">${idHtml}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)" title="${eh(d.cliente)}">${eh(d.cliente)}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${MOP_CLR[d.mop]||'#8e8e93'};flex-shrink:0"></span>${eh(d.mop)}</span></td><td>${eh(d.cidade||'—')}/${eh(d.uf)}</td><td style="${sc}">${fh(d.slaH)}</td><td><span class="badge ${bc}">${eh(d.faixa)}</span></td><td><span class="badge ${ss}">${eh(d.statusSla)}</span></td><td>${subHtml}</td><td>${lk}</td></tr>`;
   }).join('')||'<tr><td colspan="9" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
 }
@@ -1143,7 +1341,7 @@ function toggleTheme(){
   document.getElementById('ti-icon').className=dk?'ti ti-moon':'ti ti-sun';
   setTimeout(()=>{if(chAb)rChAb();if(chEnc&&dEnc.length)rChEnc(encScope());if(chSem&&dEnc.length)rChSem();},60);
 }
-restoreState();
+initAuth();
 </script>
 </body>
 </html>
