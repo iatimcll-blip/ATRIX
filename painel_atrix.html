@@ -671,6 +671,7 @@ let chAb=null,chEnc=null,chSem=null;
 let selWeek='';
 let selCluster='';
 let refreshTimer=null;
+const STORAGE_KEY='atrix:painel:bases:v1';
 
 /* ─── HELPERS ─── */
 function ph(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number')return v;const s=String(v);const m=s.match(/(\d+)h\s*(\d+)m/);if(m)return+m[1]+(+m[2])/60;return parseFloat(s.replace(',','.'))||0}
@@ -692,6 +693,33 @@ function statusSla(slaH,mop){const m={'SLN MA':8,'SLN PA':8,'GIGA+ MA':8,'GIGA+ 
 function refreshAbTimes(){dAb.forEach(d=>{if(!d.openedAt)return;d.slaH=hoursSince(d.openedAt);d.faixa=cf(d.slaH);d.statusSla=statusSla(d.slaH,d.mop)})}
 function startRefresh(){if(refreshTimer)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!dAb.length)return;refreshAbTimes();renderAllAb()},60000)}
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
+function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():''}))}
+function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({dAb:serializeAb(),dEnc,selWeek,selCluster,savedAt:new Date().toISOString()}))}catch(e){console.warn('Nao foi possivel salvar as bases localmente:',e)}}
+function restoreState(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;
+    const st=JSON.parse(raw);
+    if(Array.isArray(st.dAb)&&st.dAb.length){
+      dAb=st.dAb.map((d,i)=>({...d,rowKey:d.rowKey??i,openedAt:d.openedAt?new Date(d.openedAt):null}));
+      document.getElementById('nb-ab').textContent=dAb.length;
+      document.getElementById('ft-ab').textContent='Base restaurada em '+now2();
+      fillFiltersAb();renderAllAb();startRefresh();
+      document.getElementById('empty-ab').style.display='none';
+      document.getElementById('dash-ab').style.display='block';
+    }
+    if(Array.isArray(st.dEnc)&&st.dEnc.length){
+      dEnc=st.dEnc;
+      document.getElementById('nb-enc').textContent=dEnc.length;
+      document.getElementById('ft-enc').textContent='Base restaurada em '+now2();
+      fillFiltersEnc();fillWeekSelector();fillClusterSelector();
+      if(st.selWeek&&dEnc.some(d=>d.semana===st.selWeek)){selWeek=st.selWeek;document.getElementById('week-selector').value=selWeek}
+      if(st.selCluster&&dEnc.some(d=>d.cluster===st.selCluster)){selCluster=st.selCluster;document.getElementById('cluster-selector').value=selCluster}
+      renderAllEnc();
+      document.getElementById('empty-enc').style.display='none';
+      document.getElementById('dash-enc').style.display='block';
+    }
+  }catch(e){console.warn('Nao foi possivel restaurar as bases salvas:',e)}
+}
 
 function barRows(entries,clrFn,lmax){
   const mx=lmax||Math.max(...entries.map(e=>e[1]),1);
@@ -741,6 +769,7 @@ function procAb(raw,fname){
   fillFiltersAb();renderAllAb();startRefresh();
   document.getElementById('empty-ab').style.display='none';
   document.getElementById('dash-ab').style.display='block';
+  saveState();
 }
 
 /* ─── PROCESS ENCERRADOS ─── */
@@ -772,6 +801,7 @@ function procEnc(raw,fname){
   const showControls=document.getElementById('panel-encerrados').classList.contains('active');
   document.getElementById('week-wrap').style.display=showControls?'flex':'none';
   document.getElementById('cluster-wrap').style.display=showControls?'flex':'none';
+  saveState();
 }
 
 /* ─── WEEK / CLUSTER SELECTORS ─── */
@@ -791,12 +821,14 @@ function fillClusterSelector(){
 function onWeekChange(){
   selWeek=document.getElementById('week-selector').value;
   renderAllEnc();
+  saveState();
 }
 function onClusterChange(){
   selCluster=document.getElementById('cluster-selector').value;
   const tableCluster=document.getElementById('fe-cluster');
   if(tableCluster) tableCluster.value='';
   renderAllEnc();
+  saveState();
 }
 function selectClusterCard(cluster){
   selCluster = selCluster === cluster ? '' : cluster;
@@ -805,6 +837,7 @@ function selectClusterCard(cluster){
   const tableCluster=document.getElementById('fe-cluster');
   if(tableCluster) tableCluster.value='';
   renderAllEnc();
+  saveState();
 }
 
 /* filtered enc by global selectors */
@@ -867,7 +900,7 @@ function fillFiltersAb(){
   document.getElementById('f-faixa').innerHTML='<option value="">Todas as faixas</option>'+SLA_ORDER.map(f=>`<option value="${eh(f)}">${eh(f)}</option>`).join('');
 }
 function getSubstatusOptions(current){const subs=[...new Set(dAb.map(d=>d.substatus).filter(Boolean))].sort();if(current&&!subs.includes(current))subs.unshift(current);return subs.map(s=>`<option value="${eh(s)}"${s===current?' selected':''}>${eh(s)}</option>`).join('')}
-function updateSubstatus(rowKey,value){const item=dAb.find(d=>d.rowKey===rowKey);if(!item)return;item.substatus=value;fillFiltersAb();renderAllAb()}
+function updateSubstatus(rowKey,value){const item=dAb.find(d=>d.rowKey===rowKey);if(!item)return;item.substatus=value;fillFiltersAb();renderAllAb();saveState()}
 function gFAb(){
   const mop=document.getElementById('f-mop').value,faixa=document.getElementById('f-faixa').value;
   const sub=document.getElementById('f-sub').value,uf=document.getElementById('f-uf').value;
@@ -1110,6 +1143,7 @@ function toggleTheme(){
   document.getElementById('ti-icon').className=dk?'ti ti-moon':'ti ti-sun';
   setTimeout(()=>{if(chAb)rChAb();if(chEnc&&dEnc.length)rChEnc(encScope());if(chSem&&dEnc.length)rChSem();},60);
 }
+restoreState();
 </script>
 </body>
 </html>
