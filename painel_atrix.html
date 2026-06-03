@@ -71,12 +71,12 @@ body {
 
 /* ─── NAVBAR ─── */
 .navbar {
-  height: 52px; flex-shrink: 0;
+  min-height: 52px; flex-shrink: 0;
   background: var(--glass); backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
   border-bottom: .5px solid var(--bd);
   display: flex; align-items: center;
-  padding: 0 20px; gap: 0; position: relative; z-index: 100;
+  padding: 8px 20px; gap: 0; position: relative; z-index: 100;
 }
 .nav-brand {
   display: flex; align-items: center; gap: 8px; margin-right: 24px; flex-shrink: 0;
@@ -88,13 +88,14 @@ body {
   font-size: 14px; color: #fff; font-weight: 600; flex-shrink: 0;
 }
 .nav-logo {
-  width: 118px; height: 34px; object-fit: contain; display: block;
+  width: clamp(92px, 9vw, 118px); height: 34px; object-fit: contain; display: block;
 }
 .nav-brand-text { font-size: 14px; font-weight: 600; color: var(--tx); letter-spacing: -.01em; }
 .nav-brand-sub { font-size: 10px; color: var(--tx3); letter-spacing: .01em; }
 
 /* NAV TABS */
-.nav-tabs { display: flex; align-items: center; gap: 2px; flex: 1; }
+.nav-tabs { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.nav-tabs::-webkit-scrollbar { display: none; }
 .ntab {
   display: flex; align-items: center; gap: 6px;
   padding: 6px 14px; border-radius: var(--r);
@@ -115,7 +116,7 @@ body {
 
 /* WEEK SELECTOR */
 .week-select-wrap {
-  display: flex; align-items: center; gap: 8px; margin-left: auto;
+  display: flex; align-items: center; gap: 8px; margin-left: 8px; flex-shrink: 0;
 }
 .week-label { font-size: 11px; color: var(--tx3); font-weight: 500; white-space: nowrap; }
 .week-select {
@@ -133,7 +134,7 @@ body {
 [data-theme=dark] .week-select { background-color: var(--surface2); }
 
 /* NAV RIGHT */
-.nav-right { display: flex; align-items: center; gap: 6px; margin-left: 14px; flex-shrink: 0; }
+.nav-right { display: flex; align-items: center; gap: 6px; margin-left: 10px; flex-shrink: 0; }
 .nav-btn {
   width: 30px; height: 30px; border-radius: 8px; border: .5px solid var(--bd);
   background: var(--surface2); display: flex; align-items: center; justify-content: center;
@@ -422,13 +423,11 @@ tbody tr:hover td { background: var(--surface2); }
   box-shadow: var(--shadow-lg); padding: 24px;
 }
 .login-logo {
-  width: 44px; height: 44px; border-radius: 12px;
-  background: linear-gradient(135deg,var(--teal),var(--blue));
-  color: #fff; display: flex; align-items: center; justify-content: center;
-  font-size: 20px; font-weight: 800; margin-bottom: 14px;
+  width: min(220px,100%); height: 82px; object-fit: contain;
+  display: block; margin: 0 auto 16px;
 }
-.login-title { font-size: 20px; font-weight: 700; color: var(--tx); letter-spacing: -.02em; }
-.login-sub { font-size: 12px; color: var(--tx3); margin: 5px 0 18px; line-height: 1.5; }
+.login-title { font-size: 20px; font-weight: 700; color: var(--tx); letter-spacing: -.02em; text-align: center; }
+.login-sub { font-size: 12px; color: var(--tx3); margin: 5px 0 18px; line-height: 1.5; text-align: center; }
 .login-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 .login-field label { font-size: 10px; color: var(--tx3); font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
 .login-field input {
@@ -507,6 +506,14 @@ body.is-admin .admin-only { display: flex; }
 .panel.active > *:nth-child(4) { animation-delay: .09s; }
 .panel.active > *:nth-child(5) { animation-delay: .12s; }
 
+@media(max-width:1180px){
+  .navbar{padding:8px 12px}
+  .nav-brand{margin-right:12px}
+  .ntab{padding:6px 10px}
+  .upload-pill{padding:5px 9px}
+  .mrow{grid-template-columns:repeat(3,1fr)}
+  .cluster-grid{grid-template-columns:repeat(4,1fr)}
+}
 @media(max-width:960px){
   .cluster-grid{grid-template-columns:repeat(4,1fr)}
   .mrow{grid-template-columns:repeat(3,1fr)}
@@ -517,6 +524,33 @@ body.is-admin .admin-only { display: flex; }
   .user-form{grid-template-columns:1fr}
   .user-form button{height:34px}
 }
+@media(max-width:760px){
+  body{overflow:auto;min-height:100vh;height:auto}
+  .navbar{position:sticky;top:0;flex-wrap:wrap;align-items:center;row-gap:8px}
+  .nav-brand{order:1}
+  .nav-right{order:2;margin-left:auto}
+  .nav-tabs{order:3;flex-basis:100%;padding-bottom:2px}
+  .week-select-wrap{order:4;margin-left:0;max-width:calc(50% - 4px)}
+  .week-select{width:100%;min-width:0}
+  .app-body{overflow:visible}
+  .panel{overflow:visible;padding:16px 12px 28px}
+  .mrow,.prow,.g4,.g2,.g3,.cluster-grid{grid-template-columns:1fr}
+  .fbar{display:grid;grid-template-columns:1fr;gap:8px}
+  .fsel,.finput{width:100%;min-width:0}
+  .tsec-hd{align-items:flex-start;gap:8px;flex-direction:column}
+  .login-card{padding:20px;width:min(360px,100%)}
+  .login-logo{height:72px}
+}
+@media(max-width:520px){
+  .login-screen{justify-content:flex-start;padding-left:12px;padding-right:12px}
+  .login-card{width:min(340px,100%);padding:18px}
+  .login-logo{height:64px}
+  .nav-logo{width:88px;height:28px}
+  .upload-pill{font-size:0;padding:6px 8px}
+  .upload-pill i{font-size:14px}
+  .nav-btn{width:28px;height:28px}
+  .avatar-btn{width:26px;height:26px}
+}
 </style>
 </head>
 <body data-theme="light">
@@ -525,8 +559,8 @@ body.is-admin .admin-only { display: flex; }
 <input type="file" id="file-enc" accept=".xlsx,.xls" style="display:none">
 <div class="login-screen" id="login-screen">
   <form class="login-card" onsubmit="loginUser(event)">
-    <div class="login-logo">A</div>
-    <div class="login-title">Acesso ATRIX</div>
+    <img class="login-logo" src="assets/mcll-logo.png" alt="MCLL Monitoramento B2B">
+    <div class="login-title">Acesso MCLL</div>
     <div class="login-sub">Entre com seu usuario e senha para visualizar o painel B2B.</div>
     <div class="login-field">
       <label for="login-user">Usuario</label>
