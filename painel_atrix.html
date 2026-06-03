@@ -609,6 +609,7 @@ body.is-admin .admin-only { display: flex; }
       <i class="ti ti-brand-whatsapp"></i> WhatsApp
       <span class="ntab-badge nb-blue" id="nb-wpp">0</span>
     </button>
+    <button class="ntab" id="ntab-rede" onclick="switchTab('rede')"><i class="ti ti-router"></i> Rede</button>
     <button class="ntab" onclick="switchTab('abertos')"><i class="ti ti-clock-hour-4"></i> SLA Ao Vivo</button>
     <button class="ntab" onclick="switchTab('encerrados')"><i class="ti ti-chart-bar"></i> Performance</button>
     <button class="ntab" onclick="switchTab('encerrados')"><i class="ti ti-trend-up"></i> Evolução</button>
@@ -787,6 +788,10 @@ body.is-admin .admin-only { display: flex; }
       </div>
       <div class="pfooter">ATRIX · Chamados Encerrados · <span id="ft-enc"></span></div>
     </div>
+  </div>
+
+  <div class="panel" id="panel-rede">
+    <iframe src="PAINEL_REDE.html" title="Painel Rede Backbone e Acesso" style="width:100%;height:calc(100vh - 104px);border:0;border-radius:12px;background:#0d0f14"></iframe>
   </div>
 
 </div>
@@ -1369,12 +1374,16 @@ function exportCSV(tipo){
 
 /* ─── NAV & THEME ─── */
 function switchTab(tab){
+  if(!['abertos','encerrados','rede'].includes(tab))tab='abertos';
   const isAb=tab==='abertos';
+  const isEnc=tab==='encerrados';
+  const isRede=tab==='rede';
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('ntab-'+(isAb?'ab':'enc')).classList.add('active');
+  document.getElementById('ntab-'+(isAb?'ab':isRede?'rede':'enc')).classList.add('active');
   document.getElementById('panel-abertos').classList.toggle('active',isAb);
-  document.getElementById('panel-encerrados').classList.toggle('active',!isAb);
-  const showEncControls=!isAb&&dEnc.length>0;
+  document.getElementById('panel-encerrados').classList.toggle('active',isEnc);
+  document.getElementById('panel-rede').classList.toggle('active',isRede);
+  const showEncControls=isEnc&&dEnc.length>0;
   document.getElementById('week-wrap').style.display=showEncControls?'flex':'none';
   document.getElementById('cluster-wrap').style.display=showEncControls?'flex':'none';
 }
