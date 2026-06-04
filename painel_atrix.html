@@ -1135,6 +1135,21 @@ function fmtSubstatus(v){
   if(k.includes('FECHADO'))return'Fechado';
   return s.replace(/\uFFFD+/g,'').toLocaleLowerCase('pt-BR').replace(/(^|[\s/-])([a-z0-9\u00c0-\u024f])/gi,(m,p,c)=>p+c.toLocaleUpperCase('pt-BR')).replace(/\bSla\b/g,'SLA').replace(/\bB2b\b/g,'B2B')
 }
+function fmtCausaRaiz(v){
+  const s=String(v||'').trim().replace(/\s+/g,' ');
+  if(!s)return'';
+  const k=nk(s);
+  if(k.includes('ROMPIMENTO')&&k.includes('FIBRA'))return'Rompimento de Fibra';
+  if(k.includes('NORMALIZADO')&&k.includes('INTERVEN'))return'Normalizado Sem Intervenção';
+  if(k.includes('ATENUA'))return'Ajuste de Atenuação';
+  if(k.includes('CONFIGURA'))return'Configuração';
+  if((k.includes('ELETR')||k.includes('ELTR'))&&k.includes('CLIENTE'))return'Falha Elétrica Cliente';
+  if((k.includes('ACAO')||k.includes('AOCLIENTE')||k==='AOCLIENTE')&&k.includes('CLIENTE'))return'Ação Cliente';
+  if((k.includes('ELETR')||k.includes('ELTR'))&&k.includes('POP'))return'Falha Elétrica no POP';
+  if(k.includes('DEMAIS')&&k.includes('CAUSAS')&&k.includes('ROMPIMENTO'))return'Demais Causas de Rompimento';
+  if(k.includes('SEM')&&k.includes('ACAO'))return'Sem Ação';
+  return s.replace(/\uFFFD+/g,'').replace(/�+/g,'').toLocaleLowerCase('pt-BR').replace(/(^|[\s/-])([a-z0-9\u00c0-\u024f])/gi,(m,p,c)=>p+c.toLocaleUpperCase('pt-BR')).replace(/\bPop\b/g,'POP')
+}
 function uniqueSubstatuses(values){const map=new Map();values.map(fmtSubstatus).filter(Boolean).forEach(s=>{const k=nk(s);if(!map.has(k))map.set(k,s)});return[...map.values()].sort((a,b)=>a.localeCompare(b,'pt-BR'))}
 function safeUrl(v){const raw=String(v||'').trim();if(!raw)return'';try{const u=new URL(raw,window.location&&window.location.href?window.location.href:'http://localhost/');return['http:','https:'].includes(u.protocol)?u.href:''}catch{return''}}
 function bestLink(...vals){for(const v of vals){const u=safeUrl(v);if(u)return u}return''}
@@ -1343,7 +1358,7 @@ function procEnc(raw,fname){
     const clusterCalc=String(r['cluster_calc']||'').trim();
     const cluster=normCluster(clusterCalc);
     const clusterNome=String(r['cluster']||'').trim();
-    const causaRaiz=String(r['Tipo_Encerramento']||r['Causa_Raiz']||'').trim();
+    const causaRaiz=fmtCausaRaiz(r['Tipo_Encerramento']||r['Causa_Raiz']);
     const semana=String(r['semana']||'').trim();
     const segmento=String(r['segmento_cliente']||'').trim();
     const agingRaw=String(r['aging_ccs']||'').trim();
@@ -1595,7 +1610,7 @@ function rSlaEnc(d){
 
 function rCausaEnc(d){
   const CCLR={'Rompimento de Fibra':'#ff3b30','Normalizado Sem Intervenção':'#34c759','Ajuste de Atenuação':'#ffcc00','Configuração':'#007aff','Falha Elétrica Cliente':'#ff9500','Ação Cliente':'#af52de','Falha Elétrica no POP':'#ff6b35'};
-  document.getElementById('causa-enc').innerHTML=listRows(se(cnt(d,'causaRaiz')),k=>CCLR[k]||'#8e8e93');
+  document.getElementById('causa-enc').innerHTML=listRows(se(cnt(d.map(x=>({...x,causaRaiz:fmtCausaRaiz(x.causaRaiz)})),'causaRaiz')),k=>CCLR[k]||'#8e8e93');
 }
 
 function rMeta8(d){
@@ -1662,7 +1677,7 @@ function rUfEnc(d){
 function fillFiltersEnc(){
   const allC=[...new Set(dEnc.map(d=>d.cluster).filter(Boolean))];
   const clusters=CLUSTER_ORDER.filter(c=>allC.includes(c));
-  const causas=[...new Set(dEnc.map(d=>d.causaRaiz).filter(Boolean))].sort();
+  const causas=[...new Set(dEnc.map(d=>fmtCausaRaiz(d.causaRaiz)).filter(Boolean))].sort();
   const ufs=[...new Set(dEnc.map(d=>d.uf).filter(Boolean))].sort();
   const semanas=[...new Set(dEnc.map(d=>d.semana).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
   const segs=[...new Set(dEnc.map(d=>d.segmento).filter(Boolean))].sort();
@@ -1681,7 +1696,7 @@ function gFEnc(){
   const srch=(document.getElementById('f-srch-enc').value||'').toLowerCase();
   let f=encScope();
   if(cl)f=f.filter(d=>d.cluster===cl);if(ag)f=f.filter(d=>d.faixa===ag);
-  if(ca)f=f.filter(d=>d.causaRaiz===ca);if(uf)f=f.filter(d=>d.uf===uf);
+  if(ca)f=f.filter(d=>fmtCausaRaiz(d.causaRaiz)===ca);if(uf)f=f.filter(d=>d.uf===uf);
   if(sm)f=f.filter(d=>d.semana===sm);if(sg)f=f.filter(d=>d.segmento===sg);
   if(srch)f=f.filter(d=>d.cliente.toLowerCase().includes(srch)||d.protocolo.toLowerCase().includes(srch));
   return f.slice().sort((a,b)=>typeof a[scEnc]==='number'?(a[scEnc]-b[scEnc])*sdEnc:String(a[scEnc]).localeCompare(String(b[scEnc]))*sdEnc);
@@ -1696,7 +1711,8 @@ function renderTEnc(){
     const sc=d.tempoTotal>24?'color:var(--red);font-weight:600':d.tempoTotal>8?'color:var(--orange);font-weight:600':'color:var(--green-dk);font-weight:600';
     const d8=d.dentro8h?'<span class="badge b-in">Sim</span>':'<span class="badge b-out">Não</span>';
     const ol=d.outlier24h?'<span class="badge b-red">Sim</span>':'<span style="color:var(--tx3)">—</span>';
-    return`<tr><td class="tid">${d.protocolo}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)" title="${d.cliente}">${d.cliente}</td><td>${d.uf}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${CCLR[d.cluster]||'#8e8e93'};flex-shrink:0"></span>${d.cluster}</span></td><td style="${sc}">${fh(d.tempoTotal)}</td><td><span class="badge ${bc}">${d.faixa}</span></td><td>${d8}</td><td>${ol}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.causaRaiz}">${d.causaRaiz||'—'}</td><td><span class="badge b-teal">${d.semana||'—'}</span></td></tr>`;
+    const causa=fmtCausaRaiz(d.causaRaiz);
+    return`<tr><td class="tid">${d.protocolo}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)" title="${d.cliente}">${d.cliente}</td><td>${d.uf}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${CCLR[d.cluster]||'#8e8e93'};flex-shrink:0"></span>${d.cluster}</span></td><td style="${sc}">${fh(d.tempoTotal)}</td><td><span class="badge ${bc}">${d.faixa}</span></td><td>${d8}</td><td>${ol}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${causa}">${causa||'—'}</td><td><span class="badge b-teal">${d.semana||'—'}</span></td></tr>`;
   }).join('')||'<tr><td colspan="10" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
 }
 function sEnc(c){scEnc===c?sdEnc*=-1:(scEnc=c,sdEnc=-1);renderTEnc()}
@@ -1905,7 +1921,7 @@ function exportCSV(tipo){
     data=rows.map(d=>[d.id,d.cliente,d.mop,d.cidade,d.uf,d.slaH.toFixed(2),d.faixa,d.statusSla,d.substatus]);
   }else{
     hdr=['Protocolo','Cliente','UF','Cluster','Tempo Total (h)','Faixa SLA','Dentro 8h','Outlier +24h','Causa Raiz','Semana','Segmento'];
-    data=rows.map(d=>[d.protocolo,d.cliente,d.uf,d.cluster,d.tempoTotal.toFixed(2),d.faixa,d.dentro8h?'Sim':'Não',d.outlier24h?'Sim':'Não',d.causaRaiz,d.semana,d.segmento]);
+    data=rows.map(d=>[d.protocolo,d.cliente,d.uf,d.cluster,d.tempoTotal.toFixed(2),d.faixa,d.dentro8h?'Sim':'Não',d.outlier24h?'Sim':'Não',fmtCausaRaiz(d.causaRaiz),d.semana,d.segmento]);
   }
   const csv=[hdr,...data].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
