@@ -1046,6 +1046,7 @@ async function restoreRemoteState(){
     if(!res.ok)return;
     const data=await res.json();
     if(data&&data.state&&applyState(data.state,'Base compartilhada'))saveLocalState(data.state);
+    else if(data&&data.ok&&canEdit()&&(dAb.length||dEnc.length))saveRemoteState(buildState());
   }catch(e){console.warn('Nao foi possivel carregar as bases compartilhadas:',e)}
 }
 function restoreState(){
