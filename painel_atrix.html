@@ -866,8 +866,8 @@ body.is-admin .admin-only { display: flex; }
     <div class="prow" id="prow-fuel"></div>
     <div class="g2">
       <div class="card">
-        <div class="card-hd"><span class="card-title">Projeção por técnico</span></div>
-        <div class="cw"><canvas id="ch-fuel" role="img" aria-label="Projeção de consumo por técnico">Gráfico.</canvas></div>
+        <div class="card-hd"><span class="card-title">Consumo por condutor e projeção</span></div>
+        <div class="cw"><canvas id="ch-fuel" role="img" aria-label="Consumo por condutor, projeção mensal e linha de tendência">Gráfico.</canvas></div>
       </div>
       <div class="card">
         <div class="card-hd"><span class="card-title">Resumo por status</span></div>
@@ -1702,15 +1702,23 @@ function fuelMonthProjection(){
   Object.values(by).forEach(v=>v.proj=v.atual/elapsed*nextDays);
   return Object.entries(by).sort((a,b)=>b[1].proj-a[1].proj);
 }
+function fuelNextMonthSuggestion(){return fuelMonthProjection().reduce((s,e)=>s+Number(e[1].proj||0),0)}
+function trendValues(values){
+  const n=values.length;if(!n)return[];
+  const sx=values.reduce((s,_,i)=>s+i,0),sy=values.reduce((s,v)=>s+v,0),sxy=values.reduce((s,v,i)=>s+i*v,0),sx2=values.reduce((s,_,i)=>s+i*i,0);
+  const den=n*sx2-sx*sx,a=den?(n*sxy-sx*sy)/den:0,b=(sy-a*sx)/n;
+  return values.map((_,i)=>Math.max(0,a*i+b));
+}
 function renderFuel(){
   ensureFuelData();
   const bal=fuelBalance(),levelBase=bal.total||bal.available,level=levelBase?Math.max(0,Math.min(100,bal.available/levelBase*100)):0,color=level>60?'#7ee787':level>30?'#ffcc66':'#ff6b6b';
   const totalValor=bal.spent,active=dFuelVehicles.filter(v=>v.status==='Ativo').length;
   document.getElementById('fuel-fill').style.setProperty('--fuel-level',level+'%');document.getElementById('fuel-fill').style.setProperty('--fuel-color',color);
   document.getElementById('fuel-balance-summary').innerHTML=`<div class="mc c-blue"><div class="mc-label">Saldo Geral Solicitado</div><div class="mc-val">R$ ${pp(bal.total)}</div><div class="mc-sub">aporte editável do ciclo</div></div><div class="mc c-green"><div class="mc-label">Saldo Disponível</div><div class="mc-val" style="color:${color}">R$ ${pp(bal.available)}</div><div class="mc-sub">reflete o saldo combustível/cartão</div></div>`;
-  document.getElementById('mrow-fuel').innerHTML=`<div class="mc c-blue"><div class="mc-label">Veículos</div><div class="mc-val"><b>${dFuelVehicles.length}</b></div><div class="mc-sub">${active} ativos</div></div><div class="mc c-green"><div class="mc-label">Solicitações</div><div class="mc-val" style="color:var(--green-dk)"><b>${dFuelRequests.length}</b></div><div class="mc-sub">histórico registrado</div></div><div class="mc c-orange"><div class="mc-label">Total movimentado</div><div class="mc-val" style="color:var(--orange)">R$ ${pp(bal.moved)}</div><div class="mc-sub">retiradas - solicitações</div></div><div class="mc c-red"><div class="mc-label">Retiradas</div><div class="mc-val" style="color:var(--red)">R$ ${pp(bal.withdrawn)}</div><div class="mc-sub">empréstimos/outros fins</div></div>`;
+  document.getElementById('mrow-fuel').innerHTML=`<div class="mc c-blue"><div class="mc-label">Veículos</div><div class="mc-val"><b>${dFuelVehicles.length}</b></div><div class="mc-sub">${active} ativos</div></div><div class="mc c-green"><div class="mc-label">Solicitações</div><div class="mc-val" style="color:var(--green-dk)"><b>${dFuelRequests.length}</b></div><div class="mc-sub">histórico registrado</div></div><div class="mc c-orange"><div class="mc-label">Consumido registrado</div><div class="mc-val" style="color:var(--orange)">R$ ${pp(totalValor)}</div><div class="mc-sub">total das solicitações</div></div><div class="mc c-red"><div class="mc-label">Retiradas</div><div class="mc-val" style="color:var(--red)">R$ ${pp(bal.withdrawn)}</div><div class="mc-sub">empréstimos/outros fins</div></div><div class="mc c-blue"><div class="mc-label">Total movimentado</div><div class="mc-val">R$ ${pp(bal.moved)}</div><div class="mc-sub">retiradas - solicitações</div></div>`;
   const top=fuelProjection()[0]||['-',{valor:0,litros:0,count:0}];
-  document.getElementById('prow-fuel').innerHTML=`<div class="pc"><div class="pico pi-b"><i class="ti ti-gas-station"></i></div><div><div class="pv">R$ ${pp(bal.available)}</div><div class="ps">saldo disponível</div></div></div><div class="pc"><div class="pico pi-o"><i class="ti ti-user-dollar"></i></div><div><div class="pv" style="font-size:14px">${eh(top[0])}</div><div class="ps">maior consumo R$ ${pp(top[1].valor)}</div></div></div>`;
+  const nextSuggestion=fuelNextMonthSuggestion();
+  document.getElementById('prow-fuel').innerHTML=`<div class="pc"><div class="pico pi-b"><i class="ti ti-gas-station"></i></div><div><div class="pv">R$ ${pp(bal.available)}</div><div class="ps">saldo disponível</div></div></div><div class="pc"><div class="pico pi-o"><i class="ti ti-user-dollar"></i></div><div><div class="pv" style="font-size:14px">${eh(top[0])}</div><div class="ps">maior consumo R$ ${pp(top[1].valor)}</div></div></div><div class="pc"><div class="pico pi-g"><i class="ti ti-chart-line"></i></div><div><div class="pv">R$ ${pp(nextSuggestion)}</div><div class="ps">sugestão para próximo mês</div></div></div>`;
   document.getElementById('fuel-status').innerHTML=listRows(se(cnt(dFuelVehicles,'status')),k=>({Ativo:'var(--green)',Inativo:'var(--tx3)',Oficina:'var(--orange)',Bloqueado:'var(--red)'}[k]||'var(--blue)'));
   const sel=document.getElementById('fuel-req-placa');if(sel)sel.innerHTML=dFuelVehicles.filter(v=>v.status==='Ativo').map(v=>`<option value="${eh(v.placa)}">${eh(v.placa)} - ${eh(v.condutor)}</option>`).join('');
   ['fuel-req-data','fuel-withdraw-date'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)});
@@ -1725,7 +1733,8 @@ function renderFuel(){
 function renderFuelChart(){
   const ctx=document.getElementById('ch-fuel');if(!ctx)return;if(chFuel){chFuel.destroy();chFuel=null}
   const entries=(fuelMonthProjection().length?fuelMonthProjection():fuelProjection().map(e=>[e[0],{atual:e[1].valor,proj:e[1].valor,count:e[1].count}])).slice(0,8),dk=document.body.dataset.theme==='dark';
-  chFuel=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Consumo atual R$',data:entries.map(e=>Number(e[1].atual.toFixed(2))),backgroundColor:'rgba(77,142,240,.82)',borderRadius:6},{label:'Projeção próximo mês R$',data:entries.map(e=>Number(e[1].proj.toFixed(2))),backgroundColor:'rgba(62,207,142,.72)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}}}}});
+  const trend=trendValues(entries.map(e=>Number(e[1].proj||0)));
+  chFuel=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Consumo atual R$',data:entries.map(e=>Number(e[1].atual.toFixed(2))),backgroundColor:'rgba(77,142,240,.82)',borderRadius:6},{label:'Projeção próximo mês R$',data:entries.map(e=>Number(e[1].proj.toFixed(2))),backgroundColor:'rgba(62,207,142,.72)',borderRadius:6},{type:'line',label:'Linha de tendência',data:trend.map(v=>Number(v.toFixed(2))),borderColor:'rgba(255,159,10,.95)',backgroundColor:'rgba(255,159,10,.18)',borderWidth:2,pointRadius:2,tension:.25}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}}}}});
 }
 
 /* ─── EXPORT ─── */
