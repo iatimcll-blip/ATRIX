@@ -482,8 +482,8 @@ tbody tr.row-validation:hover td { background: rgba(52,199,89,.22); }
 }
 .user-card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .user-card-title { font-size: 16px; font-weight: 700; color: var(--tx); }
-.user-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 14px; }
-.user-form input {
+.user-form { display: grid; grid-template-columns: 1fr 1fr 140px auto; gap: 8px; margin-bottom: 14px; }
+.user-form input,.user-form select {
   height: 34px; border-radius: 9px; border: .5px solid var(--bd2);
   background: var(--surface2); color: var(--tx); padding: 0 10px;
   font: inherit; font-size: 12px; outline: none;
@@ -499,6 +499,7 @@ tbody tr.row-validation:hover td { background: rgba(52,199,89,.22); }
   padding: 10px 0; border-top: .5px solid var(--bd); font-size: 12px;
 }
 .user-role { color: var(--tx3); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+@media (max-width: 680px){ .user-form { grid-template-columns: 1fr; } .user-form button { height: 34px; } }
 .admin-only { display: none; }
 body.is-admin .admin-only { display: flex; }
 
@@ -612,6 +613,10 @@ body.is-admin .admin-only { display: flex; }
     <div class="user-form">
       <input id="new-user" placeholder="Novo usuario">
       <input id="new-pass" type="password" placeholder="Senha">
+      <select id="new-role" title="Tipo de acesso">
+        <option value="viewer">Usuario</option>
+        <option value="admin">Admin</option>
+      </select>
       <button onclick="createSecondaryUser()">Criar</button>
     </div>
     <div id="users-list"></div>
@@ -856,10 +861,13 @@ let remoteSaveWarned=false;
 /* LOGIN E PERMISSOES */
 function encPass(v){return btoa(unescape(encodeURIComponent(String(v||''))))}
 function defaultAdmin(){return{username:'admin',pass:encPass('atrix@2026'),role:'admin'}}
+function normRole(role){return role==='admin'?'admin':'viewer'}
+function roleLabel(role){return normRole(role)==='admin'?'Admin - permissoes totais':'Usuario - apenas leitura'}
 function getUsers(){
   let users=[];
   try{users=JSON.parse(localStorage.getItem(USERS_KEY)||'[]')}catch{users=[]}
   if(!Array.isArray(users))users=[];
+  users=users.map(u=>({...u,role:normRole(u.role)}));
   if(!users.some(u=>u.username==='admin'))users.unshift(defaultAdmin());
   saveUsers(users);
   return users;
@@ -881,11 +889,21 @@ function showLogin(msg){
   setTimeout(()=>document.getElementById('login-user').focus(),50);
 }
 function hideLogin(){document.getElementById('login-screen').style.display='none';document.getElementById('login-error').textContent=''}
-function loginUser(ev){
+async function syncRemoteUsers(){
+  try{
+    const res=await fetch(REMOTE_STATE_API,{cache:'no-store'});
+    if(!res.ok)return false;
+    const data=await res.json();
+    if(data&&data.state&&Array.isArray(data.state.users)&&data.state.users.length){saveUsers(data.state.users);return true}
+  }catch(e){console.warn('Nao foi possivel carregar usuarios compartilhados:',e)}
+  return false;
+}
+async function loginUser(ev){
   if(ev)ev.preventDefault();
   const username=document.getElementById('login-user').value.trim();
   const pass=document.getElementById('login-pass').value;
-  const user=getUsers().find(u=>u.username.toLowerCase()===username.toLowerCase()&&u.pass===encPass(pass));
+  let user=getUsers().find(u=>u.username.toLowerCase()===username.toLowerCase()&&u.pass===encPass(pass));
+  if(!user&&await syncRemoteUsers())user=getUsers().find(u=>u.username.toLowerCase()===username.toLowerCase()&&u.pass===encPass(pass));
   if(!user){showLogin('Usuario ou senha invalidos.');return}
   currentUser=user;
   localStorage.setItem(SESSION_KEY,user.username);
@@ -915,24 +933,28 @@ function createSecondaryUser(){
   if(!canEdit())return;
   const username=document.getElementById('new-user').value.trim();
   const pass=document.getElementById('new-pass').value.trim();
+  const role=normRole(document.getElementById('new-role').value);
   if(!/^[a-z0-9._-]{3,30}$/i.test(username)){alert('Use um usuario com 3 a 30 caracteres, sem espacos.');return}
   if(pass.length<4){alert('Informe uma senha com pelo menos 4 caracteres.');return}
   const users=getUsers();
   if(users.some(u=>u.username.toLowerCase()===username.toLowerCase())){alert('Usuario ja existe.');return}
-  users.push({username,pass:encPass(pass),role:'viewer'});
+  users.push({username,pass:encPass(pass),role});
   saveUsers(users);
+  saveState();
   document.getElementById('new-user').value='';
   document.getElementById('new-pass').value='';
+  document.getElementById('new-role').value='viewer';
   renderUsers();
 }
 function deleteUser(username){
   if(!canEdit()||username==='admin')return;
   saveUsers(getUsers().filter(u=>u.username!==username));
+  saveState();
   renderUsers();
 }
 function renderUsers(){
   const users=getUsers();
-  document.getElementById('users-list').innerHTML=users.map(u=>`<div class="user-row"><div><b>${eh(u.username)}</b><div class="user-role">${u.role==='admin'?'Administrador':'Visualizacao'}</div></div>${u.username==='admin'?'<span class="user-role">fixo</span>':`<button class="mini-btn" onclick="deleteUser('${eh(u.username)}')">Excluir</button>`}</div>`).join('');
+  document.getElementById('users-list').innerHTML=users.map(u=>`<div class="user-row"><div><b>${eh(u.username)}</b><div class="user-role">${eh(roleLabel(u.role))}</div></div>${u.username==='admin'?'<span class="user-role">fixo</span>':`<button class="mini-btn" onclick="deleteUser('${eh(u.username)}')">Excluir</button>`}</div>`).join('');
 }
 
 /* ─── HELPERS ─── */
@@ -991,7 +1013,7 @@ function refreshAbTimes(){const now=new Date();dAb.forEach(d=>{d.slaH=computeSla
 function startRefresh(){if(refreshTimer)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!dAb.length)return;refreshAbTimes();renderTAb()},1000)}
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
-function buildState(){return{version:2,dAb:serializeAb(),dEnc,selWeek,selCluster,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
+function buildState(){return{version:2,dAb:serializeAb(),dEnc,users:getUsers(),selWeek,selCluster,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>({...d,rowKey:d.rowKey??i,mop:fmtMop(d.mop),substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}))}
 function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>({...d,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}))}
 function applyState(st,label){
@@ -1017,6 +1039,14 @@ function applyState(st,label){
     document.getElementById('empty-enc').style.display=dEnc.length?'none':'block';
     document.getElementById('dash-enc').style.display=dEnc.length?'block':'none';
     changed=true;
+  }
+  if(Array.isArray(st.users)&&st.users.length){
+    saveUsers(st.users);
+    if(currentUser){
+      const fresh=getUsers().find(u=>u.username===currentUser.username);
+      if(fresh)currentUser=fresh;
+    }
+    if(document.getElementById('user-panel').style.display==='flex')renderUsers();
   }
   if(changed)applyPermissions();
   return changed;
