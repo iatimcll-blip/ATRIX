@@ -257,6 +257,9 @@ body {
   background: var(--surface); border-radius: var(--rl);
   padding: 14px 16px; box-shadow: var(--shadow-sm); border: .5px solid var(--bd);
 }
+.card,.tsec,.fuel-gauge {
+  resize: both; overflow: auto; min-width: 220px; min-height: 96px; max-width: 100%;
+}
 .card-hd {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 12px;
@@ -341,7 +344,7 @@ body {
 .tsec {
   background: var(--surface); border-radius: var(--rxl);
   box-shadow: var(--shadow-sm); border: .5px solid var(--bd);
-  margin-bottom: 16px; overflow: hidden;
+  margin-bottom: 16px; overflow: auto;
 }
 .tsec-hd {
   display: flex; align-items: center; justify-content: space-between;
@@ -1661,7 +1664,7 @@ function fuelBalance(){const total=Number(fuelBalanceTotal||0),spent=fuelSpent()
 function reduceFuelCardBalance(valor){if(fuelCardBalance!==null&&fuelCardBalance!==undefined)fuelCardBalance=Math.max(0,Number(fuelCardBalance||0)-Number(valor||0))}
 function restoreFuelCardBalance(valor){if(fuelCardBalance!==null&&fuelCardBalance!==undefined)fuelCardBalance=Number(fuelCardBalance||0)+Number(valor||0)}
 function clearFuelVehicleForm(){editingFuelPlate='';['fuel-placa','fuel-modelo','fuel-ano','fuel-condutor','fuel-setor','fuel-superior'].forEach(id=>document.getElementById(id).value='');document.getElementById('fuel-status-new').value='Ativo';document.getElementById('fuel-tipo').value='Gasolina';document.getElementById('fuel-tipo-cartao').value='Próprio';document.getElementById('fuel-placa').disabled=false;document.getElementById('fuel-vehicle-action').textContent='Adicionar'}
-function editFuelVehicle(placa){if(!canEdit())return;const v=fuelVehicleByPlate(placa);if(!v.placa)return;editingFuelPlate=v.placa;document.getElementById('fuel-placa').value=v.placa;document.getElementById('fuel-placa').disabled=true;document.getElementById('fuel-modelo').value=v.modelo||'';document.getElementById('fuel-ano').value=v.ano||'';document.getElementById('fuel-condutor').value=v.condutor||'';document.getElementById('fuel-setor').value=v.setor||'';document.getElementById('fuel-superior').value=v.superior||'';document.getElementById('fuel-tipo').value=v.tipo||'Gasolina';document.getElementById('fuel-tipo-cartao').value=v.tipoCartao||'Próprio';document.getElementById('fuel-status-new').value=v.status||'Ativo';document.getElementById('fuel-vehicle-action').textContent='Salvar edição'}
+function editFuelVehicle(placa){if(!canEdit())return;const v=fuelVehicleByPlate(placa);if(!v.placa)return;editingFuelPlate=v.placa;document.getElementById('fuel-placa').value=v.placa;document.getElementById('fuel-placa').disabled=true;document.getElementById('fuel-modelo').value=v.modelo||'';document.getElementById('fuel-ano').value=v.ano||'';document.getElementById('fuel-condutor').value=v.condutor||'';document.getElementById('fuel-setor').value=v.setor||'';document.getElementById('fuel-superior').value=v.superior||'';document.getElementById('fuel-tipo').value=v.tipo||'Gasolina';document.getElementById('fuel-tipo-cartao').value=v.tipoCartao||'Próprio';document.getElementById('fuel-status-new').value=v.status||'Ativo';document.getElementById('fuel-vehicle-action').textContent='Salvar edição';document.getElementById('fuel-placa').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>document.getElementById('fuel-modelo').focus(),250)}
 function addFuelVehicle(){
   if(!canEdit())return;
   const placa=document.getElementById('fuel-placa').value.toUpperCase().trim();
@@ -1669,7 +1672,7 @@ function addFuelVehicle(){
   const item={placa,modelo:document.getElementById('fuel-modelo').value.trim(),ano:document.getElementById('fuel-ano').value.trim(),condutor:document.getElementById('fuel-condutor').value.trim(),setor:document.getElementById('fuel-setor').value.trim(),superior:document.getElementById('fuel-superior').value.trim(),tipo:document.getElementById('fuel-tipo').value,tipoCartao:document.getElementById('fuel-tipo-cartao').value,status:document.getElementById('fuel-status-new').value};
   const idx=dFuelVehicles.findIndex(v=>v.placa===placa);
   if(idx>=0&&!editingFuelPlate){alert('Placa já cadastrada. Edite o registro existente para evitar duplicidade.');return}
-  if(editingFuelPlate){const editIdx=dFuelVehicles.findIndex(v=>v.placa===editingFuelPlate);if(editIdx>=0)dFuelVehicles[editIdx]={...dFuelVehicles[editIdx],...item,placa:editingFuelPlate}}else dFuelVehicles.push(item);
+  if(editingFuelPlate){const editIdx=dFuelVehicles.findIndex(v=>v.placa===editingFuelPlate);if(editIdx>=0)dFuelVehicles[editIdx]={...dFuelVehicles[editIdx],...item,placa:editingFuelPlate};dFuelRequests=dFuelRequests.map(r=>r.placa===editingFuelPlate?{...r,condutor:item.condutor||r.condutor}:r)}else dFuelVehicles.push(item);
   clearFuelVehicleForm();
   renderFuel();saveState();
 }
