@@ -235,6 +235,10 @@ body {
   border: .5px solid var(--bd); display: flex; align-items: center; gap: 11px;
   min-width: 0; min-height: 78px;
 }
+.pc-select {
+  width: 100%; margin-top: 4px; background: var(--surface2); border: .5px solid var(--bd2);
+  border-radius: 8px; padding: 5px 8px; font-size: 11px; color: var(--tx); outline: none;
+}
 .pico {
   width: 36px; height: 36px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
@@ -539,6 +543,14 @@ body.is-admin .admin-only { display: flex; }
 .cw { position: relative; width: 100%; height: 190px; flex: 1; min-height: 180px; }
 #panel-combustivel .card { min-height: 252px; }
 #fuel-status { flex: 1; min-height: 190px; overflow: auto; }
+.fuel-driver-detail {
+  background: var(--surface); border: .5px solid var(--bd); border-radius: var(--rl);
+  box-shadow: var(--shadow-sm); margin-bottom: 16px; overflow: hidden;
+}
+.fuel-driver-summary { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; padding: 12px 16px; border-bottom: .5px solid var(--bd); }
+.fuel-driver-summary div { min-width: 0; }
+.fuel-driver-summary b { display: block; font-size: 16px; color: var(--tx); overflow-wrap: anywhere; }
+.fuel-driver-summary span { display: block; font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
 
 /* ─── WEEK INDICATOR ─── */
 .week-banner {
@@ -869,6 +881,7 @@ body.is-admin .admin-only { display: flex; }
     <div class="section-hd">Consumo de Combustíveis <span class="sh-line"></span></div>
     <div class="mrow" id="mrow-fuel"></div>
     <div class="prow" id="prow-fuel"></div>
+    <div id="fuel-driver-detail" class="fuel-driver-detail" style="display:none"></div>
     <div class="g2">
       <div class="card">
         <div class="card-hd"><span class="card-title">Consumo por condutor e projeção</span></div>
@@ -984,7 +997,7 @@ const CLUSTER_ORDER=['MA CAP','MA INT','PA CAP','PA INT','PI CAP','PI INT','AM/A
 
 let dAb=[],dEnc=[];
 let dFuelVehicles=[],dFuelRequests=[],dFuelWithdrawals=[],fuelBalanceTotal=0,fuelCardBalance=null;
-let editingFuelPlate='',editingFuelRequestId='';
+let editingFuelPlate='',editingFuelRequestId='',selectedFuelDriver='';
 let scAb='slaH',sdAb=-1,scEnc='tempoTotal',sdEnc=-1;
 let chAb=null,chEnc=null,chSem=null,chFuel=null,chFuelProj=null,chFuelTop=null;
 let selWeek='';
@@ -1707,6 +1720,17 @@ function setFuelBalance(){if(!canEdit())return;fuelBalanceTotal=Number(document.
 function setFuelCardBalance(){if(!canEdit())return;fuelCardBalance=Number(document.getElementById('fuel-card-balance').value||0);document.getElementById('fuel-card-balance').value='';renderFuel();saveState()}
 function addFuelWithdrawal(){if(!canEdit())return;const valor=Number(document.getElementById('fuel-withdraw-value').value||0);if(!valor){alert('Informe o valor da retirada.');return}dFuelWithdrawals.push({id:'WDR'+Date.now(),data:document.getElementById('fuel-withdraw-date').value||new Date().toISOString().slice(0,10),valor,reason:document.getElementById('fuel-withdraw-reason').value.trim()});reduceFuelCardBalance(valor);document.getElementById('fuel-withdraw-value').value='';document.getElementById('fuel-withdraw-reason').value='';renderFuel();saveState()}
 function fuelProjection(){const by={};dFuelRequests.forEach(r=>{const v=fuelVehicleByPlate(r.placa),name=r.condutor||v.condutor||r.placa;if(!by[name])by[name]={valor:0,count:0};by[name].valor+=Number(r.valor||0);by[name].count++});return Object.entries(by).sort((a,b)=>b[1].valor-a[1].valor)}
+function fuelDriverName(r){const v=fuelVehicleByPlate(r.placa);return r.condutor||v.condutor||r.placa||'Sem condutor'}
+function fuelDriverOptions(){return[...new Set([...dFuelVehicles.map(v=>v.condutor).filter(Boolean),...dFuelRequests.map(fuelDriverName).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'pt-BR'))}
+function onFuelDriverChange(v){selectedFuelDriver=v;renderFuelDriverDetail()}
+function renderFuelDriverDetail(){
+  const box=document.getElementById('fuel-driver-detail');if(!box)return;
+  if(!selectedFuelDriver){box.style.display='none';box.innerHTML='';return}
+  const rows=dFuelRequests.filter(r=>fuelDriverName(r)===selectedFuelDriver).slice().sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+  const total=rows.reduce((s,r)=>s+Number(r.valor||0),0),plates=[...new Set(rows.map(r=>r.placa).filter(Boolean))];
+  box.style.display='block';
+  box.innerHTML=`<div class="tsec-hd"><span class="tsec-title">Transações do condutor: ${eh(selectedFuelDriver)}</span><span id="cnt-fuel-driver" style="color:var(--tx3)">${rows.length} transações</span></div><div class="fuel-driver-summary"><div><span>Total consumido</span><b>${brl(total)}</b></div><div><span>Placas usadas</span><b>${plates.length?plates.map(eh).join(', '):'-'}</b></div><div><span>Último registro</span><b>${rows[0]?eh(rows[0].data):'-'}</b></div></div><div class="tw"><table><thead><tr><th>Data</th><th>Placa</th><th>Valor</th><th>Observação</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${eh(r.data)}</td><td class="tid">${eh(r.placa)}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(r.obs||'')}</td></tr>`).join('')||'<tr><td colspan="4" class="nores">Nenhuma transação para este condutor</td></tr>'}</tbody></table></div>`;
+}
 function fuelProjectionWindow(){
   const dates=dFuelRequests.map(r=>new Date((r.data||'')+'T00:00:00')).filter(d=>!isNaN(d));
   const ref=dates.length?new Date(Math.max(...dates)):new Date();
@@ -1736,7 +1760,9 @@ function renderFuel(){
   document.getElementById('mrow-fuel').innerHTML=`<div class="mc c-blue"><div class="mc-label">Veículos</div><div class="mc-val"><b>${dFuelVehicles.length}</b></div><div class="mc-sub">${active} ativos</div></div><div class="mc c-green"><div class="mc-label">Solicitações</div><div class="mc-val" style="color:var(--green-dk)"><b>${dFuelRequests.length}</b></div><div class="mc-sub">histórico registrado</div></div><div class="mc c-orange"><div class="mc-label">Consumido registrado</div><div class="mc-val" style="color:var(--orange)">${brl(totalValor)}</div><div class="mc-sub">total das solicitações</div></div><div class="mc c-red"><div class="mc-label">Retiradas</div><div class="mc-val" style="color:var(--red)">${brl(bal.withdrawn)}</div><div class="mc-sub">empréstimos/outros fins</div></div><div class="mc c-blue"><div class="mc-label">Total movimentado</div><div class="mc-val">${brl(bal.moved)}</div><div class="mc-sub">retiradas - solicitações</div></div>`;
   const top=fuelProjection()[0]||['-',{valor:0,litros:0,count:0}];
   const nextSuggestion=fuelNextMonthSuggestion();
-  document.getElementById('prow-fuel').innerHTML=`<div class="pc"><div class="pico pi-b"><i class="ti ti-gas-station"></i></div><div><div class="pv">${brl(bal.available)}</div><div class="ps">saldo disponível</div></div></div><div class="pc"><div class="pico pi-o"><i class="ti ti-user-dollar"></i></div><div><div class="pv" style="font-size:14px">${eh(top[0])}</div><div class="ps">maior consumo ${brl(top[1].valor)}</div></div></div><div class="pc"><div class="pico pi-g"><i class="ti ti-chart-line"></i></div><div><div class="pv">${brl(nextSuggestion)}</div><div class="ps">sugestão para próximo mês</div></div></div>`;
+  const driverOptions=fuelDriverOptions();if(selectedFuelDriver&&!driverOptions.includes(selectedFuelDriver))selectedFuelDriver='';
+  document.getElementById('prow-fuel').innerHTML=`<div class="pc"><div class="pico pi-b"><i class="ti ti-gas-station"></i></div><div><div class="pv">${brl(bal.available)}</div><div class="ps">saldo disponível</div></div></div><div class="pc"><div class="pico pi-o"><i class="ti ti-user-dollar"></i></div><div><div class="pv" style="font-size:14px">${eh(top[0])}</div><div class="ps">maior consumo ${brl(top[1].valor)}</div></div></div><div class="pc"><div class="pico pi-g"><i class="ti ti-chart-line"></i></div><div><div class="pv">${brl(nextSuggestion)}</div><div class="ps">sugestão para próximo mês</div></div></div><div class="pc"><div class="pico pi-t"><i class="ti ti-user-search"></i></div><div style="min-width:0;flex:1"><div class="pv" style="font-size:14px">Condutor</div><div class="ps">transações e datas</div><select class="pc-select" onchange="onFuelDriverChange(this.value)"><option value="">Selecionar condutor</option>${driverOptions.map(n=>`<option value="${eh(n)}"${n===selectedFuelDriver?' selected':''}>${eh(n)}</option>`).join('')}</select></div></div>`;
+  renderFuelDriverDetail();
   document.getElementById('fuel-status').innerHTML=listRows(se(cnt(dFuelVehicles,'status')),k=>({Ativo:'var(--green)',Inativo:'var(--tx3)',Oficina:'var(--orange)',Bloqueado:'var(--red)'}[k]||'var(--blue)'));
   const sel=document.getElementById('fuel-req-placa');if(sel)sel.innerHTML=dFuelVehicles.filter(v=>v.status==='Ativo').map(v=>`<option value="${eh(v.placa)}">${eh(v.placa)} - ${eh(v.condutor)}</option>`).join('');
   ['fuel-req-data','fuel-withdraw-date'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)});
