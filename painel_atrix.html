@@ -966,7 +966,7 @@ body.is-admin .admin-only { display: flex; }
 const SLA_ORDER=['Maior que 24h','Entre 12h e 24h','Entre 8h e 12h','Entre 4h e 8h','Ate 4h'];
 const SLA_CLR={'Maior que 24h':'#ff3b30','Entre 12h e 24h':'#ff9500','Entre 8h e 12h':'#ffcc00','Entre 4h e 8h':'#34c759','Ate 4h':'#007aff'};
 const SLA_BADGE={'Maior que 24h':'b-red','Entre 12h e 24h':'b-orange','Entre 8h e 12h':'b-yellow','Entre 4h e 8h':'b-green','Ate 4h':'b-blue'};
-const AGING_MAP={'Maior que 24h':'Maior que 24h','Entre 12h e 24h':'Entre 12h e 24h','Entre 8h e 12h':'Entre 8h e 12h','Entre 4h e 8h':'Entre 4h e 8h','Ate 4h':'Ate 4h','At? 4h':'Ate 4h'};
+const AGING_MAP={'Maior que 24h':'Maior que 24h','Entre 12h e 24h':'Entre 12h e 24h','Entre 8h e 12h':'Entre 8h e 12h','Entre 4h e 8h':'Entre 4h e 8h','Ate 4h':'Ate 4h','Até 4h':'Ate 4h'};
 const MOP_CLR={'SLN MA':'#007aff','GIGA+ MA':'#34c759','SLN PA':'#af52de','GIGA+ PI':'#ff6b35','ADX':'#8e8e93'};
 const MOP_QUICK=['GIGA+ PI','GIGA+ MA','SLN MA','SLN PA','ADX'];
 const FUEL_STATUS=['Ativo','Inativo','Oficina','Bloqueado'];
@@ -1119,7 +1119,7 @@ function fh(h){const hh=Math.floor(h),mm=Math.round((h-hh)*60);return hh+'h '+(m
 function fd(h){const total=Math.max(0,Math.floor((Number(h)||0)*3600));const hh=Math.floor(total/3600),mm=Math.floor(total%3600/60),ss=total%60;return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0')}
 function cf(h){if(h>24)return SLA_ORDER[0];if(h>12)return SLA_ORDER[1];if(h>8)return SLA_ORDER[2];if(h>4)return SLA_ORDER[3];return SLA_ORDER[4]}
 function nk(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toUpperCase()}
-function eh(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function eh(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function fmtSubstatus(v){const s=String(v||'').trim().replace(/\s+/g,' ');if(!s)return'';return s.toLocaleLowerCase('pt-BR').replace(/(^|[\s/-])([a-z0-9\u00c0-\u024f])/gi,(m,p,c)=>p+c.toLocaleUpperCase('pt-BR')).replace(/\bSla\b/g,'SLA').replace(/\bB2b\b/g,'B2B')}
 function uniqueSubstatuses(values){const map=new Map();values.map(fmtSubstatus).filter(Boolean).forEach(s=>{const k=nk(s);if(!map.has(k))map.set(k,s)});return[...map.values()].sort((a,b)=>a.localeCompare(b,'pt-BR'))}
 function safeUrl(v){const raw=String(v||'').trim();if(!raw)return'';try{const u=new URL(raw,window.location&&window.location.href?window.location.href:'http://localhost/');return['http:','https:'].includes(u.protocol)?u.href:''}catch{return''}}
@@ -1724,16 +1724,17 @@ function deleteFuelVehicle(){
 }
 function updateFuelStatus(placa,status){if(!canEdit())return;const v=fuelVehicleByPlate(placa);if(!v.placa)return;v.status=FUEL_STATUS.includes(status)?status:'Ativo';renderFuel();saveState()}
 function updateFuelCardType(placa,tipoCartao){if(!canEdit())return;const v=fuelVehicleByPlate(placa);if(!v.placa)return;v.tipoCartao=tipoCartao==='Coringa'?'Coringa':'Próprio';renderFuel();saveState()}
-function clearFuelRequestForm(){editingFuelRequestId='';document.getElementById('fuel-req-data').value=new Date().toISOString().slice(0,10);document.getElementById('fuel-req-valor').value='';document.getElementById('fuel-req-obs').value='';document.getElementById('fuel-request-action').textContent='Registrar'}
+function clearFuelRequestForm(){editingFuelRequestId='';document.getElementById('fuel-req-placa').value='';document.getElementById('fuel-req-data').value='';document.getElementById('fuel-req-valor').value='';document.getElementById('fuel-req-obs').value='';document.getElementById('fuel-request-action').textContent='Registrar'}
 function editFuelRequest(id){if(!canEdit())return;const r=dFuelRequests.find(x=>x.id===id);if(!r)return;editingFuelRequestId=id;document.getElementById('fuel-req-placa').value=r.placa;document.getElementById('fuel-req-data').value=r.data;document.getElementById('fuel-req-valor').value=r.valor;document.getElementById('fuel-req-obs').value=r.obs||'';document.getElementById('fuel-request-action').textContent='Salvar edição'}
 function deleteFuelRequest(id){if(!canEdit())return;if(!confirm('Excluir esta solicitação?'))return;const old=dFuelRequests.find(r=>r.id===id);restoreFuelCardBalance(old&&old.valor);dFuelRequests=dFuelRequests.filter(r=>r.id!==id);clearFuelRequestForm();renderFuel();saveState()}
 function addFuelRequest(){
   if(!canEdit())return;
   const placa=document.getElementById('fuel-req-placa').value;
+  const data=document.getElementById('fuel-req-data').value;
   const valor=Number(document.getElementById('fuel-req-valor').value||0);
-  if(!placa||!valor){alert('Informe placa e valor da solicitação.');return}
+  if(!placa||!data||!valor){alert('Informe placa, data e valor da solicitação.');return}
   const v=fuelVehicleByPlate(placa);
-  const item={id:editingFuelRequestId||('REQ'+Date.now()),data:document.getElementById('fuel-req-data').value||new Date().toISOString().slice(0,10),placa,condutor:v.condutor||'',valor,obs:document.getElementById('fuel-req-obs').value.trim()};
+  const item={id:editingFuelRequestId||('REQ'+Date.now()),data,placa,condutor:v.condutor||'',valor,obs:document.getElementById('fuel-req-obs').value.trim()};
   if(editingFuelRequestId){const idx=dFuelRequests.findIndex(r=>r.id===editingFuelRequestId);if(idx>=0){const prev=Number(dFuelRequests[idx].valor||0);dFuelRequests[idx]=item;reduceFuelCardBalance(valor-prev)}}else{dFuelRequests.push(item);reduceFuelCardBalance(valor)}
   clearFuelRequestForm();
   renderFuel();saveState();
@@ -1753,7 +1754,7 @@ function parseCsvRows(text){
   return lines.slice(1).map(line=>{const cols=csvSplit(line),row={};head.forEach((h,i)=>row[h]=cols[i]??'');return row});
 }
 function moneyBR(v){
-  const s=String(v??'').trim().replace(/\./g,'').replace(',','.');
+  const s=String(v||'').trim().replace(/\./g,'').replace(',','.');
   const n=Number(s);return Number.isFinite(n)?n:0;
 }
 function aleloDate(v){
@@ -1851,8 +1852,8 @@ function renderFuel(){
   document.getElementById('prow-fuel').innerHTML=`<div class="pc"><div class="pico pi-b"><i class="ti ti-gas-station"></i></div><div><div class="pv">${brl(bal.available)}</div><div class="ps">saldo disponível</div></div></div><div class="pc"><div class="pico pi-o"><i class="ti ti-user-dollar"></i></div><div><div class="pv" style="font-size:14px">${eh(top[0])}</div><div class="ps">maior consumo ${brl(top[1].valor)}</div></div></div><div class="pc"><div class="pico pi-g"><i class="ti ti-chart-line"></i></div><div><div class="pv">${brl(nextSuggestion)}</div><div class="ps">sugestão para próximo mês</div></div></div><div class="pc"><div class="pico pi-t"><i class="ti ti-user-search"></i></div><div style="min-width:0;flex:1"><div class="pv" style="font-size:14px">Condutor</div><div class="ps">transações e datas</div><select class="pc-select" onchange="onFuelDriverChange(this.value)"><option value="">Selecionar condutor</option>${driverOptions.map(n=>`<option value="${eh(n)}"${n===selectedFuelDriver?' selected':''}>${eh(n)}</option>`).join('')}</select></div></div>`;
   renderFuelDriverDetail();
   document.getElementById('fuel-status').innerHTML=listRows(se(cnt(dFuelVehicles,'status')),k=>({Ativo:'var(--green)',Inativo:'var(--tx3)',Oficina:'var(--orange)',Bloqueado:'var(--red)'}[k]||'var(--blue)'));
-  const sel=document.getElementById('fuel-req-placa');if(sel)sel.innerHTML=dFuelVehicles.filter(v=>v.status==='Ativo').map(v=>`<option value="${eh(v.placa)}">${eh(v.placa)} - ${eh(v.condutor)}</option>`).join('');
-  ['fuel-req-data','fuel-withdraw-date'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)});
+  const sel=document.getElementById('fuel-req-placa');if(sel){const cur=sel.value;sel.innerHTML='<option value="">Selecionar placa</option>'+dFuelVehicles.filter(v=>v.status==='Ativo').map(v=>`<option value="${eh(v.placa)}">${eh(v.placa)} - ${eh(v.condutor)}</option>`).join('');sel.value=[...sel.options].some(o=>o.value===cur)?cur:''}
+  ['fuel-withdraw-date'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)});
   document.getElementById('cnt-fuel-v').textContent=dFuelVehicles.length+' veículos';
   document.getElementById('tb-fuel-v').innerHTML=dFuelVehicles.map(v=>`<tr><td class="tid">${eh(v.placa)}</td><td>${eh(v.modelo)}</td><td>${eh(v.ano)}</td><td>${eh(v.condutor)}</td><td>${eh(v.setor)}</td><td>${eh(v.superior)}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelCardType('${eh(v.placa)}',this.value)"><option value="Próprio"${(v.tipoCartao||'Próprio')==='Próprio'?' selected':''}>Próprio</option><option value="Coringa"${v.tipoCartao==='Coringa'?' selected':''}>Coringa</option></select>`:eh(v.tipoCartao||'Próprio')}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelStatus('${eh(v.placa)}',this.value)">${FUEL_STATUS.map(s=>`<option value="${s}"${s===v.status?' selected':''}>${s}</option>`).join('')}</select>`:eh(v.status)}</td><td class="admin-only"><span class="card-action" onclick="editFuelVehicle('${eh(v.placa)}')">Editar</span></td></tr>`).join('');
   document.getElementById('cnt-fuel-r').textContent=validRequests.length+' solicitações';
