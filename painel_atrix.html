@@ -257,10 +257,6 @@ body {
   background: var(--surface); border-radius: var(--rl);
   padding: 14px 16px; box-shadow: var(--shadow-sm); border: .5px solid var(--bd);
 }
-.card,.tsec,.fuel-gauge,.mc,.pc {
-  resize: both; overflow: auto; min-width: 220px; min-height: 96px; max-width: 100%;
-}
-.mc,.pc { min-width: 160px; min-height: 74px; }
 .card-hd {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 12px;
@@ -345,7 +341,7 @@ body {
 .tsec {
   background: var(--surface); border-radius: var(--rxl);
   box-shadow: var(--shadow-sm); border: .5px solid var(--bd);
-  margin-bottom: 16px; overflow: auto;
+  margin-bottom: 16px; overflow: hidden;
 }
 .tsec-hd {
   display: flex; align-items: center; justify-content: space-between;
@@ -877,6 +873,10 @@ body.is-admin .admin-only { display: flex; }
         <div class="card-hd"><span class="card-title">Resumo por status</span></div>
         <div id="fuel-status"></div>
       </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Projeção mês atual x próximo</span></div>
+        <div class="cw"><canvas id="ch-fuel-proj" role="img" aria-label="Projeção de consumo do mês atual para o próximo mês">Gráfico.</canvas></div>
+      </div>
     </div>
     <div class="tsec admin-only">
       <div class="tsec-hd"><span class="tsec-title">Saldo de combustível</span></div>
@@ -977,7 +977,7 @@ let dAb=[],dEnc=[];
 let dFuelVehicles=[],dFuelRequests=[],dFuelWithdrawals=[],fuelBalanceTotal=0,fuelCardBalance=null;
 let editingFuelPlate='',editingFuelRequestId='';
 let scAb='slaH',sdAb=-1,scEnc='tempoTotal',sdEnc=-1;
-let chAb=null,chEnc=null,chSem=null,chFuel=null;
+let chAb=null,chEnc=null,chSem=null,chFuel=null,chFuelProj=null;
 let selWeek='';
 let selCluster='';
 let refreshTimer=null;
@@ -1109,6 +1109,7 @@ function now2(){const n=new Date();return n.toLocaleDateString('pt-BR')+' '+n.to
 function normCluster(c){return(c==='AM INT'||c==='AP')?'AM/AP':c}
 function encBucket(h){if(h>24)return'outlier';if(h>8)return'intermediario';return'prazo'}
 function pp(v){return v.toFixed(1).replace('.',',')}
+function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2})}
 function encRuleStats(d){
   const total=d.length||0;
   const prazo=d.filter(x=>encBucket(x.tempoTotal)==='prazo').length;
@@ -1661,7 +1662,7 @@ function ensureFuelData(){
 function fuelVehicleByPlate(placa){const k=String(placa||'').toUpperCase().trim();return dFuelVehicles.find(v=>v.placa===k)||{}}
 function fuelSpent(){return dFuelRequests.reduce((s,r)=>s+Number(r.valor||0),0)}
 function fuelWithdrawn(){return dFuelWithdrawals.reduce((s,r)=>s+Number(r.valor||0),0)}
-function fuelBalance(){const total=Number(fuelBalanceTotal||0),spent=fuelSpent(),withdrawn=fuelWithdrawn(),moved=spent+withdrawn,computed=Math.max(0,total-moved),available=fuelCardBalance===null||fuelCardBalance===undefined?computed:Math.max(0,Number(fuelCardBalance||0));return{total,spent,withdrawn,moved,available,computed,manual:fuelCardBalance!==null&&fuelCardBalance!==undefined}}
+function fuelBalance(){const total=Number(fuelBalanceTotal||0),spent=fuelSpent(),withdrawn=fuelWithdrawn(),moved=withdrawn-spent,computed=Math.max(0,total-spent-withdrawn),available=fuelCardBalance===null||fuelCardBalance===undefined?computed:Math.max(0,Number(fuelCardBalance||0));return{total,spent,withdrawn,moved,available,computed,manual:fuelCardBalance!==null&&fuelCardBalance!==undefined}}
 function reduceFuelCardBalance(valor){if(fuelCardBalance!==null&&fuelCardBalance!==undefined)fuelCardBalance=Math.max(0,Number(fuelCardBalance||0)-Number(valor||0))}
 function restoreFuelCardBalance(valor){if(fuelCardBalance!==null&&fuelCardBalance!==undefined)fuelCardBalance=Number(fuelCardBalance||0)+Number(valor||0)}
 function clearFuelVehicleForm(){editingFuelPlate='';['fuel-placa','fuel-modelo','fuel-ano','fuel-condutor','fuel-setor','fuel-superior'].forEach(id=>document.getElementById(id).value='');document.getElementById('fuel-status-new').value='Ativo';document.getElementById('fuel-tipo').value='Gasolina';document.getElementById('fuel-tipo-cartao').value='Próprio';document.getElementById('fuel-placa').disabled=false;document.getElementById('fuel-vehicle-action').textContent='Adicionar'}
@@ -1697,16 +1698,20 @@ function setFuelBalance(){if(!canEdit())return;fuelBalanceTotal=Number(document.
 function setFuelCardBalance(){if(!canEdit())return;fuelCardBalance=Number(document.getElementById('fuel-card-balance').value||0);document.getElementById('fuel-card-balance').value='';renderFuel();saveState()}
 function addFuelWithdrawal(){if(!canEdit())return;const valor=Number(document.getElementById('fuel-withdraw-value').value||0);if(!valor){alert('Informe o valor da retirada.');return}dFuelWithdrawals.push({id:'WDR'+Date.now(),data:document.getElementById('fuel-withdraw-date').value||new Date().toISOString().slice(0,10),valor,reason:document.getElementById('fuel-withdraw-reason').value.trim()});reduceFuelCardBalance(valor);document.getElementById('fuel-withdraw-value').value='';document.getElementById('fuel-withdraw-reason').value='';renderFuel();saveState()}
 function fuelProjection(){const by={};dFuelRequests.forEach(r=>{const v=fuelVehicleByPlate(r.placa),name=r.condutor||v.condutor||r.placa;if(!by[name])by[name]={valor:0,count:0};by[name].valor+=Number(r.valor||0);by[name].count++});return Object.entries(by).sort((a,b)=>b[1].valor-a[1].valor)}
-function fuelMonthProjection(){
+function fuelProjectionWindow(){
   const dates=dFuelRequests.map(r=>new Date((r.data||'')+'T00:00:00')).filter(d=>!isNaN(d));
   const ref=dates.length?new Date(Math.max(...dates)):new Date();
   const y=ref.getFullYear(),m=ref.getMonth(),elapsed=Math.max(1,...dates.filter(d=>d.getFullYear()===y&&d.getMonth()===m).map(d=>d.getDate()));
-  const nextDays=new Date(y,m+2,0).getDate(),by={};
-  dFuelRequests.forEach(r=>{const d=new Date((r.data||'')+'T00:00:00');if(isNaN(d)||d.getFullYear()!==y||d.getMonth()!==m)return;const v=fuelVehicleByPlate(r.placa),name=r.condutor||v.condutor||r.placa;if(!by[name])by[name]={atual:0,proj:0,count:0};by[name].atual+=Number(r.valor||0);by[name].count++});
-  Object.values(by).forEach(v=>v.proj=v.atual/elapsed*nextDays);
-  return Object.entries(by).sort((a,b)=>b[1].proj-a[1].proj);
+  return{y,m,elapsed,nextDays:new Date(y,m+2,0).getDate()};
 }
-function fuelNextMonthSuggestion(){return fuelMonthProjection().reduce((s,e)=>s+Number(e[1].proj||0),0)}
+function fuelMonthProjection(){
+  const win=fuelProjectionWindow(),by={};
+  dFuelVehicles.forEach(v=>{by[v.placa]={label:`${v.placa} - ${v.condutor||'Sem condutor'}`,placa:v.placa,atual:0,proj:0,count:0}});
+  dFuelRequests.forEach(r=>{const d=new Date((r.data||'')+'T00:00:00');if(isNaN(d)||d.getFullYear()!==win.y||d.getMonth()!==win.m)return;const placa=String(r.placa||'').toUpperCase().trim();if(!by[placa])by[placa]={label:`${placa} - ${r.condutor||'Sem condutor'}`,placa,atual:0,proj:0,count:0};by[placa].atual+=Number(r.valor||0);by[placa].count++});
+  Object.values(by).forEach(v=>v.proj=v.atual/win.elapsed*win.nextDays);
+  return Object.values(by).sort((a,b)=>a.atual-b.atual||a.proj-b.proj||a.label.localeCompare(b.label));
+}
+function fuelNextMonthSuggestion(){return fuelMonthProjection().reduce((s,e)=>s+Number(e.proj||0),0)}
 function trendValues(values){
   const n=values.length;if(!n)return[];
   const sx=values.reduce((s,_,i)=>s+i,0),sy=values.reduce((s,v)=>s+v,0),sxy=values.reduce((s,v,i)=>s+i*v,0),sx2=values.reduce((s,_,i)=>s+i*i,0);
@@ -1718,27 +1723,34 @@ function renderFuel(){
   const bal=fuelBalance(),levelBase=bal.total||bal.available,level=levelBase?Math.max(0,Math.min(100,bal.available/levelBase*100)):0,color=level>60?'#7ee787':level>30?'#ffcc66':'#ff6b6b';
   const totalValor=bal.spent,active=dFuelVehicles.filter(v=>v.status==='Ativo').length;
   document.getElementById('fuel-fill').style.setProperty('--fuel-level',level+'%');document.getElementById('fuel-fill').style.setProperty('--fuel-color',color);
-  document.getElementById('fuel-balance-summary').innerHTML=`<div class="mc c-blue"><div class="mc-label">Saldo Geral Solicitado</div><div class="mc-val">R$ ${pp(bal.total)}</div><div class="mc-sub">aporte editável do ciclo</div></div><div class="mc c-green"><div class="mc-label">Saldo Disponível</div><div class="mc-val" style="color:${color}">R$ ${pp(bal.available)}</div><div class="mc-sub">reflete o saldo combustível/cartão</div></div>`;
-  document.getElementById('mrow-fuel').innerHTML=`<div class="mc c-blue"><div class="mc-label">Veículos</div><div class="mc-val"><b>${dFuelVehicles.length}</b></div><div class="mc-sub">${active} ativos</div></div><div class="mc c-green"><div class="mc-label">Solicitações</div><div class="mc-val" style="color:var(--green-dk)"><b>${dFuelRequests.length}</b></div><div class="mc-sub">histórico registrado</div></div><div class="mc c-orange"><div class="mc-label">Consumido registrado</div><div class="mc-val" style="color:var(--orange)">R$ ${pp(totalValor)}</div><div class="mc-sub">total das solicitações</div></div><div class="mc c-red"><div class="mc-label">Retiradas</div><div class="mc-val" style="color:var(--red)">R$ ${pp(bal.withdrawn)}</div><div class="mc-sub">empréstimos/outros fins</div></div><div class="mc c-blue"><div class="mc-label">Total movimentado</div><div class="mc-val">R$ ${pp(bal.moved)}</div><div class="mc-sub">solicitações + retiradas</div></div>`;
+  document.getElementById('fuel-balance-summary').innerHTML=`<div class="mc c-blue"><div class="mc-label">Saldo Geral Solicitado</div><div class="mc-val">${brl(bal.total)}</div><div class="mc-sub">aporte editável do ciclo</div></div><div class="mc c-green"><div class="mc-label">Saldo Disponível</div><div class="mc-val" style="color:${color}">${brl(bal.available)}</div><div class="mc-sub">reflete o saldo combustível/cartão</div></div>`;
+  document.getElementById('mrow-fuel').innerHTML=`<div class="mc c-blue"><div class="mc-label">Veículos</div><div class="mc-val"><b>${dFuelVehicles.length}</b></div><div class="mc-sub">${active} ativos</div></div><div class="mc c-green"><div class="mc-label">Solicitações</div><div class="mc-val" style="color:var(--green-dk)"><b>${dFuelRequests.length}</b></div><div class="mc-sub">histórico registrado</div></div><div class="mc c-orange"><div class="mc-label">Consumido registrado</div><div class="mc-val" style="color:var(--orange)">${brl(totalValor)}</div><div class="mc-sub">total das solicitações</div></div><div class="mc c-red"><div class="mc-label">Retiradas</div><div class="mc-val" style="color:var(--red)">${brl(bal.withdrawn)}</div><div class="mc-sub">empréstimos/outros fins</div></div><div class="mc c-blue"><div class="mc-label">Total movimentado</div><div class="mc-val">${brl(bal.moved)}</div><div class="mc-sub">retiradas - solicitações</div></div>`;
   const top=fuelProjection()[0]||['-',{valor:0,litros:0,count:0}];
   const nextSuggestion=fuelNextMonthSuggestion();
-  document.getElementById('prow-fuel').innerHTML=`<div class="pc"><div class="pico pi-b"><i class="ti ti-gas-station"></i></div><div><div class="pv">R$ ${pp(bal.available)}</div><div class="ps">saldo disponível</div></div></div><div class="pc"><div class="pico pi-o"><i class="ti ti-user-dollar"></i></div><div><div class="pv" style="font-size:14px">${eh(top[0])}</div><div class="ps">maior consumo R$ ${pp(top[1].valor)}</div></div></div><div class="pc"><div class="pico pi-g"><i class="ti ti-chart-line"></i></div><div><div class="pv">R$ ${pp(nextSuggestion)}</div><div class="ps">sugestão para próximo mês</div></div></div>`;
+  document.getElementById('prow-fuel').innerHTML=`<div class="pc"><div class="pico pi-b"><i class="ti ti-gas-station"></i></div><div><div class="pv">${brl(bal.available)}</div><div class="ps">saldo disponível</div></div></div><div class="pc"><div class="pico pi-o"><i class="ti ti-user-dollar"></i></div><div><div class="pv" style="font-size:14px">${eh(top[0])}</div><div class="ps">maior consumo ${brl(top[1].valor)}</div></div></div><div class="pc"><div class="pico pi-g"><i class="ti ti-chart-line"></i></div><div><div class="pv">${brl(nextSuggestion)}</div><div class="ps">sugestão para próximo mês</div></div></div>`;
   document.getElementById('fuel-status').innerHTML=listRows(se(cnt(dFuelVehicles,'status')),k=>({Ativo:'var(--green)',Inativo:'var(--tx3)',Oficina:'var(--orange)',Bloqueado:'var(--red)'}[k]||'var(--blue)'));
   const sel=document.getElementById('fuel-req-placa');if(sel)sel.innerHTML=dFuelVehicles.filter(v=>v.status==='Ativo').map(v=>`<option value="${eh(v.placa)}">${eh(v.placa)} - ${eh(v.condutor)}</option>`).join('');
   ['fuel-req-data','fuel-withdraw-date'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)});
   document.getElementById('cnt-fuel-v').textContent=dFuelVehicles.length+' veículos';
   document.getElementById('tb-fuel-v').innerHTML=dFuelVehicles.map(v=>`<tr><td class="tid">${eh(v.placa)}</td><td>${eh(v.modelo)}</td><td>${eh(v.ano)}</td><td>${eh(v.condutor)}</td><td>${eh(v.setor)}</td><td>${eh(v.superior)}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelCardType('${eh(v.placa)}',this.value)"><option value="Próprio"${(v.tipoCartao||'Próprio')==='Próprio'?' selected':''}>Próprio</option><option value="Coringa"${v.tipoCartao==='Coringa'?' selected':''}>Coringa</option></select>`:eh(v.tipoCartao||'Próprio')}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelStatus('${eh(v.placa)}',this.value)">${FUEL_STATUS.map(s=>`<option value="${s}"${s===v.status?' selected':''}>${s}</option>`).join('')}</select>`:eh(v.status)}</td><td class="admin-only"><span class="card-action" onclick="editFuelVehicle('${eh(v.placa)}')">Editar</span></td></tr>`).join('');
   document.getElementById('cnt-fuel-r').textContent=dFuelRequests.length+' solicitações';
-  document.getElementById('tb-fuel-r').innerHTML=dFuelRequests.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td class="tid">${eh(r.placa)}</td><td>${eh(r.condutor||fuelVehicleByPlate(r.placa).condutor||'-')}</td><td>R$ ${pp(Number(r.valor||0))}</td><td>${eh(r.obs||'')}</td><td class="admin-only"><span class="card-action" onclick="editFuelRequest('${eh(r.id)}')">Editar</span><span class="card-action" onclick="deleteFuelRequest('${eh(r.id)}')">Excluir</span></td></tr>`).join('')||'<tr><td colspan="6" class="nores">Nenhuma solicitação registrada</td></tr>';
+  document.getElementById('tb-fuel-r').innerHTML=dFuelRequests.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td class="tid">${eh(r.placa)}</td><td>${eh(r.condutor||fuelVehicleByPlate(r.placa).condutor||'-')}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(r.obs||'')}</td><td class="admin-only"><span class="card-action" onclick="editFuelRequest('${eh(r.id)}')">Editar</span><span class="card-action" onclick="deleteFuelRequest('${eh(r.id)}')">Excluir</span></td></tr>`).join('')||'<tr><td colspan="6" class="nores">Nenhuma solicitação registrada</td></tr>';
   document.getElementById('cnt-fuel-w').textContent=dFuelWithdrawals.length+' retiradas';
-  document.getElementById('tb-fuel-w').innerHTML=dFuelWithdrawals.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td>R$ ${pp(Number(r.valor||0))}</td><td>${eh(r.reason||'')}</td></tr>`).join('')||'<tr><td colspan="3" class="nores">Nenhuma retirada registrada</td></tr>';
+  document.getElementById('tb-fuel-w').innerHTML=dFuelWithdrawals.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(r.reason||'')}</td></tr>`).join('')||'<tr><td colspan="3" class="nores">Nenhuma retirada registrada</td></tr>';
   renderFuelChart();
 }
 function renderFuelChart(){
   const ctx=document.getElementById('ch-fuel');if(!ctx)return;if(chFuel){chFuel.destroy();chFuel=null}
-  const entries=(fuelMonthProjection().length?fuelMonthProjection():fuelProjection().map(e=>[e[0],{atual:e[1].valor,proj:e[1].valor,count:e[1].count}])).slice(0,8),dk=document.body.dataset.theme==='dark';
-  const trend=trendValues(entries.map(e=>Number(e[1].proj||0)));
-  chFuel=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Consumo atual R$',data:entries.map(e=>Number(e[1].atual.toFixed(2))),backgroundColor:'rgba(77,142,240,.82)',borderRadius:6},{label:'Projeção próximo mês R$',data:entries.map(e=>Number(e[1].proj.toFixed(2))),backgroundColor:'rgba(62,207,142,.72)',borderRadius:6},{type:'line',label:'Linha de tendência',data:trend.map(v=>Number(v.toFixed(2))),borderColor:'rgba(255,159,10,.95)',backgroundColor:'rgba(255,159,10,.18)',borderWidth:2,pointRadius:2,tension:.25}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}}}}});
+  const entries=fuelMonthProjection(),dk=document.body.dataset.theme==='dark';
+  const trend=trendValues(entries.map(e=>Number(e.proj||0)));
+  const moneyTick=v=>brl(Number(v));
+  chFuel=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e.label),datasets:[{label:'Consumo atual R$',data:entries.map(e=>Number(e.atual.toFixed(2))),backgroundColor:'rgba(77,142,240,.82)',borderRadius:6},{label:'Projeção próximo mês R$',data:entries.map(e=>Number(e.proj.toFixed(2))),backgroundColor:'rgba(62,207,142,.72)',borderRadius:6},{type:'line',label:'Linha de tendência',data:trend.map(v=>Number(v.toFixed(2))),borderColor:'rgba(255,159,10,.95)',backgroundColor:'rgba(255,159,10,.18)',borderWidth:2,pointRadius:2,tension:.25}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${brl(c.parsed.y||0)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',callback:moneyTick}}}}});
+  renderFuelProjectionChart();
+}
+function renderFuelProjectionChart(){
+  const ctx=document.getElementById('ch-fuel-proj');if(!ctx)return;if(chFuelProj){chFuelProj.destroy();chFuelProj=null}
+  const entries=fuelMonthProjection(),dk=document.body.dataset.theme==='dark',current=entries.reduce((s,e)=>s+Number(e.atual||0),0),next=entries.reduce((s,e)=>s+Number(e.proj||0),0);
+  chFuelProj=new Chart(ctx,{type:'line',data:{labels:['Mês atual','Próximo mês'],datasets:[{label:'Projeção mensal',data:[Number(current.toFixed(2)),Number(next.toFixed(2))],borderColor:'rgba(62,207,142,.95)',backgroundColor:'rgba(62,207,142,.18)',fill:true,borderWidth:2,pointRadius:4,tension:.25}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${brl(c.parsed.y||0)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:dk?'#8e8e93':'#636366'}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',callback:v=>brl(Number(v))}}}}});
 }
 
 /* ─── EXPORT ─── */
@@ -1780,7 +1792,7 @@ function toggleTheme(){
   const dk=document.body.dataset.theme==='dark';
   document.body.dataset.theme=dk?'light':'dark';
   document.getElementById('ti-icon').className=dk?'ti ti-moon':'ti ti-sun';
-  setTimeout(()=>{if(chAb)rChAb();if(chEnc&&dEnc.length)rChEnc(encScope());if(chSem&&dEnc.length)rChSem();if(chFuel)renderFuelChart();},60);
+  setTimeout(()=>{if(chAb)rChAb();if(chEnc&&dEnc.length)rChEnc(encScope());if(chSem&&dEnc.length)rChSem();if(chFuel||chFuelProj)renderFuelChart();},60);
 }
 initAuth();renderFuel();
 </script>
