@@ -312,28 +312,34 @@ function nk(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,
 function gv(r,cols){const m=Object.fromEntries(Object.keys(r).map(k=>[nk(k),k]));for(const c of cols){const k=m[nk(c)];if(k&&r[k]!==undefined&&r[k]!=='')return r[k]}return''}
 function num(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number')return v;return parseFloat(String(v).replace(',','.').replace(/[^\d.-]/g,''))||0}
 function boolish(v){const s=nk(v);return v===1||v===true||['SIM','S','TRUE','YES','Y','1','NO PRAZO','DENTRO PRAZO','DENTRO SLA'].includes(s)}
-function clusterCode(v){const s=nk(v);if(s.includes('CAP'))return'C';if(s.includes('NORTE')||s==='N'||s.includes('AM')||s.includes('PA'))return'N';if(s.includes('PI')||s.includes('PIAUI')||s==='P')return'P';if(s.includes('INT')||s.includes('INTERIOR')||s==='I'||s.includes('MA'))return'I';return'I'}
+function parseDateBR(v){if(v instanceof Date&&!isNaN(v))return v;if(typeof v==='number'&&isFinite(v)){const d=new Date(Math.round((v-25569)*86400*1000));return isNaN(d)?null:d}const raw=String(v||'').trim();if(!raw)return null;const d=new Date(raw);if(!isNaN(d))return d;const m=raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);if(!m)return null;const y=Number(m[3].length===2?'20'+m[3]:m[3]);const x=new Date(y,Number(m[2])-1,Number(m[1]),Number(m[4]||0),Number(m[5]||0),Number(m[6]||0));return isNaN(x)?null:x}
+function isoWeek(d){if(!d)return 0;const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=x.getUTCDay()||7;x.setUTCDate(x.getUTCDate()+4-day);const y0=new Date(Date.UTC(x.getUTCFullYear(),0,1));return Math.ceil((((x-y0)/86400000)+1)/7)}
+function clusterCode(v){const s=nk(v);if(s.includes('CAP'))return'C';if(s.includes('NORTE')||s==='N'||s.includes('AM')||s.includes('AP')||s.includes('PA'))return'N';if(s.includes('PI')||s.includes('PIAUI')||s==='P'||s.includes('C31'))return'P';if(s.includes('INT')||s.includes('INTERIOR')||s==='I'||s.includes('MA')||s.includes('MARANHAO')||s.includes('C32'))return'I';return'I'}
+function clusterFromRow(r){const uf=nk(gv(r,['UF','ufservico']));const cidade=nk(gv(r,['CIDADE','CIDADE_SIMPLES','cidadeservico','localidade']));const cluster=gv(r,['cluster_calc','NOME CLUSTER','NOVO CLUSTER','CLUSTER','cluster','regional','regiao','area']);if(uf==='PI')return'P';if(uf==='AM'||uf==='AP'||uf==='PA')return'N';if(uf==='MA')return cidade.includes('SAOLUIS')?'C':'I';return clusterCode(cluster||uf||cidade)}
 function ensureLabel(arr,key,label){let i=arr.indexOf(key);if(i<0){arr.push(key);label&&arr===M.mes?M.ml.push(label):label&&arr===M.sem&&M.sl.push(label);i=arr.length-1}return i}
 function monthIndex(v){if(v instanceof Date&&!isNaN(v))return ensureLabel(M.mes,`${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}`,v.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}).replace('.',''));const raw=String(v||'').trim();if(!raw)return 0;const d=new Date(raw);if(!isNaN(d))return monthIndex(d);const m=raw.match(/(\d{4})[-/](\d{1,2})|(\d{1,2})[-/](\d{4})/);if(m){const y=m[1]||m[4],mo=m[2]||m[3];return ensureLabel(M.mes,`${y}-${String(Number(mo)).padStart(2,'0')}`,raw)}const i=M.ml.findIndex(x=>nk(x)===nk(raw));return i>=0?i:ensureLabel(M.mes,raw,raw)}
-function weekIndex(v){const raw=String(v||'').trim();if(!raw)return 0;const n=Number((raw.match(/\d+/)||[])[0]||0);if(n>0)return ensureLabel(M.sem,`2026-W${String(n).padStart(2,'0')}`,`S${String(n).padStart(2,'0')}`);const i=M.sl.findIndex(x=>nk(x)===nk(raw));return i>=0?i:ensureLabel(M.sem,raw,raw)}
+function weekIndex(v){if(v instanceof Date&&!isNaN(v)){const w=isoWeek(v);return ensureLabel(M.sem,`${v.getFullYear()}-W${String(w).padStart(2,'0')}`,`S${String(w).padStart(2,'0')}`)}const raw=String(v||'').trim();if(!raw)return 0;const d=parseDateBR(raw);if(d)return weekIndex(d);const n=Number((raw.match(/\d+/)||[])[0]||0);if(n>0)return ensureLabel(M.sem,`2026-W${String(n).padStart(2,'0')}`,`S${String(n).padStart(2,'0')}`);const i=M.sl.findIndex(x=>nk(x)===nk(raw));return i>=0?i:ensureLabel(M.sem,raw,raw)}
 function labelIndex(arr,v){const raw=String(v||'Nao informado').trim()||'Nao informado';let i=arr.findIndex(x=>nk(x)===nk(raw));if(i<0){arr.push(raw);i=arr.length-1}return i}
 function rowToRede(r,sheet){
   const tipo=String(gv(r,['tipo','rede','categoria','grupo'])||sheet||'').toLowerCase();
   const isAC=tipo.includes('acesso');
-  const cl=clusterCode(gv(r,['cluster','regional','regiao','area','uf','localidade']));
-  const mi=monthIndex(gv(r,['mes','mês','competencia','competência','periodo','período','data']));
-  const wi=weekIndex(gv(r,['semana','week','periodo semanal','período semanal'])||mi+1);
-  const tempo=num(gv(r,['tme','tmr','tempo medio','tempo médio','tempo','horas','duracao','duração']));
-  const prazoRaw=gv(r,['no prazo','prazo','dentro prazo','dentro_sla','sla prazo','dentro']);
-  const outRaw=gv(r,['outlier','fora outlier','outlier 24h','outlier_24h']);
+  const openedAt=parseDateBR(gv(r,['DATA_ABERTURA','data abertura','abertura','data']));
+  const mes=gv(r,['mes','mÃªs','competencia','competÃªncia','periodo','perÃ­odo']);
+  const ano=gv(r,['ano']);
+  const cl=clusterFromRow(r);
+  const mi=monthIndex(mes&&ano?`${ano}-${mes}`:(mes||openedAt));
+  const wi=weekIndex(gv(r,['semana','week','periodo semanal','perÃ­odo semanal'])||openedAt);
+  const tempo=num(gv(r,isAC?['TME','tme','tempo medio','tempo mÃ©dio','tempo','horas','duracao','duraÃ§Ã£o']:['TMR','tmr','tempo medio','tempo mÃ©dio','tempo','horas','duracao','duraÃ§Ã£o']));
+  const prazoRaw=gv(r,['PRAZO_SEM_PARADA_RELOGIO','prazo sem parada relogio','no prazo','prazo','dentro prazo','dentro_sla','sla prazo','dentro']);
+  const outRaw=gv(r,['OUTLIER_SEM_PARADA_RELOGIO','outlier sem parada relogio','outlier','fora outlier','outlier 24h','outlier_24h']);
   const prazo=prazoRaw!==''?boolish(prazoRaw):(tempo?tempo<=MTME:false);
   const out=outRaw!==''?boolish(outRaw):(tempo>24);
   if(isAC){
-    const cli=num(gv(r,['clientes afetados','clientes','cliente afetado','impactados','afetados']));
-    const motivo=labelIndex(M.mo,gv(r,['motivo','causa','causa raiz','falha','tipo encerramento']));
+    const cli=num(gv(r,['CLIENTES AFETADOS','clientes afetados','clientes','cliente afetado','impactados','afetados']));
+    const motivo=labelIndex(M.mo,gv(r,['CAUSA_SIMPLES','ORIGEM','CLASSE_CABO','motivo','causa','causa raiz','falha','tipo encerramento']));
     return{kind:'ac',row:[cl,mi,wi,prazo?1:0,out?1:0,tempo,cli,motivo]};
   }
-  const causa=labelIndex(M.ca,gv(r,['motivo','causa','causa raiz','falha','tipo encerramento']));
+  const causa=labelIndex(M.ca,gv(r,['[INCIDENTE - TRECHO DOWN] MOTIVO DA FALHA (REDE)','MOTIVO DA FALHA (REDE)','FALHA','motivo','causa','causa raiz','falha','tipo encerramento']));
   return{kind:'bb',row:[cl,mi,wi,prazo?1:0,out?1:0,tempo,causa]};
 }
 function applyRedeRows(rows,fileName){
