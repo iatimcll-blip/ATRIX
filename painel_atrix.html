@@ -930,19 +930,30 @@ function encRuleStats(d){
 }
 function parseOpeningDate(v){if(v===undefined||v===null||v==='')return null;if(v instanceof Date&&!isNaN(v))return v;if(typeof v==='number'&&isFinite(v)){const d=new Date(Math.round((v-25569)*86400*1000));return isNaN(d)?null:d}const raw=String(v).trim();if(!raw)return null;const iso=new Date(raw);if(!isNaN(iso))return iso;const m=raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);if(!m)return null;const y=Number(m[3].length===2?'20'+m[3]:m[3]);const d=new Date(y,Number(m[2])-1,Number(m[1]),Number(m[4]||0),Number(m[5]||0),Number(m[6]||0));return isNaN(d)?null:d}
 function hoursSince(d){return d?Math.max(0,(Date.now()-d.getTime())/3600000):0}
+const PAUSE_SUBSTATUS=['Pendente Cliente','Pendente Validação','Cancelado','Fechado','Aguardando liberação de acesso','Agudando liberação de acesso'];
+const OPERATOR_CLIENTS=['OPERADORA','OPERADORAS','TIM','CLARO','VIVO','ONLINE'];
+function isPausedSubstatus(v){const s=nk(v);return PAUSE_SUBSTATUS.some(x=>s===nk(x)||s.includes(nk(x)))}
+function isOperatorClient(d){const s=nk((d&&d.cliente)||'');return OPERATOR_CLIENTS.some(x=>s.includes(nk(x)))}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+function easterDate(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da)}
+function holidaySet(y){const e=easterDate(y);return new Set([`${y}-01-01`,`${y}-04-21`,`${y}-05-01`,`${y}-09-07`,`${y}-10-12`,`${y}-11-02`,`${y}-11-15`,`${y}-11-20`,`${y}-12-25`,fmtDay(addDays(e,-48)),fmtDay(addDays(e,-47)),fmtDay(addDays(e,-2)),fmtDay(addDays(e,60))])}
+function fmtDay(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function workWindow(d){const day=d.getDay();if(day===0||holidaySet(d.getFullYear()).has(fmtDay(d)))return null;const start=new Date(d.getFullYear(),d.getMonth(),d.getDate(),8,0,0,0);const end=day===6?new Date(d.getFullYear(),d.getMonth(),d.getDate(),12,0,0,0):new Date(d.getFullYear(),d.getMonth(),d.getDate(),18,0,0,0);return{start,end}}
+function businessHoursBetween(start,end){if(!start||!end||end<=start)return 0;let total=0,cur=new Date(start.getFullYear(),start.getMonth(),start.getDate());const guard=new Date(end.getFullYear(),end.getMonth(),end.getDate());for(let i=0;cur<=guard&&i<3700;i++,cur=addDays(cur,1)){const w=workWindow(cur);if(!w)continue;const a=new Date(Math.max(start,w.start)),b=new Date(Math.min(end,w.end));if(b>a)total+=(b-a)/3600000}return Math.max(0,total)}
+function computeSlaHours(d,now=new Date()){if(!d.openedAt)return d.originalSlaH||d.slaLimitH||0;if(isOperatorClient(d))return Math.max(0,(now-d.openedAt)/3600000);const base=businessHoursBetween(d.openedAt,now);const paused=Number(d.pausedBusinessH||0)+(d.pauseStart?businessHoursBetween(d.pauseStart,now):0);return Math.max(0,base-paused)}
 function slaBaseLimit(r){const v=gv(r,['SLA Base','SLA Meta','Meta SLA','Prazo SLA','SLA Prazo','SLA Contratado','SLA Limite','SLA limite (h)','Prazo (h)','Prazo']);return v===''?0:ph(v)}
 function statusSla(slaH,mop,limitH){const m={'SLN MA':8,'SLN PA':8,'GIGA+ MA':8,'GIGA+ PI':8,'ADX':4};const lim=limitH||m[mop]||8;return slaH>lim?'FORA DO PRAZO':'NO PRAZO'}
-function refreshAbTimes(){dAb.forEach(d=>{if(d.originalSlaH>0||!d.openedAt)return;d.slaH=hoursSince(d.openedAt);d.faixa=cf(d.slaH);d.statusSla=statusSla(d.slaH,d.mop,d.slaLimitH)})}
+function refreshAbTimes(){const now=new Date();dAb.forEach(d=>{d.slaH=computeSlaHours(d,now);d.faixa=cf(d.slaH);d.statusSla=statusSla(d.slaH,d.mop,d.slaLimitH)})}
 function startRefresh(){if(refreshTimer)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!dAb.length)return;refreshAbTimes();renderAllAb()},60000)}
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
-function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():''}))}
+function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
 function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({dAb:serializeAb(),dEnc,selWeek,selCluster,savedAt:new Date().toISOString()}))}catch(e){console.warn('Nao foi possivel salvar as bases localmente:',e)}}
 function restoreState(){
   try{
     const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;
     const st=JSON.parse(raw);
     if(Array.isArray(st.dAb)&&st.dAb.length){
-      dAb=st.dAb.map((d,i)=>({...d,rowKey:d.rowKey??i,openedAt:d.openedAt?new Date(d.openedAt):null,slaLimitH:d.slaLimitH||0}));
+      dAb=st.dAb.map((d,i)=>({...d,rowKey:d.rowKey??i,openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}));
       document.getElementById('nb-ab').textContent=dAb.length;
       document.getElementById('ft-ab').textContent='Base restaurada em '+now2();
       fillFiltersAb();renderAllAb();startRefresh();
@@ -1001,13 +1012,15 @@ function procAb(raw,fname){
     const slaLimitH=slaBaseLimit(r);
     const slaRaw=gv(r,['SLA (h)','SLA(h)','SLA_H','SLA','SLA Formatado','Tempo','Tempo SLA','Tempo Decorrido']);
     const originalSlaH=typeof slaRaw==='number'?slaRaw:ph(slaRaw);
-    const slaH=originalSlaH||hoursSince(openedAt)||slaLimitH;
-    const faixaRaw=String(gv(r,['Faixa SLA','Faixa_SLA','FAIXA SLA'])||'').trim();
-    const faixa=SLA_ORDER.find(f=>nk(faixaRaw).includes(nk(f)))||cf(slaH);
     let mop=String(gv(r,['MOP/EPS (Regra)','MOP/EPS','MOP_EPS'])||'').trim();
     if(!mop)mop=iMop(uf,regiao);
-    const ss=statusSla(slaH,mop,slaLimitH);
-    return{rowKey,id,cliente,uf,cidade,regiao,substatus,link,openedAt,originalSlaH,slaLimitH,slaH,faixa,mop,statusSla:ss};
+    const item={rowKey,id,cliente,uf,cidade,regiao,substatus,link,openedAt,originalSlaH,slaLimitH,pausedBusinessH:0,pauseStart:null,mop};
+    if(!isOperatorClient(item)&&isPausedSubstatus(substatus))item.pauseStart=new Date();
+    item.slaH=computeSlaHours(item);
+    const faixaRaw=String(gv(r,['Faixa SLA','Faixa_SLA','FAIXA SLA'])||'').trim();
+    item.faixa=SLA_ORDER.find(f=>nk(faixaRaw).includes(nk(f)))||cf(item.slaH);
+    item.statusSla=statusSla(item.slaH,mop,slaLimitH);
+    return item;
   });
   document.getElementById('nb-ab').textContent=dAb.length;
   document.getElementById('ft-ab').textContent='Atualizado em '+now2();
@@ -1144,8 +1157,17 @@ function fillFiltersAb(){
   document.getElementById('f-uf').innerHTML='<option value="">Todas UFs</option>'+ufs.map(u=>`<option value="${eh(u)}">${eh(u)}</option>`).join('');
   document.getElementById('f-faixa').innerHTML='<option value="">Todas as faixas</option>'+SLA_ORDER.map(f=>`<option value="${eh(f)}">${eh(f)}</option>`).join('');
 }
-function getSubstatusOptions(current){const subs=[...new Set(dAb.map(d=>d.substatus).filter(Boolean))].sort();if(current&&!subs.includes(current))subs.unshift(current);return subs.map(s=>`<option value="${eh(s)}"${s===current?' selected':''}>${eh(s)}</option>`).join('')}
-function updateSubstatus(rowKey,value){if(!canEdit())return;const item=dAb.find(d=>d.rowKey===rowKey);if(!item)return;item.substatus=value;fillFiltersAb();renderAllAb();saveState()}
+function getSubstatusOptions(current){const subs=[...new Set([...PAUSE_SUBSTATUS,...dAb.map(d=>d.substatus).filter(Boolean)])].sort();if(current&&!subs.includes(current))subs.unshift(current);return subs.map(s=>`<option value="${eh(s)}"${s===current?' selected':''}>${eh(s)}</option>`).join('')}
+function updateSubstatus(rowKey,value){
+  if(!canEdit())return;
+  const item=dAb.find(d=>d.rowKey===rowKey);if(!item)return;
+  const now=new Date(),wasPaused=!isOperatorClient(item)&&isPausedSubstatus(item.substatus),willPause=!isOperatorClient(item)&&isPausedSubstatus(value);
+  if(wasPaused&&!willPause&&item.pauseStart){item.pausedBusinessH=Number(item.pausedBusinessH||0)+businessHoursBetween(item.pauseStart,now);item.pauseStart=null}
+  if(!wasPaused&&willPause)item.pauseStart=now;
+  item.substatus=value;
+  item.slaH=computeSlaHours(item,now);item.faixa=cf(item.slaH);item.statusSla=statusSla(item.slaH,item.mop,item.slaLimitH);
+  fillFiltersAb();renderAllAb();saveState()
+}
 function gFAb(){
   const mop=document.getElementById('f-mop').value,faixa=document.getElementById('f-faixa').value;
   const sub=document.getElementById('f-sub').value,uf=document.getElementById('f-uf').value;

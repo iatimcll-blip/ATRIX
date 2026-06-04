@@ -149,6 +149,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
     <div class="vtog">
       <button class="vbtn on" onclick="setView('bb')">Backbone</button>
       <button class="vbtn" onclick="setView('ac')">Acesso</button>
+      <button class="vbtn" onclick="setView('all')">Backbone + Acesso</button>
     </div>
   </div>
   <div class="toolbar-group">
@@ -379,7 +380,7 @@ function setMonthPeriod(v){selMonth=v;selWeek='';modo='m';buildPeriodSelects();r
 function setWeekPeriod(v){selWeek=v;selMonth='';modo=v?'s':'m';buildPeriodSelects();render();}
 function setView(v){
   activeView=v;
-  document.querySelectorAll('.vbtn').forEach((b,i)=>b.classList.toggle('on',['bb','ac'][i]===v));
+  document.querySelectorAll('.vbtn').forEach((b,i)=>b.classList.toggle('on',['bb','ac','all'][i]===v));
   render();
 }
 function goTab(id){
@@ -403,6 +404,11 @@ function fAC(cl){
     if(selWeek&&M.sem[r[2]]!==selWeek)return false;
     return true;
   });
+}
+function fAll(cl){
+  const bb=fBB(cl).map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],0,M.ca[r[6]]||'Backbone']);
+  const ac=fAC(cl).map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],r[6],M.mo[r[7]]||'Acesso']);
+  return bb.concat(ac);
 }
 
 function agg(rows,isAC){
@@ -428,6 +434,7 @@ function topN(rows,fi,n=5){
   rows.forEach(r=>{const v=(fi===6?M.mo[r[6]]:M.ca[r[7]])||'?';c[v]=(c[v]||0)+1;});
   return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n);
 }
+function topNLabel(rows,n=5){const c={};rows.forEach(r=>{const v=r[7]||'Nao informado';c[v]=(c[v]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n)}
 
 function pH(v,meta,inv=false){
   const ok=inv?(v<=meta):(v>=meta),nr=inv?(v<=meta*1.5):(v>=meta*0.9);
@@ -496,49 +503,51 @@ function setBL(id,items,color){
 }
 
 function renderVis(){
-  const isAC=activeView==='ac';
-  const tag=isAC?'Acesso':'Backbone';
+  const isAC=activeView==='ac',isAll=activeView==='all';
+  const tag=isAll?'Backbone + Acesso':isAC?'Acesso':'Backbone';
+  const rowsFor=cl=>isAll?fAll(cl):(isAC?fAC(cl):fBB(cl));
+  const allRows=rowsFor('');
+  const total=agg(allRows,isAC||isAll)||{t:0,pp:0,op:0,tme:0,tmr:0,cli:0};
+  const avgTime=isAC||isAll?total.tme:total.tmr;
+  const good=total.pp>=M89?'#3ecf8e':total.pp>=M89*.9?'#f0a14d':'#e05c5c';
+  const bad=total.op<=4.9?'#3ecf8e':total.op<=9?'#f0a14d':'#e05c5c';
   let cards='',d1=[],d2=[];
   CLS.forEach(cl=>{
-    const rows=isAC?fAC(cl):fBB(cl);
-    const s=agg(rows,isAC);
+    const rows=rowsFor(cl),s=agg(rows,isAC||isAll);
     const cp=s&&s.pp>=M89?'#3ecf8e':s&&s.pp>=M89*.9?'#f0a14d':'#e05c5c';
     const co=s&&s.op<=4.9?'#3ecf8e':s&&s.op<=9?'#f0a14d':'#e05c5c';
     d1.push(s?s.pp:0);d2.push(s?s.op:0);
-    if(isAC){
-      const ct=s&&s.tme<=MTME?'#3ecf8e':s&&s.tme<=MTME*1.2?'#f0a14d':'#e05c5c';
-      cards+=`<div class="sc"><div class="sct">${CL_NM[cl]}</div>
-        <div class="scr">No prazo <span class="scv" style="color:${cp}">${s?s.pp+'%':'—'}</span></div>
-        <div class="scr">Outlier <span class="scv" style="color:${co}">${s?s.op+'%':'—'}</span></div>
-        <div class="scr">TME médio <span class="scv" style="color:${ct}">${s?s.tme+'h':'—'}</span></div>
-        <div class="scr">Clientes af. <span class="scv">${s?s.cli.toLocaleString('pt-BR'):'0'}</span></div>
-        ${s?pH(s.pp,M89):''}</div>`;
-    } else {
-      cards+=`<div class="sc"><div class="sct">${CL_NM[cl]}</div>
-        <div class="scr">No prazo <span class="scv" style="color:${cp}">${s?s.pp+'%':'—'}</span></div>
-        <div class="scr">Outlier <span class="scv" style="color:${co}">${s?s.op+'%':'—'}</span></div>
-        <div class="scr">TMR médio <span class="scv">${s?s.tmr+'h':'—'}</span></div>
-        <div class="scr">Chamados <span class="scv">${s?s.t:'0'}</span></div>
-        ${s?pH(s.pp,M89):''}</div>`;
-    }
+    const tempo=s?(isAC||isAll?s.tme:s.tmr):0;
+    cards+=`<div class="sc"><div class="sct">${CL_NM[cl]}</div>
+      <div class="scr">No prazo <span class="scv" style="color:${cp}">${s?s.pp+'%':'-'} </span></div>
+      <div class="scr">Outlier <span class="scv" style="color:${co}">${s?s.op+'%':'-'}</span></div>
+      <div class="scr">Tempo medio <span class="scv">${s?tempo+'h':'-'}</span></div>
+      <div class="scr">Chamados <span class="scv">${s?s.t:'0'}</span></div>
+      ${s?pH(s.pp,M89):''}</div>`;
   });
   document.getElementById('vis-content').innerHTML=`
-    <div class="shead"><h2>Comparativo — ${tag}</h2><span class="stag ${isAC?'stag-ac':'stag-bb'}">${tag}</span></div>
+    <div class="shead"><h2>Visao Geral - ${tag}</h2><span class="stag ${isAC?'stag-ac':'stag-bb'}">${tag}</span></div>
+    <div class="krow">
+      <div class="kpi"><div class="lb">Chamados analisados</div><div class="vl">${total.t}</div><div class="sb">base filtrada</div></div>
+      <div class="kpi"><div class="lb">No prazo</div><div class="vl" style="color:${good}">${total.pp}%</div><div class="sb">meta minima 89%</div></div>
+      <div class="kpi"><div class="lb">Outlier</div><div class="vl" style="color:${bad}">${total.op}%</div><div class="sb">referencia maxima 4,9%</div></div>
+      <div class="kpi"><div class="lb">Tempo medio</div><div class="vl">${avgTime||0}h</div><div class="sb">${isAll?'backbone + acesso':tag.toLowerCase()}</div></div>
+    </div>
     <div class="sgrid">${cards}</div>
     <div class="cbx" style="margin-top:12px">
-      <h4>No prazo % e outlier % — comparativo por cluster (${tag})</h4>
-      <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>No prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span><span style="font-size:10px;color:var(--text3)">— meta 89%</span></div>
-      <div style="position:relative;height:180px"><canvas id="cv-main" role="img" aria-label="Comparativo por cluster"></canvas></div>
+      <h4>Comparativo por cluster - no prazo x outlier (${tag})</h4>
+      <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>No prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span><span style="font-size:10px;color:var(--text3)">linha laranja = meta 89%</span></div>
+      <div style="position:relative;height:210px"><canvas id="cv-main" role="img" aria-label="Comparativo por cluster"></canvas></div>
     </div>`;
   mkCh('cv-main',CLS.map(c=>CL_NM[c]),[
-    {data:d1,backgroundColor:'rgba(77,142,240,.8)',borderRadius:4,order:1},
-    {data:d2,backgroundColor:'rgba(224,92,92,.75)',borderRadius:4,order:1},
-    {data:CLS.map(()=>89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}
+    {label:'No prazo %',data:d1,backgroundColor:'rgba(77,142,240,.8)',borderRadius:4,order:1},
+    {label:'Outlier %',data:d2,backgroundColor:'rgba(224,92,92,.75)',borderRadius:4,order:1},
+    {label:'Meta',data:CLS.map(()=>89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}
   ],{max:100});
 }
 
 function renderClusters(){
-  const isAC=activeView==='ac';
+  const isAC=activeView==='ac',isAll=activeView==='all';
   CLS.forEach(cl=>{
     const bbSec=document.getElementById(`sec-${cl}-bb`);
     const acSec=document.getElementById(`sec-${cl}-ac`);
@@ -549,8 +558,15 @@ function renderClusters(){
       setKPI(`k-${cl}-a`,agg(rows,true),true);
       barEv(`ch-${cl}-a`,ts);tmeEv(`ch-${cl}-t`,ts);
       setBL(`bl-${cl}-a`,topN(rows,7),CL_CL[cl]);
+    } else if(isAll){
+      const rows=fAll(cl);const ts=tseries(rows,true);
+      if(bbSec){const tag=bbSec.querySelector('.stag');if(tag){tag.textContent='Backbone + Acesso';tag.className='stag stag-bb'}}
+      setKPI(`k-${cl}-b`,agg(rows,true),true);
+      barEv(`ch-${cl}-b`,ts);
+      setBL(`bl-${cl}-b`,topNLabel(rows),CL_CL[cl]);
     } else {
       const rows=fBB(cl);const ts=tseries(rows,false);
+      if(bbSec){const tag=bbSec.querySelector('.stag');if(tag){tag.textContent='Backbone';tag.className='stag stag-bb'}}
       setKPI(`k-${cl}-b`,agg(rows,false),false);
       barEv(`ch-${cl}-b`,ts);
       setBL(`bl-${cl}-b`,topN(rows,6),CL_CL[cl]);
