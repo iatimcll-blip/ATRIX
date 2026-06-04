@@ -632,6 +632,7 @@ body.is-admin .admin-only { display: flex; }
 
 <input type="file" id="file-ab" accept=".xlsx,.xls" style="display:none">
 <input type="file" id="file-enc" accept=".xlsx,.xls" style="display:none">
+<input type="file" id="file-fuel" accept=".csv" style="display:none">
 <div class="login-screen" id="login-screen">
   <form class="login-card" onsubmit="loginUser(event)">
     <img class="login-logo" src="assets/mcll-logo.png" alt="MCLL Monitoramento B2B">
@@ -706,6 +707,7 @@ body.is-admin .admin-only { display: flex; }
   <div class="nav-right">
     <label class="upload-pill up-ab" for="file-ab"><i class="ti ti-upload"></i>Abertos</label>
     <label class="upload-pill up-enc" for="file-enc"><i class="ti ti-upload"></i>Encerrados</label>
+    <label class="upload-pill admin-only" for="file-fuel"><i class="ti ti-upload"></i>Alelo</label>
     <div class="nav-btn admin-only" onclick="openUserPanel()" title="Usuários"><i class="ti ti-users"></i></div>
     <div class="nav-btn" onclick="toggleTheme()" title="Tema"><i class="ti ti-moon" id="ti-icon"></i></div>
     <div class="nav-btn" onclick="logoutUser()" title="Sair"><i class="ti ti-logout"></i></div>
@@ -926,6 +928,7 @@ body.is-admin .admin-only { display: flex; }
         <select class="fsel" id="fuel-tipo-cartao"><option>Próprio</option><option>Coringa</option></select>
         <select class="fsel" id="fuel-status-new"><option>Ativo</option><option>Inativo</option><option>Oficina</option><option>Bloqueado</option></select>
         <span class="card-action" id="fuel-vehicle-action" onclick="addFuelVehicle()">Adicionar</span>
+        <span class="card-action" id="fuel-delete-action" onclick="deleteFuelVehicle()" style="display:none;color:var(--red)">Excluir placa</span>
         <span class="card-action" onclick="clearFuelVehicleForm()">Limpar</span>
       </div>
     </div>
@@ -1171,7 +1174,7 @@ function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.t
 function buildState(){return{version:5,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,users:getUsers(),selWeek,selCluster,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>({...d,rowKey:d.rowKey??i,mop:fmtMop(d.mop),substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}))}
 function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>({...d,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}))}
-function normalizeFuelVehicles(list){const base=Array.isArray(list)&&list.length?list:FUEL_BASE,by=new Map();[...FUEL_BASE,...base].forEach(v=>{const placa=String(v.placa||'').toUpperCase().trim();if(placa)by.set(placa,{...v,placa,tipoCartao:['Próprio','Coringa'].includes(v.tipoCartao)?v.tipoCartao:'Próprio',status:FUEL_STATUS.includes(v.status)?v.status:'Ativo'})});return[...by.values()]}
+function normalizeFuelVehicles(list){const source=Array.isArray(list)&&list.length?list:FUEL_BASE,by=new Map();source.forEach(v=>{const placa=String(v.placa||'').toUpperCase().trim();if(placa)by.set(placa,{...v,placa,tipoCartao:['Próprio','Coringa'].includes(v.tipoCartao)?v.tipoCartao:'Próprio',status:FUEL_STATUS.includes(v.status)?v.status:'Ativo'})});return[...by.values()]}
 function normalizeFuelRequests(list){const base=Array.isArray(list)&&list.length?list:[],by=new Map();[...FUEL_IMPORTED_REQUESTS,...base].forEach((r,i)=>{const placa=String(r.placa||'').toUpperCase().trim();if(!placa)return;const id=r.id||('REQ'+Date.now()+i);by.set(id,{...r,id,placa,valor:Number(r.valor||0),data:r.data||new Date().toISOString().slice(0,10)})});return[...by.values()]}
 function normalizeFuelWithdrawals(list){return(Array.isArray(list)?list:[]).map((r,i)=>({...r,id:r.id||('WDR'+Date.now()+i),valor:Number(r.valor||0),data:r.data||new Date().toISOString().slice(0,10)})).filter(r=>r.valor>0)}
 function applyState(st,label){
@@ -1274,6 +1277,13 @@ document.getElementById('file-enc').addEventListener('change',function(e){
   const rd=new FileReader();
   rd.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'array'});const sn=wb.SheetNames.find(n=>n.toUpperCase().includes('BASE'))||wb.SheetNames[0];procEnc(XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:''}),f.name)}catch(er){alert('Erro: '+er.message)}};
   rd.readAsArrayBuffer(f);this.value='';
+});
+document.getElementById('file-fuel').addEventListener('change',function(e){
+  if(!canEdit()){alert('Seu usuário possui acesso somente para visualização.');this.value='';return}
+  const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=ev=>{try{importFuelAlelo(String(ev.target.result||''),f.name)}catch(er){alert('Erro Alelo: '+er.message)}};
+  rd.readAsText(f,'UTF-8');this.value='';
 });
 
 /* ─── PROCESS ABERTOS ─── */
@@ -1687,8 +1697,8 @@ function fuelWithdrawn(){return dFuelWithdrawals.reduce((s,r)=>s+Number(r.valor|
 function fuelBalance(){const total=Number(fuelBalanceTotal||0),spent=fuelSpent(),withdrawn=fuelWithdrawn(),moved=withdrawn-spent,computed=Math.max(0,total-spent-withdrawn),available=fuelCardBalance===null||fuelCardBalance===undefined?computed:Math.max(0,Number(fuelCardBalance||0));return{total,spent,withdrawn,moved,available,computed,manual:fuelCardBalance!==null&&fuelCardBalance!==undefined}}
 function reduceFuelCardBalance(valor){if(fuelCardBalance!==null&&fuelCardBalance!==undefined)fuelCardBalance=Math.max(0,Number(fuelCardBalance||0)-Number(valor||0))}
 function restoreFuelCardBalance(valor){if(fuelCardBalance!==null&&fuelCardBalance!==undefined)fuelCardBalance=Number(fuelCardBalance||0)+Number(valor||0)}
-function clearFuelVehicleForm(){editingFuelPlate='';['fuel-placa','fuel-modelo','fuel-ano','fuel-condutor','fuel-setor','fuel-superior'].forEach(id=>document.getElementById(id).value='');document.getElementById('fuel-status-new').value='Ativo';document.getElementById('fuel-tipo').value='Gasolina';document.getElementById('fuel-tipo-cartao').value='Próprio';document.getElementById('fuel-placa').disabled=false;document.getElementById('fuel-vehicle-action').textContent='Adicionar'}
-function editFuelVehicle(placa){if(!canEdit())return;const v=fuelVehicleByPlate(placa);if(!v.placa)return;editingFuelPlate=v.placa;document.getElementById('fuel-placa').value=v.placa;document.getElementById('fuel-placa').disabled=false;document.getElementById('fuel-modelo').value=v.modelo||'';document.getElementById('fuel-ano').value=v.ano||'';document.getElementById('fuel-condutor').value=v.condutor||'';document.getElementById('fuel-setor').value=v.setor||'';document.getElementById('fuel-superior').value=v.superior||'';document.getElementById('fuel-tipo').value=v.tipo||'Gasolina';document.getElementById('fuel-tipo-cartao').value=v.tipoCartao||'Próprio';document.getElementById('fuel-status-new').value=v.status||'Ativo';document.getElementById('fuel-vehicle-action').textContent='Salvar edição';document.getElementById('fuel-placa').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>document.getElementById('fuel-placa').focus(),250)}
+function clearFuelVehicleForm(){editingFuelPlate='';['fuel-placa','fuel-modelo','fuel-ano','fuel-condutor','fuel-setor','fuel-superior'].forEach(id=>document.getElementById(id).value='');document.getElementById('fuel-status-new').value='Ativo';document.getElementById('fuel-tipo').value='Gasolina';document.getElementById('fuel-tipo-cartao').value='Próprio';document.getElementById('fuel-placa').disabled=false;document.getElementById('fuel-vehicle-action').textContent='Adicionar';document.getElementById('fuel-delete-action').style.display='none'}
+function editFuelVehicle(placa){if(!canEdit())return;const v=fuelVehicleByPlate(placa);if(!v.placa)return;editingFuelPlate=v.placa;document.getElementById('fuel-placa').value=v.placa;document.getElementById('fuel-placa').disabled=false;document.getElementById('fuel-modelo').value=v.modelo||'';document.getElementById('fuel-ano').value=v.ano||'';document.getElementById('fuel-condutor').value=v.condutor||'';document.getElementById('fuel-setor').value=v.setor||'';document.getElementById('fuel-superior').value=v.superior||'';document.getElementById('fuel-tipo').value=v.tipo||'Gasolina';document.getElementById('fuel-tipo-cartao').value=v.tipoCartao||'Próprio';document.getElementById('fuel-status-new').value=v.status||'Ativo';document.getElementById('fuel-vehicle-action').textContent='Salvar edição';document.getElementById('fuel-delete-action').style.display='inline-flex';document.getElementById('fuel-placa').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>document.getElementById('fuel-placa').focus(),250)}
 function addFuelVehicle(){
   if(!canEdit())return;
   const placa=document.getElementById('fuel-placa').value.toUpperCase().trim();
@@ -1697,8 +1707,18 @@ function addFuelVehicle(){
   const idx=dFuelVehicles.findIndex(v=>v.placa===placa);
   if(idx>=0&&(!editingFuelPlate||placa!==editingFuelPlate)){alert('Placa já cadastrada. Edite o registro existente para evitar duplicidade.');return}
   if(editingFuelPlate){const editIdx=dFuelVehicles.findIndex(v=>v.placa===editingFuelPlate);if(editIdx>=0)dFuelVehicles[editIdx]={...dFuelVehicles[editIdx],...item};dFuelRequests=dFuelRequests.map(r=>r.placa===editingFuelPlate?{...r,placa:item.placa,condutor:item.condutor||r.condutor}:r)}else dFuelVehicles.push(item);
+  dFuelVehicles=normalizeFuelVehicles(dFuelVehicles);
   clearFuelVehicleForm();
   renderFuel();saveState();
+}
+function deleteFuelVehicle(){
+  if(!canEdit()||!editingFuelPlate)return;
+  const linked=dFuelRequests.filter(r=>r.placa===editingFuelPlate),total=linked.reduce((s,r)=>s+Number(r.valor||0),0);
+  if(!confirm(`Excluir a placa ${editingFuelPlate} e ${linked.length} solicitações vinculadas?`))return;
+  dFuelVehicles=dFuelVehicles.filter(v=>v.placa!==editingFuelPlate);
+  dFuelRequests=dFuelRequests.filter(r=>r.placa!==editingFuelPlate);
+  restoreFuelCardBalance(total);
+  clearFuelVehicleForm();renderFuel();saveState();
 }
 function updateFuelStatus(placa,status){if(!canEdit())return;const v=fuelVehicleByPlate(placa);if(!v.placa)return;v.status=FUEL_STATUS.includes(status)?status:'Ativo';renderFuel();saveState()}
 function updateFuelCardType(placa,tipoCartao){if(!canEdit())return;const v=fuelVehicleByPlate(placa);if(!v.placa)return;v.tipoCartao=tipoCartao==='Coringa'?'Coringa':'Próprio';renderFuel();saveState()}
@@ -1719,6 +1739,70 @@ function addFuelRequest(){
 function setFuelBalance(){if(!canEdit())return;fuelBalanceTotal=Number(document.getElementById('fuel-balance-total').value||0);document.getElementById('fuel-balance-total').value='';renderFuel();saveState()}
 function setFuelCardBalance(){if(!canEdit())return;fuelCardBalance=Number(document.getElementById('fuel-card-balance').value||0);document.getElementById('fuel-card-balance').value='';renderFuel();saveState()}
 function addFuelWithdrawal(){if(!canEdit())return;const valor=Number(document.getElementById('fuel-withdraw-value').value||0);if(!valor){alert('Informe o valor da retirada.');return}dFuelWithdrawals.push({id:'WDR'+Date.now(),data:document.getElementById('fuel-withdraw-date').value||new Date().toISOString().slice(0,10),valor,reason:document.getElementById('fuel-withdraw-reason').value.trim()});reduceFuelCardBalance(valor);document.getElementById('fuel-withdraw-value').value='';document.getElementById('fuel-withdraw-reason').value='';renderFuel();saveState()}
+function csvSplit(line){
+  const out=[];let cur='',q=false;
+  for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){cur+='"';i++}else q=!q}else if(c===';'&&!q){out.push(cur);cur=''}else cur+=c}
+  out.push(cur);return out;
+}
+function parseCsvRows(text){
+  const lines=String(text||'').replace(/^\uFEFF/,'').split(/\r?\n/).filter(l=>l.trim()!=='');
+  if(lines.length<2)return[];
+  const head=csvSplit(lines[0]).map(h=>String(h||'').trim());
+  return lines.slice(1).map(line=>{const cols=csvSplit(line),row={};head.forEach((h,i)=>row[h]=cols[i]??'');return row});
+}
+function moneyBR(v){
+  const s=String(v??'').trim().replace(/\./g,'').replace(',','.');
+  const n=Number(s);return Number.isFinite(n)?n:0;
+}
+function aleloDate(v){
+  const m=String(v||'').trim().match(/^(\d{2})-(\d{2})-(\d{2,4})\s+(\d{1,2}):(\d{2})/);
+  if(!m)return new Date().toISOString().slice(0,10);
+  const y=Number(m[3].length===2?'20'+m[3]:m[3]);
+  return `${y}-${m[2]}-${m[1]}`;
+}
+function headerKey(v){return nk(String(v||'').replace(/\uFFFD/g,''))}
+function headerDistance(a,b){
+  a=headerKey(a);b=headerKey(b);
+  if(a===b||a.includes(b)||b.includes(a))return 0;
+  const dp=Array.from({length:a.length+1},(_,i)=>[i]);
+  for(let j=1;j<=b.length;j++)dp[0][j]=j;
+  for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)dp[i][j]=Math.min(dp[i-1][j]+1,dp[i][j-1]+1,dp[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return dp[a.length][b.length];
+}
+function rowVal(row,names){
+  const keys=Object.keys(row||{});
+  for(const name of names){
+    const max=Math.max(2,Math.ceil(headerKey(name).length*.25));
+    const best=keys.map(key=>({key,dist:headerDistance(key,name)})).sort((a,b)=>a.dist-b.dist)[0];
+    if(best&&best.dist<=max)return row[best.key]
+  }
+  return '';
+}
+function importFuelAlelo(text,fname){
+  ensureFuelData();
+  const rows=parseCsvRows(text),plates=new Set(dFuelVehicles.map(v=>v.placa)),drivers=new Set(dFuelVehicles.map(v=>nk(v.condutor)).filter(Boolean));
+  const keys=Object.keys(rows[0]||{});
+  const findCol=names=>{for(const name of names){const max=Math.max(2,Math.ceil(headerKey(name).length*.25)),best=keys.map(key=>({key,dist:headerDistance(key,name)})).sort((a,b)=>a.dist-b.dist)[0];if(best&&best.dist<=max)return best.key}return ''};
+  const col={placa:findCol(['Placa do veiculo']),driver:findCol(['Nome do motorista']),tipo:findCol(['Tipo de mercadoria','Descricao da transacao']),status:findCol(['Status da transacao']),auth:findCol(['Numero de autorizacao da transacao']),valor:findCol(['Valor da transacao']),data:findCol(['Data/hora da transacao']),mercadoria:findCol(['Mercadoria'])};
+  const val=(r,k)=>k?String(r[k]||''):'';
+  let imported=0,ignored=0,dups=0;
+  rows.forEach((r,i)=>{
+    const placa=val(r,col.placa).toUpperCase().trim(),driver=val(r,col.driver).trim();
+    const tipo=val(r,col.tipo),status=val(r,col.status);
+    if(!placa||(!plates.has(placa)&&!drivers.has(nk(driver)))){ignored++;return}
+    if(!/combust/i.test(tipo)||!/aprov/i.test(status)){ignored++;return}
+    const auth=val(r,col.auth).trim(),valor=moneyBR(val(r,col.valor));
+    if(!valor){ignored++;return}
+    const data=aleloDate(val(r,col.data));
+    const id='ALELO-'+(auth||`${data}-${placa}-${i}`);
+    if(dFuelRequests.some(x=>x.id===id)){dups++;return}
+    const v=fuelVehicleByPlate(placa);
+    dFuelRequests.push({id,data,placa,condutor:v.condutor||driver,valor,obs:`Importado da base Alelo - ${val(r,col.mercadoria)||tipo}`});
+    imported++;
+  });
+  renderFuel();saveState();
+  alert(`Base Alelo importada: ${imported} transacoes, ${dups} duplicadas, ${ignored} ignoradas.`);
+}
 function fuelProjection(){const by={};dFuelRequests.forEach(r=>{const v=fuelVehicleByPlate(r.placa),name=r.condutor||v.condutor||r.placa;if(!by[name])by[name]={valor:0,count:0};by[name].valor+=Number(r.valor||0);by[name].count++});return Object.entries(by).sort((a,b)=>b[1].valor-a[1].valor)}
 function fuelDriverName(r){const v=fuelVehicleByPlate(r.placa);return r.condutor||v.condutor||r.placa||'Sem condutor'}
 function fuelDriverOptions(){return[...new Set([...dFuelVehicles.map(v=>v.condutor).filter(Boolean),...dFuelRequests.map(fuelDriverName).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'pt-BR'))}
@@ -1785,7 +1869,7 @@ function renderFuelChart(){
 }
 function renderFuelTopChart(){
   const ctx=document.getElementById('ch-fuel-top');if(!ctx)return;if(chFuelTop){chFuelTop.destroy();chFuelTop=null}
-  const dk=document.body.dataset.theme==='dark',entries=fuelProjection().slice(0,10).reverse();
+  const dk=document.body.dataset.theme==='dark',entries=fuelProjection().slice(0,10);
   chFuelTop=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Maior consumo R$',data:entries.map(e=>Number(e[1].valor.toFixed(2))),backgroundColor:'rgba(255,159,10,.78)',borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${brl(c.parsed.x||0)}`}}},scales:{x:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',callback:v=>brl(Number(v))}},y:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}}}}});
 }
 function renderFuelProjectionChart(){
