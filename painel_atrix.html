@@ -846,9 +846,12 @@ let selWeek='';
 let selCluster='';
 let refreshTimer=null;
 const STORAGE_KEY='atrix:painel:bases:v1';
+const REMOTE_STATE_API='/api/painel-state';
 const USERS_KEY='atrix:usuarios:v1';
 const SESSION_KEY='atrix:sessao:v1';
 let currentUser=null;
+let remoteSaveTimer=null;
+let remoteSaveWarned=false;
 
 /* LOGIN E PERMISSOES */
 function encPass(v){return btoa(unescape(encodeURIComponent(String(v||''))))}
@@ -940,6 +943,7 @@ function cf(h){if(h>24)return SLA_ORDER[0];if(h>12)return SLA_ORDER[1];if(h>8)re
 function nk(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toUpperCase()}
 function eh(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function fmtSubstatus(v){const s=String(v||'').trim().replace(/\s+/g,' ');if(!s)return'';return s.toLocaleLowerCase('pt-BR').replace(/(^|[\s/-])([a-z0-9\u00c0-\u024f])/gi,(m,p,c)=>p+c.toLocaleUpperCase('pt-BR')).replace(/\bSla\b/g,'SLA').replace(/\bB2b\b/g,'B2B')}
+function uniqueSubstatuses(values){const map=new Map();values.map(fmtSubstatus).filter(Boolean).forEach(s=>{const k=nk(s);if(!map.has(k))map.set(k,s)});return[...map.values()].sort((a,b)=>a.localeCompare(b,'pt-BR'))}
 function safeUrl(v){const raw=String(v||'').trim();if(!raw)return'';try{const u=new URL(raw,window.location&&window.location.href?window.location.href:'http://localhost/');return['http:','https:'].includes(u.protocol)?u.href:''}catch{return''}}
 function bestLink(...vals){for(const v of vals){const u=safeUrl(v);if(u)return u}return''}
 function gv(r,ns){for(const n of ns)if(r[n]!==undefined&&r[n]!=='')return r[n];const m=Object.fromEntries(Object.keys(r).map(k=>[nk(k),k]));for(const n of ns){const k=m[nk(n)];if(k&&r[k]!==undefined&&r[k]!=='')return r[k]}return''}
@@ -987,30 +991,69 @@ function refreshAbTimes(){const now=new Date();dAb.forEach(d=>{d.slaH=computeSla
 function startRefresh(){if(refreshTimer)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!dAb.length)return;refreshAbTimes();renderTAb()},1000)}
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
-function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({dAb:serializeAb(),dEnc,selWeek,selCluster,savedAt:new Date().toISOString()}))}catch(e){console.warn('Nao foi possivel salvar as bases localmente:',e)}}
+function buildState(){return{version:2,dAb:serializeAb(),dEnc,selWeek,selCluster,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
+function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>({...d,rowKey:d.rowKey??i,mop:fmtMop(d.mop),substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}))}
+function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>({...d,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}))}
+function applyState(st,label){
+  if(!st||typeof st!=='object')return false;
+  let changed=false;
+  if(Array.isArray(st.dAb)){
+    dAb=normalizeAbState(st.dAb);
+    document.getElementById('nb-ab').textContent=dAb.length;
+    document.getElementById('ft-ab').textContent=(label||'Base restaurada')+' em '+now2();
+    fillFiltersAb();renderAllAb();startRefresh();
+    document.getElementById('empty-ab').style.display=dAb.length?'none':'block';
+    document.getElementById('dash-ab').style.display=dAb.length?'block':'none';
+    changed=true;
+  }
+  if(Array.isArray(st.dEnc)){
+    dEnc=normalizeEncState(st.dEnc);
+    document.getElementById('nb-enc').textContent=dEnc.length;
+    document.getElementById('ft-enc').textContent=(label||'Base restaurada')+' em '+now2();
+    fillFiltersEnc();fillWeekSelector();fillClusterSelector();
+    if(st.selWeek&&dEnc.some(d=>d.semana===st.selWeek)){selWeek=st.selWeek;document.getElementById('week-selector').value=selWeek}else if(!st.selWeek){selWeek=''}
+    if(st.selCluster&&dEnc.some(d=>d.cluster===st.selCluster)){selCluster=st.selCluster;document.getElementById('cluster-selector').value=selCluster}else if(!st.selCluster){selCluster=''}
+    renderAllEnc();
+    document.getElementById('empty-enc').style.display=dEnc.length?'none':'block';
+    document.getElementById('dash-enc').style.display=dEnc.length?'block':'none';
+    changed=true;
+  }
+  if(changed)applyPermissions();
+  return changed;
+}
+function saveLocalState(st){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(st||buildState()))}catch(e){console.warn('Nao foi possivel salvar as bases localmente:',e)}}
+async function saveRemoteState(st){
+  try{
+    const res=await fetch(REMOTE_STATE_API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(st||buildState())});
+    if(!res.ok){const body=await res.json().catch(()=>({}));throw new Error(body.error||('HTTP '+res.status))}
+    remoteSaveWarned=false;
+  }catch(e){
+    console.warn('Nao foi possivel salvar as bases compartilhadas:',e);
+    if(canEdit()&&!remoteSaveWarned){remoteSaveWarned=true;alert('A base foi salva neste navegador, mas ainda nao foi gravada no armazenamento compartilhado. Verifique a configuracao BLOB_READ_WRITE_TOKEN no Vercel.')}
+  }
+}
+function saveState(){
+  const st=buildState();
+  saveLocalState(st);
+  if(canEdit()){
+    clearTimeout(remoteSaveTimer);
+    remoteSaveTimer=setTimeout(()=>saveRemoteState(st),450);
+  }
+}
+async function restoreRemoteState(){
+  try{
+    const res=await fetch(REMOTE_STATE_API,{cache:'no-store'});
+    if(!res.ok)return;
+    const data=await res.json();
+    if(data&&data.state&&applyState(data.state,'Base compartilhada'))saveLocalState(data.state);
+  }catch(e){console.warn('Nao foi possivel carregar as bases compartilhadas:',e)}
+}
 function restoreState(){
   try{
-    const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;
+    const raw=localStorage.getItem(STORAGE_KEY);if(!raw){restoreRemoteState();return}
     const st=JSON.parse(raw);
-    if(Array.isArray(st.dAb)&&st.dAb.length){
-      dAb=st.dAb.map((d,i)=>({...d,rowKey:d.rowKey??i,mop:fmtMop(d.mop),substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}));
-      document.getElementById('nb-ab').textContent=dAb.length;
-      document.getElementById('ft-ab').textContent='Base restaurada em '+now2();
-      fillFiltersAb();renderAllAb();startRefresh();
-      document.getElementById('empty-ab').style.display='none';
-      document.getElementById('dash-ab').style.display='block';
-    }
-    if(Array.isArray(st.dEnc)&&st.dEnc.length){
-      dEnc=st.dEnc.map(d=>({...d,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}));
-      document.getElementById('nb-enc').textContent=dEnc.length;
-      document.getElementById('ft-enc').textContent='Base restaurada em '+now2();
-      fillFiltersEnc();fillWeekSelector();fillClusterSelector();
-      if(st.selWeek&&dEnc.some(d=>d.semana===st.selWeek)){selWeek=st.selWeek;document.getElementById('week-selector').value=selWeek}
-      if(st.selCluster&&dEnc.some(d=>d.cluster===st.selCluster)){selCluster=st.selCluster;document.getElementById('cluster-selector').value=selCluster}
-      renderAllEnc();
-      document.getElementById('empty-enc').style.display='none';
-      document.getElementById('dash-enc').style.display='block';
-    }
+    applyState(st,'Base restaurada');
+    restoreRemoteState();
   }catch(e){console.warn('Nao foi possivel restaurar as bases salvas:',e)}
 }
 
@@ -1209,7 +1252,7 @@ function rChAb(){
 function fillFiltersAb(){
   const curMop=document.getElementById('f-mop')?.value||'';
   const mops=[...new Set(dAb.map(d=>d.mop).filter(Boolean))].sort();
-  const subs=[...new Set(dAb.map(d=>fmtSubstatus(d.substatus)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const subs=uniqueSubstatuses(dAb.map(d=>d.substatus));
   const ufs=[...new Set(dAb.map(d=>d.uf).filter(Boolean))].sort();
   document.getElementById('f-mop').innerHTML='<option value="">Todos MOP/EPS</option>'+mops.map(m=>`<option value="${eh(m)}">${eh(m)}</option>`).join('');
   if(curMop&&mops.includes(curMop))document.getElementById('f-mop').value=curMop;
@@ -1218,7 +1261,7 @@ function fillFiltersAb(){
   document.getElementById('f-faixa').innerHTML='<option value="">Todas as faixas</option>'+SLA_ORDER.map(f=>`<option value="${eh(f)}">${eh(f)}</option>`).join('');
   renderMopQuick();
 }
-function getSubstatusOptions(current){const cur=fmtSubstatus(current);const subs=[...new Set([...PAUSE_SUBSTATUS,...dAb.map(d=>d.substatus)].map(fmtSubstatus).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));if(cur&&!subs.includes(cur))subs.unshift(cur);return subs.map(s=>`<option value="${eh(s)}"${s===cur?' selected':''}>${eh(s)}</option>`).join('')}
+function getSubstatusOptions(current){const cur=fmtSubstatus(current);const subs=uniqueSubstatuses([...PAUSE_SUBSTATUS,...dAb.map(d=>d.substatus)]);if(cur&&!subs.some(s=>nk(s)===nk(cur)))subs.unshift(cur);return subs.map(s=>`<option value="${eh(s)}"${nk(s)===nk(cur)?' selected':''}>${eh(s)}</option>`).join('')}
 function updateSubstatus(rowKey,value){
   if(!canEdit())return;
   const item=dAb.find(d=>d.rowKey===rowKey);if(!item)return;

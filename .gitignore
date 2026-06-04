@@ -1,4 +1,5 @@
 .vercel
+node_modules/
 ~$*.xlsx
 encerrados_preview.png
 painel_atrix_novo_layout.png
