@@ -371,6 +371,25 @@ body {
 }
 .finput:focus { border-color: var(--blue); }
 [data-theme=dark] .fsel, [data-theme=dark] .finput { background: var(--surface2); }
+.quick-mop {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin: 0 0 12px; padding: 10px;
+  background: var(--surface); border: .5px solid var(--bd);
+  border-radius: 12px; box-shadow: var(--shadow-sm);
+}
+.quick-mop-label {
+  font-size: 10px; font-weight: 800; color: var(--tx3);
+  text-transform: uppercase; letter-spacing: .07em; margin-right: 2px;
+}
+.quick-mop-btn {
+  border: .5px solid var(--bd2); background: var(--surface2); color: var(--tx2);
+  border-radius: 999px; padding: 7px 11px; font-size: 11px; font-weight: 800;
+  font-family: inherit; cursor: pointer; min-height: 30px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  white-space: nowrap; max-width: 100%; transition: transform .12s, border-color .12s, background .12s;
+}
+.quick-mop-btn:hover { transform: translateY(-1px); border-color: var(--blue); color: var(--tx); }
+.quick-mop-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
 .tw { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 11px; }
 th {
@@ -654,6 +673,7 @@ body.is-admin .admin-only { display: flex; }
       <label class="empty-btn eb-ab" for="file-ab"><i class="ti ti-upload" style="font-size:14px"></i> Carregar Base Abertos</label>
     </div>
     <div id="dash-ab" style="display:none">
+      <div class="quick-mop" id="quick-mop-ab" aria-label="Filtros rápidos por MOP/EPS"></div>
       <div class="mrow" id="mrow-ab"></div>
       <div class="prow" id="prow-ab"></div>
       <div class="g3">
@@ -689,7 +709,7 @@ body.is-admin .admin-only { display: flex; }
           </div>
         </div>
         <div class="fbar">
-          <select class="fsel" id="f-mop" onchange="renderTAb()"><option value="">Todos MOP/EPS</option></select>
+          <select class="fsel" id="f-mop" onchange="renderAllAb()"><option value="">Todos MOP/EPS</option></select>
           <select class="fsel" id="f-faixa" onchange="renderTAb()"><option value="">Todas as faixas</option></select>
           <select class="fsel" id="f-sub" onchange="renderTAb()"><option value="">Todos substatus</option></select>
           <select class="fsel" id="f-uf" onchange="renderTAb()"><option value="">Todas UFs</option></select>
@@ -807,6 +827,7 @@ const SLA_CLR={'Maior que 24h':'#ff3b30','Entre 12h e 24h':'#ff9500','Entre 8h e
 const SLA_BADGE={'Maior que 24h':'b-red','Entre 12h e 24h':'b-orange','Entre 8h e 12h':'b-yellow','Entre 4h e 8h':'b-green','Ate 4h':'b-blue'};
 const AGING_MAP={'Maior que 24h':'Maior que 24h','Entre 12h e 24h':'Entre 12h e 24h','Entre 8h e 12h':'Entre 8h e 12h','Entre 4h e 8h':'Entre 4h e 8h','Ate 4h':'Ate 4h','At? 4h':'Ate 4h'};
 const MOP_CLR={'SLN MA':'#007aff','GIGA+ MA':'#34c759','SLN PA':'#af52de','GIGA+ PI':'#ff6b35','ADX':'#8e8e93'};
+const MOP_QUICK=['GIGA+ PI','GIGA+ MA','SLN MA','SLN PA','ADX'];
 const CLUSTER_INFO={
   'MA CAP':{clr:'#007aff',desc:'Maranhão Capital'},
   'MA INT':{clr:'#5ac8fa',desc:'Maranhão Interior'},
@@ -922,6 +943,7 @@ function fmtSubstatus(v){const s=String(v||'').trim().replace(/\s+/g,' ');if(!s)
 function safeUrl(v){const raw=String(v||'').trim();if(!raw)return'';try{const u=new URL(raw,window.location&&window.location.href?window.location.href:'http://localhost/');return['http:','https:'].includes(u.protocol)?u.href:''}catch{return''}}
 function bestLink(...vals){for(const v of vals){const u=safeUrl(v);if(u)return u}return''}
 function gv(r,ns){for(const n of ns)if(r[n]!==undefined&&r[n]!=='')return r[n];const m=Object.fromEntries(Object.keys(r).map(k=>[nk(k),k]));for(const n of ns){const k=m[nk(n)];if(k&&r[k]!==undefined&&r[k]!=='')return r[k]}return''}
+function fmtMop(v){const raw=String(v||'').trim().replace(/\s+/g,' ').toUpperCase();const k=raw.replace(/\s+/g,'');if(k==='GIGA+PI'||k==='GIGAPI')return'GIGA+ PI';if(k==='GIGA+MA'||k==='GIGAMA')return'GIGA+ MA';if(k==='SLNMA')return'SLN MA';if(k==='SLNPA')return'SLN PA';if(k==='ADX')return'ADX';return raw}
 function iMop(uf,reg){const u=String(uf||'').toUpperCase().trim(),r=String(reg||'').toUpperCase().trim();if(u==='MA')return r.includes('INT')?'GIGA+ MA':'SLN MA';if(u==='PA')return'SLN PA';if(u==='PI')return'GIGA+ PI';if(u==='AM'||u==='AP')return'ADX';return'SLN MA'}
 function cnt(arr,key){const r={};arr.forEach(d=>{if(d[key])r[d[key]]=(r[d[key]]||0)+1});return r}
 function se(obj){return Object.entries(obj).sort((a,b)=>b[1]-a[1])}
@@ -971,7 +993,7 @@ function restoreState(){
     const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;
     const st=JSON.parse(raw);
     if(Array.isArray(st.dAb)&&st.dAb.length){
-      dAb=st.dAb.map((d,i)=>({...d,rowKey:d.rowKey??i,substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}));
+      dAb=st.dAb.map((d,i)=>({...d,rowKey:d.rowKey??i,mop:fmtMop(d.mop),substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}));
       document.getElementById('nb-ab').textContent=dAb.length;
       document.getElementById('ft-ab').textContent='Base restaurada em '+now2();
       fillFiltersAb();renderAllAb();startRefresh();
@@ -1030,7 +1052,7 @@ function procAb(raw,fname){
     const slaLimitH=slaBaseLimit(r);
     const slaRaw=gv(r,['SLA (h)','SLA(h)','SLA_H','SLA','SLA Formatado','Tempo','Tempo SLA','Tempo Decorrido']);
     const originalSlaH=typeof slaRaw==='number'?slaRaw:ph(slaRaw);
-    let mop=String(gv(r,['MOP/EPS (Regra)','MOP/EPS','MOP_EPS'])||'').trim();
+    let mop=fmtMop(gv(r,['MOP/EPS (Regra)','MOP/EPS','MOP_EPS']));
     if(!mop)mop=iMop(uf,regiao);
     const item={rowKey,id,cliente,uf,cidade,regiao,substatus,link,openedAt,originalSlaH,slaLimitH,pausedBusinessH:0,pauseStart:null,mop};
     if(!isOperatorClient(item)&&isPausedSubstatus(substatus))item.pauseStart=new Date();
@@ -1125,11 +1147,25 @@ function encScope(){
 }
 
 /* ─── RENDER ABERTOS ─── */
-function renderAllAb(){refreshAbTimes();rMetAb();rPillAb();rSlaAb();rRegAb();rMopAb();rSubAb();rChAb();renderTAb()}
+function activeMopAb(){const el=document.getElementById('f-mop');return el?el.value:''}
+function abScope(){const mop=activeMopAb();return mop?dAb.filter(d=>d.mop===mop):dAb}
+function setMopQuick(mop){const el=document.getElementById('f-mop');if(el)el.value=mop||'';renderAllAb()}
+function renderMopQuick(){
+  const el=document.getElementById('quick-mop-ab');if(!el)return;
+  const cur=activeMopAb();
+  const btns=['',...MOP_QUICK].map(m=>{
+    const label=m||'Todos',active=cur===m?' active':'';
+    const count=m?dAb.filter(d=>d.mop===m).length:dAb.length;
+    return`<button type="button" class="quick-mop-btn${active}" onclick="setMopQuick('${eh(m)}')" title="${count} chamados">${eh(label)} <span style="opacity:.72">${count}</span></button>`;
+  }).join('');
+  el.innerHTML=`<span class="quick-mop-label">Dashboard por MOP/EPS</span>${btns}`;
+}
+function renderAllAb(){refreshAbTimes();renderMopQuick();rMetAb();rPillAb();rSlaAb();rRegAb();rMopAb();rSubAb();rChAb();renderTAb()}
 
 function rMetAb(){
-  const t=dAb.length,fo=dAb.filter(d=>d.statusSla==='FORA DO PRAZO').length,np=t-fo;
-  const vs=dAb.map(d=>d.slaH).filter(v=>v>0);
+  const data=abScope();
+  const t=data.length,fo=data.filter(d=>d.statusSla==='FORA DO PRAZO').length,np=t-fo;
+  const vs=data.map(d=>d.slaH).filter(v=>v>0);
   const avg=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:0,mx=vs.length?Math.max(...vs):0;
   const pfo=Math.round(fo/Math.max(t,1)*100),pnp=Math.round(np/Math.max(t,1)*100);
   document.getElementById('mrow-ab').innerHTML=`
@@ -1140,8 +1176,9 @@ function rMetAb(){
     <div class="mc c-red"><div class="mc-label">Maior SLA</div><div class="mc-val" style="color:var(--red)">${fh(mx)}</div><div class="mc-sub">pior caso ativo</div></div>`;
 }
 function rPillAb(){
-  const t=dAb.length||1,fo=dAb.filter(d=>d.statusSla==='FORA DO PRAZO').length,np=t-fo;
-  const tm=se(cnt(dAb,'mop'))[0]||['—',0],ts=se(cnt(dAb.map(d=>({...d,substatus:fmtSubstatus(d.substatus)})),'substatus'))[0]||['—',0];
+  const data=abScope();
+  const t=data.length||1,fo=data.filter(d=>d.statusSla==='FORA DO PRAZO').length,np=t-fo;
+  const tm=se(cnt(data,'mop'))[0]||['—',0],ts=se(cnt(data.map(d=>({...d,substatus:fmtSubstatus(d.substatus)})),'substatus'))[0]||['—',0];
   document.getElementById('prow-ab').innerHTML=`
     <div class="pc"><div class="pico pi-r"><i class="ti ti-alert-circle"></i></div><div><div class="pv">${fo}</div><div class="ps">Fora do prazo <b>(${Math.round(fo/t*100)}%)</b></div></div></div>
     <div class="pc"><div class="pico pi-g"><i class="ti ti-circle-check"></i></div><div><div class="pv">${np}</div><div class="ps">No prazo <b>(${Math.round(np/t*100)}%)</b></div></div></div>
@@ -1149,31 +1186,37 @@ function rPillAb(){
     <div class="pc"><div class="pico pi-o"><i class="ti ti-clock-pause"></i></div><div><div class="pv">${ts[1]}</div><div class="ps">${ts[0]||'—'}</div></div></div>`;
 }
 function rSlaAb(){
-  const c={};SLA_ORDER.forEach(f=>c[f]=0);dAb.forEach(d=>{if(d.faixa)c[d.faixa]=(c[d.faixa]||0)+1});
+  const data=abScope();
+  const c={};SLA_ORDER.forEach(f=>c[f]=0);data.forEach(d=>{if(d.faixa)c[d.faixa]=(c[d.faixa]||0)+1});
   const mx=Math.max(...Object.values(c),1);
   document.getElementById('sla-ab').innerHTML=barRows(SLA_ORDER.map(f=>[f,c[f]]),k=>SLA_CLR[k],mx);
 }
-function rRegAb(){document.getElementById('reg-ab').innerHTML=listRows(se(cnt(dAb,'regiao')),()=>'var(--blue)')||'<div style="font-size:11px;color:var(--tx3);padding:5px">Sem dados</div>'}
+function rRegAb(){const data=abScope();document.getElementById('reg-ab').innerHTML=listRows(se(cnt(data,'regiao')),()=>'var(--blue)')||'<div style="font-size:11px;color:var(--tx3);padding:5px">Sem dados</div>'}
 function rMopAb(){
-  const e=se(cnt(dAb,'mop'));const mx=Math.max(...e.map(x=>x[1]),1);
+  const data=abScope();
+  const e=se(cnt(data,'mop'));const mx=Math.max(...e.map(x=>x[1]),1);
   document.getElementById('mop-ab').innerHTML=e.map(([m,v])=>`<div class="brow"><div class="blbl" style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${MOP_CLR[m]||'#8e8e93'};flex-shrink:0"></span>${m}</div><div class="btrk"><div class="bfil" style="width:${Math.round(v/mx*100)}%;background:${MOP_CLR[m]||'#8e8e93'}"></div></div><div class="bn">${v}</div></div>`).join('');
 }
-function rSubAb(){document.getElementById('sub-ab').innerHTML=listRows(se(cnt(dAb.map(d=>({...d,substatus:fmtSubstatus(d.substatus)})),'substatus')),()=>'var(--tx3)')}
+function rSubAb(){const data=abScope();document.getElementById('sub-ab').innerHTML=listRows(se(cnt(data.map(d=>({...d,substatus:fmtSubstatus(d.substatus)})),'substatus')),()=>'var(--tx3)')}
 function rChAb(){
-  const c={};SLA_ORDER.forEach(f=>c[f]=0);dAb.forEach(d=>{if(d.faixa)c[d.faixa]=(c[d.faixa]||0)+1});
+  const data=abScope();
+  const c={};SLA_ORDER.forEach(f=>c[f]=0);data.forEach(d=>{if(d.faixa)c[d.faixa]=(c[d.faixa]||0)+1});
   if(chAb){chAb.destroy();chAb=null}
   const ctx=document.getElementById('ch-ab');if(!ctx)return;
   const dk=document.body.dataset.theme==='dark';
   chAb=new Chart(ctx,{type:'bar',data:{labels:SLA_ORDER.map(f=>f.replace(/[🔴🟠🟡🟢🔵]\s*/,'')),datasets:[{data:SLA_ORDER.map(f=>c[f]),backgroundColor:SLA_ORDER.map(f=>SLA_CLR[f]),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93'}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:1}}}}});
 }
 function fillFiltersAb(){
+  const curMop=document.getElementById('f-mop')?.value||'';
   const mops=[...new Set(dAb.map(d=>d.mop).filter(Boolean))].sort();
   const subs=[...new Set(dAb.map(d=>fmtSubstatus(d.substatus)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   const ufs=[...new Set(dAb.map(d=>d.uf).filter(Boolean))].sort();
   document.getElementById('f-mop').innerHTML='<option value="">Todos MOP/EPS</option>'+mops.map(m=>`<option value="${eh(m)}">${eh(m)}</option>`).join('');
+  if(curMop&&mops.includes(curMop))document.getElementById('f-mop').value=curMop;
   document.getElementById('f-sub').innerHTML='<option value="">Todos substatus</option>'+subs.map(s=>`<option value="${eh(s)}">${eh(s)}</option>`).join('');
   document.getElementById('f-uf').innerHTML='<option value="">Todas UFs</option>'+ufs.map(u=>`<option value="${eh(u)}">${eh(u)}</option>`).join('');
   document.getElementById('f-faixa').innerHTML='<option value="">Todas as faixas</option>'+SLA_ORDER.map(f=>`<option value="${eh(f)}">${eh(f)}</option>`).join('');
+  renderMopQuick();
 }
 function getSubstatusOptions(current){const cur=fmtSubstatus(current);const subs=[...new Set([...PAUSE_SUBSTATUS,...dAb.map(d=>d.substatus)].map(fmtSubstatus).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));if(cur&&!subs.includes(cur))subs.unshift(cur);return subs.map(s=>`<option value="${eh(s)}"${s===cur?' selected':''}>${eh(s)}</option>`).join('')}
 function updateSubstatus(rowKey,value){
