@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
       return json(res, 503, {
         ok: false,
-        error: 'BLOB_READ_WRITE_TOKEN nao configurado no Vercel.',
+        error: 'BLOB_READ_WRITE_TOKEN não configurado no Vercel.',
       });
     }
 
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
     }
 
     res.setHeader('allow', 'GET, POST');
-    return json(res, 405, { ok: false, error: 'Metodo nao permitido.' });
+    return json(res, 405, { ok: false, error: 'Método não permitido.' });
   } catch (error) {
     return json(res, 500, { ok: false, error: error.message || 'Erro interno.' });
   }
