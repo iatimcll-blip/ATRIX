@@ -468,6 +468,26 @@ const chOpts={
   },
   spanGaps:true
 };
+const lineLabelPlugin={
+  id:'lineLabelPlugin',
+  afterDatasetsDraw(chart){
+    const {ctx,chartArea}=chart;
+    chart.data.datasets.forEach((ds,i)=>{
+      if(chart.options.plugins.percentValues&&chart.options.plugins.percentValues.enabled&&ds.type!=='line'&&String(ds.label||'').includes('%')){
+        const meta=chart.getDatasetMeta(i);
+        ctx.save();ctx.font='700 9px IBM Plex Mono, monospace';ctx.fillStyle='#555c78';ctx.textAlign='center';ctx.textBaseline='bottom';
+        meta.data.forEach((p,idx)=>{const v=ds.data[idx];if(Number(v)>0)ctx.fillText(v+'%',p.x,p.y-3)});
+        ctx.restore();
+      }
+      if(ds.type!=='line'||!ds.lineLabel)return;
+      const meta=chart.getDatasetMeta(i);if(!meta.data.length)return;
+      const p=meta.data[meta.data.length-1];
+      ctx.save();ctx.font='700 10px IBM Plex Mono, monospace';ctx.fillStyle=ds.borderColor||'#fff';ctx.textAlign='right';ctx.textBaseline='bottom';
+      ctx.fillText(ds.lineLabel,Math.min(chartArea.right-4,p.x-4),p.y-4);
+      ctx.restore();
+    });
+  }
+};
 
 function mkCh(id,lbs,ds,opts={}){
   const c=document.getElementById(id);if(!c)return;
@@ -475,18 +495,24 @@ function mkCh(id,lbs,ds,opts={}){
   const o=JSON.parse(JSON.stringify(chOpts));
   if(opts.max)o.scales.y.max=opts.max;
   if(opts.min!==undefined)o.scales.y.min=opts.min;
+  if(opts.percent){
+    o.scales.y.ticks.callback=v=>v+'%';
+    o.plugins.tooltip={callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}%`}};
+    o.plugins.percentValues={enabled:true};
+  }
   o.scales.x.ticks.maxRotation=modo==='s'?60:0;
   o.scales.x.ticks.minRotation=modo==='s'?60:0;
-  charts[id]=new Chart(c,{type:opts.type||'bar',data:{labels:lbs,datasets:ds},options:o});
+  charts[id]=new Chart(c,{type:opts.type||'bar',data:{labels:lbs,datasets:ds},options:o,plugins:[lineLabelPlugin]});
 }
 
 function barEv(id,ts){
-  mkCh(id,ts.lbs,[
+  const ds=[
     {label:'Prazo %',data:ts.pp,backgroundColor:'rgba(77,142,240,.8)',borderRadius:3,order:1,hoverBackgroundColor:'#4d8ef0'},
     {label:'Outlier %',data:ts.op,backgroundColor:'rgba(224,92,92,.75)',borderRadius:3,order:1,hoverBackgroundColor:'#e05c5c'},
-    {label:'Meta',data:ts.lbs.map(()=>M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0},
-    {label:'Meta Outlier',data:ts.lbs.map(()=>MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0}
-  ],{max:100});
+    {label:'Meta',lineLabel:'Meta',data:ts.lbs.map(()=>M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}
+  ];
+  if(ts.op.some(v=>v>MOUT))ds.push({label:'Outlier',lineLabel:'Outlier',data:ts.lbs.map(()=>MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0});
+  mkCh(id,ts.lbs,ds,{max:100,percent:true});
 }
 
 function tmeEv(id,ts){
@@ -545,20 +571,20 @@ function renderVis(){
       <div class="leg">${isAll?'<span><span class="ld" style="background:#4d8ef0"></span>Backbone prazo</span><span><span class="ld" style="background:#3ecf8e"></span>Acesso prazo</span><span><span class="ld" style="background:#e05c5c"></span>Backbone outlier</span><span><span class="ld" style="background:#f0a14d"></span>Acesso outlier</span>':'<span><span class="ld" style="background:#4d8ef0"></span>No prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span>'}<span style="font-size:10px;color:var(--text3)">Meta prazo 88,9% - Meta outlier 4,9%</span></div>
       <div style="position:relative;height:210px"><canvas id="cv-main" role="img" aria-label="Comparativo por cluster"></canvas></div>
     </div>`;
+  const hasOutlierLine=isAll?[...bbOut,...acOut].some(v=>v>MOUT):d2.some(v=>v>MOUT);
   const chartData=isAll?[
     {label:'Backbone - Prazo',data:bbPrazo,backgroundColor:'rgba(77,142,240,.82)',borderRadius:4,order:1},
     {label:'Acesso - Prazo',data:acPrazo,backgroundColor:'rgba(62,207,142,.82)',borderRadius:4,order:1},
     {label:'Backbone - Outlier',data:bbOut,backgroundColor:'rgba(224,92,92,.72)',borderRadius:4,order:1},
     {label:'Acesso - Outlier',data:acOut,backgroundColor:'rgba(240,161,77,.72)',borderRadius:4,order:1},
-    {label:'Meta',data:CLS.map(()=>M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0},
-    {label:'Meta Outlier',data:CLS.map(()=>MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0}
+    {label:'Meta',lineLabel:'Meta',data:CLS.map(()=>M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}
   ]:[
     {label:'No prazo %',data:d1,backgroundColor:'rgba(77,142,240,.8)',borderRadius:4,order:1},
     {label:'Outlier %',data:d2,backgroundColor:'rgba(224,92,92,.75)',borderRadius:4,order:1},
-    {label:'Meta',data:CLS.map(()=>M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0},
-    {label:'Meta Outlier',data:CLS.map(()=>MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0}
+    {label:'Meta',lineLabel:'Meta',data:CLS.map(()=>M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}
   ];
-  mkCh('cv-main',CLS.map(c=>CL_NM[c]),chartData,{max:100});
+  if(hasOutlierLine)chartData.push({label:'Outlier',lineLabel:'Outlier',data:CLS.map(()=>MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0});
+  mkCh('cv-main',CLS.map(c=>CL_NM[c]),chartData,{max:100,percent:true});
 }
 
 function renderClusters(){

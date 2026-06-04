@@ -639,6 +639,7 @@ body.is-admin .admin-only { display: flex; }
       <span class="ntab-badge nb-green" id="nb-enc">0</span>
     </button>
     <button class="ntab" id="ntab-rede" onclick="switchTab('rede')"><i class="ti ti-router"></i> Rede</button>
+    <button class="ntab" id="ntab-fuel" onclick="switchTab('combustivel')"><i class="ti ti-gas-station"></i> Combustiveis</button>
     <button class="ntab" onclick="switchTab('encerrados')"><i class="ti ti-chart-bar"></i> Performance</button>
     <button class="ntab" onclick="switchTab('encerrados')"><i class="ti ti-trend-up"></i> Evolução</button>
   </div>
@@ -823,6 +824,58 @@ body.is-admin .admin-only { display: flex; }
     <iframe src="PAINEL_REDE.html" title="Painel Rede Backbone e Acesso" style="width:100%;height:calc(100vh - 104px);border:0;border-radius:14px;background:transparent"></iframe>
   </div>
 
+  <div class="panel" id="panel-combustivel">
+    <div class="section-hd">Consumo de combustiveis <span class="sh-line"></span></div>
+    <div class="mrow" id="mrow-fuel"></div>
+    <div class="prow" id="prow-fuel"></div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Projecao por tecnico</span></div>
+        <div class="cw"><canvas id="ch-fuel" role="img" aria-label="Projecao de consumo por tecnico">Grafico.</canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Resumo por status</span></div>
+        <div id="fuel-status"></div>
+      </div>
+    </div>
+    <div class="tsec admin-only">
+      <div class="tsec-hd"><span class="tsec-title">Cadastrar veiculo e condutor</span></div>
+      <div class="fbar">
+        <input class="finput" id="fuel-placa" placeholder="Placa">
+        <input class="finput" id="fuel-modelo" placeholder="Modelo">
+        <input class="finput" id="fuel-ano" placeholder="Ano">
+        <input class="finput" id="fuel-condutor" placeholder="Colaborador / condutor">
+        <input class="finput" id="fuel-setor" placeholder="Setor">
+        <input class="finput" id="fuel-superior" placeholder="Superior imediato">
+        <select class="fsel" id="fuel-tipo"><option>Gasolina</option><option>Diesel</option><option>Etanol</option><option>Flex</option></select>
+        <select class="fsel" id="fuel-status-new"><option>Ativo</option><option>Inativo</option><option>Oficina</option><option>Bloqueado</option></select>
+        <span class="card-action" onclick="addFuelVehicle()">Adicionar</span>
+      </div>
+    </div>
+    <div class="tsec admin-only">
+      <div class="tsec-hd"><span class="tsec-title">Registrar solicitacao</span></div>
+      <div class="fbar">
+        <select class="fsel" id="fuel-req-placa"></select>
+        <input class="finput" id="fuel-req-data" type="date">
+        <input class="finput" id="fuel-req-valor" type="number" step="0.01" min="0" placeholder="Valor R$">
+        <input class="finput" id="fuel-req-litros" type="number" step="0.01" min="0" placeholder="Litros">
+        <input class="finput" id="fuel-req-obs" placeholder="Observacao">
+        <span class="card-action" onclick="addFuelRequest()">Registrar</span>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="tsec">
+        <div class="tsec-hd"><span class="tsec-title">Veiculos e condutores</span><span id="cnt-fuel-v" style="color:var(--tx3)"></span></div>
+        <div class="tw"><table><thead><tr><th>Placa</th><th>Modelo</th><th>Ano</th><th>Condutor</th><th>Setor</th><th>Superior</th><th>Status</th></tr></thead><tbody id="tb-fuel-v"></tbody></table></div>
+      </div>
+      <div class="tsec">
+        <div class="tsec-hd"><span class="tsec-title">Solicitacoes registradas</span><span id="cnt-fuel-r" style="color:var(--tx3)"></span></div>
+        <div class="tw"><table><thead><tr><th>Data</th><th>Placa</th><th>Condutor</th><th>Valor</th><th>Litros</th><th>Observacao</th></tr></thead><tbody id="tb-fuel-r"></tbody></table></div>
+      </div>
+    </div>
+    <div class="pfooter">ATRIX · Consumo de Combustiveis · dados compartilhados</div>
+  </div>
+
 </div>
 
 <script>
@@ -833,6 +886,16 @@ const SLA_BADGE={'Maior que 24h':'b-red','Entre 12h e 24h':'b-orange','Entre 8h 
 const AGING_MAP={'Maior que 24h':'Maior que 24h','Entre 12h e 24h':'Entre 12h e 24h','Entre 8h e 12h':'Entre 8h e 12h','Entre 4h e 8h':'Entre 4h e 8h','Ate 4h':'Ate 4h','At? 4h':'Ate 4h'};
 const MOP_CLR={'SLN MA':'#007aff','GIGA+ MA':'#34c759','SLN PA':'#af52de','GIGA+ PI':'#ff6b35','ADX':'#8e8e93'};
 const MOP_QUICK=['GIGA+ PI','GIGA+ MA','SLN MA','SLN PA','ADX'];
+const FUEL_STATUS=['Ativo','Inativo','Oficina','Bloqueado'];
+const FUEL_BASE=[
+  {placa:'SYO3A32',modelo:'GOL',ano:'2024',condutor:'Clemilton Mendes Da Silva',setor:'Operacoes',superior:'Aleksei Thomas Oliveira De Abreu',tipo:'Gasolina',status:'Ativo'},
+  {placa:'FFV6D56',modelo:'SAVEIRO',ano:'2024',condutor:'Moises Amorim Viana',setor:'Operacoes',superior:'Aleksei Thomas Oliveira De Abreu',tipo:'Gasolina',status:'Ativo'},
+  {placa:'TIZ2E26',modelo:'ARGO',ano:'2024',condutor:'Romulo Jose Do Vale Araujo',setor:'Operacoes',superior:'Aleksei Thomas Oliveira De Abreu',tipo:'Gasolina',status:'Ativo'},
+  {placa:'SVE8D67',modelo:'SAVEIRO',ano:'2024',condutor:'Renato Rodrigues Silva',setor:'Operacoes',superior:'Wagner Luz Figueredo',tipo:'Gasolina',status:'Ativo'},
+  {placa:'EWZ5G71',modelo:'SAVEIRO',ano:'2024',condutor:'Mamede Barros Monteiro Filho',setor:'Operacoes',superior:'Wagner Luz Figueredo',tipo:'Gasolina',status:'Ativo'},
+  {placa:'CIY9J81',modelo:'SAVEIRO',ano:'2024',condutor:'Adriano Santos Da Silva',setor:'Operacoes',superior:'Wagner Luz Figueredo',tipo:'Gasolina',status:'Ativo'},
+  {placa:'SUY1C75',modelo:'SAVEIRO',ano:'2024',condutor:'Marcos Alves Da Silva',setor:'Operacoes',superior:'Wagner Luz Figueredo',tipo:'Gasolina',status:'Inativo'}
+];
 const CLUSTER_INFO={
   'MA CAP':{clr:'#007aff',desc:'Maranhão Capital'},
   'MA INT':{clr:'#5ac8fa',desc:'Maranhão Interior'},
@@ -845,8 +908,9 @@ const CLUSTER_INFO={
 const CLUSTER_ORDER=['MA CAP','MA INT','PA CAP','PA INT','PI CAP','PI INT','AM/AP'];
 
 let dAb=[],dEnc=[];
+let dFuelVehicles=[],dFuelRequests=[];
 let scAb='slaH',sdAb=-1,scEnc='tempoTotal',sdEnc=-1;
-let chAb=null,chEnc=null,chSem=null;
+let chAb=null,chEnc=null,chSem=null,chFuel=null;
 let selWeek='';
 let selCluster='';
 let refreshTimer=null;
@@ -880,6 +944,7 @@ function applyPermissions(){
   document.body.classList.toggle('readonly',!!currentUser&&!canEdit());
   const av=document.getElementById('avatar-label');if(av)av.textContent=initials(currentUser&&currentUser.username);
   if(dAb.length)renderTAb();
+  renderFuel();
 }
 function showLogin(msg){
   currentUser=null;
@@ -985,7 +1050,7 @@ function encRuleStats(d){
   const fora8=intermediario+outlier;
   const pct=n=>total?n/total*100:0;
   const pPrazo=pct(prazo),pInter=pct(intermediario),pOut=pct(outlier),pFora8=pct(fora8);
-  return{total,prazo,intermediario,outlier,fora8,pPrazo,pInter,pOut,pFora8,gapPrazo:Math.max(0,85-pPrazo),excessoOutlier:Math.max(0,pOut-2)};
+  return{total,prazo,intermediario,outlier,fora8,pPrazo,pInter,pOut,pFora8,gapPrazo:Math.max(0,85-pPrazo),excessoOutlier:Math.max(0,pOut-1.98)};
 }
 function parseOpeningDate(v){if(v===undefined||v===null||v==='')return null;if(v instanceof Date&&!isNaN(v))return v;if(typeof v==='number'&&isFinite(v)){const d=new Date(Math.round((v-25569)*86400*1000));return isNaN(d)?null:d}const raw=String(v).trim();if(!raw)return null;const iso=new Date(raw);if(!isNaN(iso))return iso;const m=raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);if(!m)return null;const y=Number(m[3].length===2?'20'+m[3]:m[3]);const d=new Date(y,Number(m[2])-1,Number(m[1]),Number(m[4]||0),Number(m[5]||0),Number(m[6]||0));return isNaN(d)?null:d}
 function hoursSince(d){return d?Math.max(0,(Date.now()-d.getTime())/3600000):0}
@@ -1013,9 +1078,11 @@ function refreshAbTimes(){const now=new Date();dAb.forEach(d=>{d.slaH=computeSla
 function startRefresh(){if(refreshTimer)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!dAb.length)return;refreshAbTimes();renderTAb()},1000)}
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
-function buildState(){return{version:2,dAb:serializeAb(),dEnc,users:getUsers(),selWeek,selCluster,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
+function buildState(){return{version:3,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,users:getUsers(),selWeek,selCluster,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>({...d,rowKey:d.rowKey??i,mop:fmtMop(d.mop),substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}))}
 function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>({...d,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}))}
+function normalizeFuelVehicles(list){return(Array.isArray(list)&&list.length?list:FUEL_BASE).map(v=>({...v,placa:String(v.placa||'').toUpperCase().trim(),status:FUEL_STATUS.includes(v.status)?v.status:'Ativo'})).filter(v=>v.placa)}
+function normalizeFuelRequests(list){return(Array.isArray(list)?list:[]).map((r,i)=>({...r,id:r.id||('REQ'+Date.now()+i),placa:String(r.placa||'').toUpperCase().trim(),valor:Number(r.valor||0),litros:Number(r.litros||0),data:r.data||new Date().toISOString().slice(0,10)})).filter(r=>r.placa)}
 function applyState(st,label){
   if(!st||typeof st!=='object')return false;
   let changed=false;
@@ -1048,6 +1115,9 @@ function applyState(st,label){
     }
     if(document.getElementById('user-panel').style.display==='flex')renderUsers();
   }
+  dFuelVehicles=normalizeFuelVehicles(st.dFuelVehicles);
+  dFuelRequests=normalizeFuelRequests(st.dFuelRequests);
+  renderFuel();
   if(changed)applyPermissions();
   return changed;
 }
@@ -1295,7 +1365,7 @@ function fillFiltersAb(){
 function getSubstatusOptions(current){const cur=fmtSubstatus(current);const subs=uniqueSubstatuses([...PAUSE_SUBSTATUS,...dAb.map(d=>d.substatus)]);if(cur&&!subs.some(s=>nk(s)===nk(cur)))subs.unshift(cur);return subs.map(s=>`<option value="${eh(s)}"${nk(s)===nk(cur)?' selected':''}>${eh(s)}</option>`).join('')}
 function updateSubstatus(rowKey,value){
   if(!canEdit())return;
-  const item=dAb.find(d=>d.rowKey===rowKey);if(!item)return;
+  const item=dAb.find(d=>String(d.rowKey)===String(rowKey)||String(d.id)===String(rowKey));if(!item)return;
   const next=fmtSubstatus(value);
   const now=new Date(),wasPaused=!isOperatorClient(item)&&isPausedSubstatus(item.substatus),willPause=!isOperatorClient(item)&&isPausedSubstatus(next);
   if(wasPaused&&!willPause&&item.pauseStart){item.pausedBusinessH=Number(item.pausedBusinessH||0)+businessHoursBetween(item.pauseStart,now);item.pauseStart=null}
@@ -1324,7 +1394,8 @@ function renderTAb(){
     const cleanLink=safeUrl(d.link);
     const lk=cleanLink?`<a class="lbtn" href="${eh(cleanLink)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" style="font-size:13px"></i></a>`:'';
     const idHtml=cleanLink?`<a href="${eh(cleanLink)}" target="_blank" rel="noopener noreferrer" title="Abrir ticket">${eh(d.id)}</a>`:eh(d.id);
-    const subHtml=canEdit()?`<select class="substatus-select" title="Alterar substatus" onchange="updateSubstatus(${d.rowKey}, this.value)">${getSubstatusOptions(d.substatus)}</select>`:`<span class="substatus-readonly">${eh(fmtSubstatus(d.substatus)||'Sem substatus')}</span>`;
+    const subKey=JSON.stringify(String(d.id||d.rowKey)).replace(/</g,'\\u003c');
+    const subHtml=canEdit()?`<select class="substatus-select" title="Alterar substatus" onclick="event.stopPropagation()" onchange="updateSubstatus(${subKey}, this.value)">${getSubstatusOptions(d.substatus)}</select>`:`<span class="substatus-readonly">${eh(fmtSubstatus(d.substatus)||'Sem substatus')}</span>`;
     const rowCls=isValidationSubstatus(d.substatus)?'row-validation':'';
     return`<tr class="${rowCls}"><td class="tid">${idHtml}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)" title="${eh(d.cliente)}">${eh(d.cliente)}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${MOP_CLR[d.mop]||'#8e8e93'};flex-shrink:0"></span>${eh(d.mop)}</span></td><td>${eh(d.cidade||'\u2014')}/${eh(d.uf)}</td><td style="${sc}"><span class="sla-clock">${fd(d.slaH)}</span></td><td><span class="badge ${bc}">${eh(d.faixa)}</span></td><td><span class="badge ${ss}">${eh(d.statusSla)}</span></td><td><span class="substatus-cell">${substatusLamp(d)}${subHtml}</span></td><td>${lk}</td></tr>`;
   }).join('')||'<tr><td colspan="9" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
@@ -1358,7 +1429,7 @@ function rMetEnc(d){
     <div class="mc c-teal"><div class="mc-label">Total encerrados</div><div class="mc-val" style="color:var(--teal-dk)"><b>${s.total}</b></div><div class="mc-sub">chamados fechados</div></div>
     <div class="mc c-green"><div class="mc-label">Prazo ≤8h</div><div class="mc-val" style="color:var(--green-dk)"><b>${s.prazo}</b></div><div class="mc-sub"><span class="tag tag-green">${pp(s.pPrazo)}%</span> ${s.gapPrazo?pp(s.gapPrazo)+' p.p. fora da meta':'meta atingida'}</div></div>
     <div class="mc c-orange"><div class="mc-label">8h a 24h</div><div class="mc-val" style="color:var(--orange)"><b>${s.intermediario}</b></div><div class="mc-sub"><span class="tag tag-orange">${pp(s.pInter)}%</span> fora da meta 8h</div></div>
-    <div class="mc c-red"><div class="mc-label">Outlier &gt;24h</div><div class="mc-val" style="color:var(--red)"><b>${s.outlier}</b></div><div class="mc-sub"><span class="tag tag-red">${pp(s.pOut)}%</span> ${s.excessoOutlier?pp(s.excessoOutlier)+' p.p. acima do max. 2%':'dentro do max. 2%'}</div></div>
+    <div class="mc c-red"><div class="mc-label">Outlier &gt;24h</div><div class="mc-val" style="color:var(--red)"><b>${s.outlier}</b></div><div class="mc-sub"><span class="tag tag-red">${pp(s.pOut)}%</span> ${s.excessoOutlier?pp(s.excessoOutlier)+' p.p. acima do max. 1,98%':'dentro do max. 1,98%'}</div></div>
     <div class="mc c-orange"><div class="mc-label">Tempo medio</div><div class="mc-val" style="color:var(--orange)">${fh(avg)}</div><div class="mc-sub">tempo total medio</div></div>`;
 }
 
@@ -1368,7 +1439,7 @@ function rPillEnc(d){
   document.getElementById('prow-enc').innerHTML=`
     <div class="pc"><div class="pico pi-g"><i class="ti ti-circle-check"></i></div><div><div class="pv">${s.prazo}</div><div class="ps">Prazo ≤8h <b>(${pp(s.pPrazo)}%)</b> · meta ≥85%</div></div></div>
     <div class="pc"><div class="pico pi-o"><i class="ti ti-clock-exclamation"></i></div><div><div class="pv">${s.intermediario}</div><div class="ps">8h a 24h <b>(${pp(s.pInter)}%)</b> fora da meta</div></div></div>
-    <div class="pc"><div class="pico pi-r"><i class="ti ti-alert-triangle"></i></div><div><div class="pv">${s.outlier}</div><div class="ps">Outlier &gt;24h <b>(${pp(s.pOut)}%)</b> · max. 2%</div></div></div>
+    <div class="pc"><div class="pico pi-r"><i class="ti ti-alert-triangle"></i></div><div><div class="pv">${s.outlier}</div><div class="ps">Outlier &gt;24h <b>(${pp(s.pOut)}%)</b> · max. 1,98%</div></div></div>
     <div class="pc"><div class="pico pi-b"><i class="ti ti-map-pin"></i></div><div><div class="pv" style="font-size:14px;letter-spacing:-.01em">${tc[0]}</div><div class="ps">${tc[1]} chamados · cluster maior</div></div></div>`;
 }
 function rClusterCards(d){
@@ -1434,7 +1505,7 @@ function rMeta8(d){
         <div class="brow"><div class="blbl">Prazo ≤8h</div><div class="btrk"><div class="bfil" style="width:${Math.min(100,s.pPrazo)}%;background:var(--green)"></div></div><div class="bn">${s.prazo} · ${pp(s.pPrazo)}%</div></div>
         <div class="brow"><div class="blbl">8h a 24h</div><div class="btrk"><div class="bfil" style="width:${Math.min(100,s.pInter)}%;background:var(--orange)"></div></div><div class="bn">${s.intermediario} · ${pp(s.pInter)}%</div></div>
         <div class="brow"><div class="blbl">Outlier &gt;24h</div><div class="btrk"><div class="bfil" style="width:${Math.min(100,s.pOut)}%;background:var(--red)"></div></div><div class="bn">${s.outlier} · ${pp(s.pOut)}%</div></div>
-        <div style="font-size:9px;color:var(--tx3);margin-top:8px">Fora da meta 8h: ${s.fora8} chamados (${pp(s.pFora8)}%) · Outlier acima do limite: ${pp(s.excessoOutlier)} p.p.</div>
+        <div style="font-size:9px;color:var(--tx3);margin-top:8px">Fora da meta 8h: ${s.fora8} chamados (${pp(s.pFora8)}%) · Outlier acima do limite 1,98%: ${pp(s.excessoOutlier)} p.p.</div>
       </div>
     </div>`;
 }
@@ -1511,6 +1582,52 @@ function renderTEnc(){
 }
 function sEnc(c){scEnc===c?sdEnc*=-1:(scEnc=c,sdEnc=-1);renderTEnc()}
 
+/* FUEL PANEL */
+function ensureFuelData(){if(!dFuelVehicles.length)dFuelVehicles=normalizeFuelVehicles(FUEL_BASE)}
+function fuelVehicleByPlate(placa){const k=String(placa||'').toUpperCase().trim();return dFuelVehicles.find(v=>v.placa===k)||{}}
+function addFuelVehicle(){
+  if(!canEdit())return;
+  const placa=document.getElementById('fuel-placa').value.toUpperCase().trim();
+  if(!placa){alert('Informe a placa.');return}
+  const item={placa,modelo:document.getElementById('fuel-modelo').value.trim(),ano:document.getElementById('fuel-ano').value.trim(),condutor:document.getElementById('fuel-condutor').value.trim(),setor:document.getElementById('fuel-setor').value.trim(),superior:document.getElementById('fuel-superior').value.trim(),tipo:document.getElementById('fuel-tipo').value,status:document.getElementById('fuel-status-new').value};
+  const idx=dFuelVehicles.findIndex(v=>v.placa===placa);
+  if(idx>=0)dFuelVehicles[idx]={...dFuelVehicles[idx],...item};else dFuelVehicles.push(item);
+  ['fuel-placa','fuel-modelo','fuel-ano','fuel-condutor','fuel-setor','fuel-superior'].forEach(id=>document.getElementById(id).value='');
+  renderFuel();saveState();
+}
+function updateFuelStatus(placa,status){if(!canEdit())return;const v=fuelVehicleByPlate(placa);if(!v.placa)return;v.status=FUEL_STATUS.includes(status)?status:'Ativo';renderFuel();saveState()}
+function addFuelRequest(){
+  if(!canEdit())return;
+  const placa=document.getElementById('fuel-req-placa').value;
+  const valor=Number(document.getElementById('fuel-req-valor').value||0),litros=Number(document.getElementById('fuel-req-litros').value||0);
+  if(!placa||(!valor&&!litros)){alert('Informe placa e valor ou litros.');return}
+  const v=fuelVehicleByPlate(placa);
+  dFuelRequests.push({id:'REQ'+Date.now(),data:document.getElementById('fuel-req-data').value||new Date().toISOString().slice(0,10),placa,condutor:v.condutor||'',valor,litros,obs:document.getElementById('fuel-req-obs').value.trim()});
+  ['fuel-req-valor','fuel-req-litros','fuel-req-obs'].forEach(id=>document.getElementById(id).value='');
+  renderFuel();saveState();
+}
+function fuelProjection(){const by={};dFuelRequests.forEach(r=>{const v=fuelVehicleByPlate(r.placa),name=r.condutor||v.condutor||r.placa;if(!by[name])by[name]={valor:0,litros:0,count:0};by[name].valor+=Number(r.valor||0);by[name].litros+=Number(r.litros||0);by[name].count++});return Object.entries(by).sort((a,b)=>b[1].valor-a[1].valor)}
+function renderFuel(){
+  ensureFuelData();
+  const totalValor=dFuelRequests.reduce((s,r)=>s+Number(r.valor||0),0),totalLitros=dFuelRequests.reduce((s,r)=>s+Number(r.litros||0),0),active=dFuelVehicles.filter(v=>v.status==='Ativo').length;
+  document.getElementById('mrow-fuel').innerHTML=`<div class="mc c-blue"><div class="mc-label">Veiculos</div><div class="mc-val"><b>${dFuelVehicles.length}</b></div><div class="mc-sub">${active} ativos</div></div><div class="mc c-green"><div class="mc-label">Solicitacoes</div><div class="mc-val" style="color:var(--green-dk)"><b>${dFuelRequests.length}</b></div><div class="mc-sub">historico registrado</div></div><div class="mc c-orange"><div class="mc-label">Consumo geral</div><div class="mc-val" style="color:var(--orange)">R$ ${pp(totalValor)}</div><div class="mc-sub">${pp(totalLitros)} litros</div></div><div class="mc c-red"><div class="mc-label">Projecao mensal</div><div class="mc-val" style="color:var(--red)">R$ ${pp(totalValor)}</div><div class="mc-sub">base atual de solicitacoes</div></div>`;
+  const top=fuelProjection()[0]||['-',{valor:0,litros:0,count:0}];
+  document.getElementById('prow-fuel').innerHTML=`<div class="pc"><div class="pico pi-b"><i class="ti ti-gas-station"></i></div><div><div class="pv">${pp(totalLitros)} L</div><div class="ps">litros solicitados</div></div></div><div class="pc"><div class="pico pi-o"><i class="ti ti-user-dollar"></i></div><div><div class="pv" style="font-size:14px">${eh(top[0])}</div><div class="ps">maior consumo R$ ${pp(top[1].valor)}</div></div></div>`;
+  document.getElementById('fuel-status').innerHTML=listRows(se(cnt(dFuelVehicles,'status')),k=>({Ativo:'var(--green)',Inativo:'var(--tx3)',Oficina:'var(--orange)',Bloqueado:'var(--red)'}[k]||'var(--blue)'));
+  const sel=document.getElementById('fuel-req-placa');if(sel)sel.innerHTML=dFuelVehicles.filter(v=>v.status==='Ativo').map(v=>`<option value="${eh(v.placa)}">${eh(v.placa)} - ${eh(v.condutor)}</option>`).join('');
+  const today=document.getElementById('fuel-req-data');if(today&&!today.value)today.value=new Date().toISOString().slice(0,10);
+  document.getElementById('cnt-fuel-v').textContent=dFuelVehicles.length+' veiculos';
+  document.getElementById('tb-fuel-v').innerHTML=dFuelVehicles.map(v=>`<tr><td class="tid">${eh(v.placa)}</td><td>${eh(v.modelo)}</td><td>${eh(v.ano)}</td><td>${eh(v.condutor)}</td><td>${eh(v.setor)}</td><td>${eh(v.superior)}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelStatus('${eh(v.placa)}',this.value)">${FUEL_STATUS.map(s=>`<option value="${s}"${s===v.status?' selected':''}>${s}</option>`).join('')}</select>`:eh(v.status)}</td></tr>`).join('');
+  document.getElementById('cnt-fuel-r').textContent=dFuelRequests.length+' solicitacoes';
+  document.getElementById('tb-fuel-r').innerHTML=dFuelRequests.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td class="tid">${eh(r.placa)}</td><td>${eh(r.condutor||fuelVehicleByPlate(r.placa).condutor||'-')}</td><td>R$ ${pp(Number(r.valor||0))}</td><td>${pp(Number(r.litros||0))} L</td><td>${eh(r.obs||'')}</td></tr>`).join('')||'<tr><td colspan="6" class="nores">Nenhuma solicitacao registrada</td></tr>';
+  renderFuelChart();
+}
+function renderFuelChart(){
+  const ctx=document.getElementById('ch-fuel');if(!ctx)return;if(chFuel){chFuel.destroy();chFuel=null}
+  const entries=fuelProjection().slice(0,8),dk=document.body.dataset.theme==='dark';
+  chFuel=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Valor R$',data:entries.map(e=>Number(e[1].valor.toFixed(2))),backgroundColor:'rgba(77,142,240,.82)',borderRadius:6},{label:'Litros',data:entries.map(e=>Number(e[1].litros.toFixed(2))),backgroundColor:'rgba(62,207,142,.72)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}}}}});
+}
+
 /* ─── EXPORT ─── */
 function exportCSV(tipo){
   const rows=tipo==='ab'?gFAb():gFEnc();
@@ -1530,26 +1647,29 @@ function exportCSV(tipo){
 
 /* ─── NAV & THEME ─── */
 function switchTab(tab){
-  if(!['abertos','encerrados','rede'].includes(tab))tab='abertos';
+  if(!['abertos','encerrados','rede','combustivel'].includes(tab))tab='abertos';
   const isAb=tab==='abertos';
   const isEnc=tab==='encerrados';
   const isRede=tab==='rede';
+  const isFuel=tab==='combustivel';
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('ntab-'+(isAb?'ab':isRede?'rede':'enc')).classList.add('active');
+  document.getElementById('ntab-'+(isAb?'ab':isRede?'rede':isFuel?'fuel':'enc')).classList.add('active');
   document.getElementById('panel-abertos').classList.toggle('active',isAb);
   document.getElementById('panel-encerrados').classList.toggle('active',isEnc);
   document.getElementById('panel-rede').classList.toggle('active',isRede);
+  document.getElementById('panel-combustivel').classList.toggle('active',isFuel);
   const showEncControls=isEnc&&dEnc.length>0;
   document.getElementById('week-wrap').style.display=showEncControls?'flex':'none';
   document.getElementById('cluster-wrap').style.display=showEncControls?'flex':'none';
+  if(isFuel)renderFuel();
 }
 function toggleTheme(){
   const dk=document.body.dataset.theme==='dark';
   document.body.dataset.theme=dk?'light':'dark';
   document.getElementById('ti-icon').className=dk?'ti ti-moon':'ti ti-sun';
-  setTimeout(()=>{if(chAb)rChAb();if(chEnc&&dEnc.length)rChEnc(encScope());if(chSem&&dEnc.length)rChSem();},60);
+  setTimeout(()=>{if(chAb)rChAb();if(chEnc&&dEnc.length)rChEnc(encScope());if(chSem&&dEnc.length)rChSem();if(chFuel)renderFuelChart();},60);
 }
-initAuth();
+initAuth();renderFuel();
 </script>
 </body>
 </html>
