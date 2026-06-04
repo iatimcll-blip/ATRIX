@@ -512,9 +512,14 @@ function renderVis(){
   const avgTime=isAC||isAll?total.tme:total.tmr;
   const good=total.pp>=M89?'#3ecf8e':total.pp>=M89*.9?'#f0a14d':'#e05c5c';
   const bad=total.op<=MOUT?'#3ecf8e':total.op<=MOUT*1.8?'#f0a14d':'#e05c5c';
-  let cards='',d1=[],d2=[];
+  let cards='',d1=[],d2=[],bbPrazo=[],acPrazo=[],bbOut=[],acOut=[];
   CLS.forEach(cl=>{
     const rows=rowsFor(cl),s=agg(rows,isAC||isAll);
+    if(isAll){
+      const bb=agg(fBB(cl),false),ac=agg(fAC(cl),true);
+      bbPrazo.push(bb?bb.pp:0);acPrazo.push(ac?ac.pp:0);
+      bbOut.push(bb?bb.op:0);acOut.push(ac?ac.op:0);
+    }
     const cp=s&&s.pp>=M89?'#3ecf8e':s&&s.pp>=M89*.9?'#f0a14d':'#e05c5c';
     const co=s&&s.op<=MOUT?'#3ecf8e':s&&s.op<=MOUT*1.8?'#f0a14d':'#e05c5c';
     d1.push(s?s.pp:0);d2.push(s?s.op:0);
@@ -537,15 +542,23 @@ function renderVis(){
     <div class="sgrid">${cards}</div>
     <div class="cbx" style="margin-top:12px">
       <h4>Comparativo por cluster - no prazo x outlier (${tag})</h4>
-      <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>No prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span><span style="font-size:10px;color:var(--text3)">Meta prazo 88,9% - Meta outlier 4,9%</span></div>
+      <div class="leg">${isAll?'<span><span class="ld" style="background:#4d8ef0"></span>Backbone prazo</span><span><span class="ld" style="background:#3ecf8e"></span>Acesso prazo</span><span><span class="ld" style="background:#e05c5c"></span>Backbone outlier</span><span><span class="ld" style="background:#f0a14d"></span>Acesso outlier</span>':'<span><span class="ld" style="background:#4d8ef0"></span>No prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span>'}<span style="font-size:10px;color:var(--text3)">Meta prazo 88,9% - Meta outlier 4,9%</span></div>
       <div style="position:relative;height:210px"><canvas id="cv-main" role="img" aria-label="Comparativo por cluster"></canvas></div>
     </div>`;
-  mkCh('cv-main',CLS.map(c=>CL_NM[c]),[
+  const chartData=isAll?[
+    {label:'Backbone - Prazo',data:bbPrazo,backgroundColor:'rgba(77,142,240,.82)',borderRadius:4,order:1},
+    {label:'Acesso - Prazo',data:acPrazo,backgroundColor:'rgba(62,207,142,.82)',borderRadius:4,order:1},
+    {label:'Backbone - Outlier',data:bbOut,backgroundColor:'rgba(224,92,92,.72)',borderRadius:4,order:1},
+    {label:'Acesso - Outlier',data:acOut,backgroundColor:'rgba(240,161,77,.72)',borderRadius:4,order:1},
+    {label:'Meta',data:CLS.map(()=>M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0},
+    {label:'Meta Outlier',data:CLS.map(()=>MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0}
+  ]:[
     {label:'No prazo %',data:d1,backgroundColor:'rgba(77,142,240,.8)',borderRadius:4,order:1},
     {label:'Outlier %',data:d2,backgroundColor:'rgba(224,92,92,.75)',borderRadius:4,order:1},
     {label:'Meta',data:CLS.map(()=>M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0},
     {label:'Meta Outlier',data:CLS.map(()=>MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0}
-  ],{max:100});
+  ];
+  mkCh('cv-main',CLS.map(c=>CL_NM[c]),chartData,{max:100});
 }
 
 function renderClusters(){
