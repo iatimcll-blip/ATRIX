@@ -320,7 +320,7 @@ function clusterFromRow(r){const uf=nk(gv(r,['UF','ufservico']));const cidade=nk
 function ensureLabel(arr,key,label){let i=arr.indexOf(key);if(i<0){arr.push(key);label&&arr===M.mes?M.ml.push(label):label&&arr===M.sem&&M.sl.push(label);i=arr.length-1}return i}
 function monthIndex(v){if(v instanceof Date&&!isNaN(v))return ensureLabel(M.mes,`${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}`,v.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}).replace('.',''));const raw=String(v||'').trim();if(!raw)return 0;const d=new Date(raw);if(!isNaN(d))return monthIndex(d);const m=raw.match(/(\d{4})[-/](\d{1,2})|(\d{1,2})[-/](\d{4})/);if(m){const y=m[1]||m[4],mo=m[2]||m[3];return ensureLabel(M.mes,`${y}-${String(Number(mo)).padStart(2,'0')}`,raw)}const i=M.ml.findIndex(x=>nk(x)===nk(raw));return i>=0?i:ensureLabel(M.mes,raw,raw)}
 function weekIndex(v){if(v instanceof Date&&!isNaN(v)){const w=isoWeek(v);return ensureLabel(M.sem,`${v.getFullYear()}-W${String(w).padStart(2,'0')}`,`S${String(w).padStart(2,'0')}`)}const raw=String(v||'').trim();if(!raw)return 0;const d=parseDateBR(raw);if(d)return weekIndex(d);const n=Number((raw.match(/\d+/)||[])[0]||0);if(n>0)return ensureLabel(M.sem,`2026-W${String(n).padStart(2,'0')}`,`S${String(n).padStart(2,'0')}`);const i=M.sl.findIndex(x=>nk(x)===nk(raw));return i>=0?i:ensureLabel(M.sem,raw,raw)}
-function labelIndex(arr,v){const raw=String(v||'N?o informado').trim()||'N?o informado';let i=arr.findIndex(x=>nk(x)===nk(raw));if(i<0){arr.push(raw);i=arr.length-1}return i}
+function labelIndex(arr,v){const raw=String(v||'Não informado').trim()||'Não informado';let i=arr.findIndex(x=>nk(x)===nk(raw));if(i<0){arr.push(raw);i=arr.length-1}return i}
 function rowToRede(r,sheet){
   const tipo=String(gv(r,['tipo','rede','categoria','grupo'])||sheet||'').toLowerCase();
   const isAC=tipo.includes('acesso');
@@ -434,7 +434,7 @@ function topN(rows,fi,n=5){
   rows.forEach(r=>{const v=(fi===6?M.mo[r[6]]:M.ca[r[7]])||'?';c[v]=(c[v]||0)+1;});
   return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n);
 }
-function topNLabel(rows,n=5){const c={};rows.forEach(r=>{const v=r[7]||'N?o informado';c[v]=(c[v]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n)}
+function topNLabel(rows,n=5){const c={};rows.forEach(r=>{const v=r[7]||'Não informado';c[v]=(c[v]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n)}
 
 function pH(v,meta,inv=false){
   const ok=inv?(v<=meta):(v>=meta),nr=inv?(v<=meta*1.5):(v>=meta*0.9);
@@ -553,17 +553,17 @@ function renderVis(){
     cards+=`<div class="sc"><div class="sct">${CL_NM[cl]}</div>
       <div class="scr">No prazo <span class="scv" style="color:${cp}">${s?s.pp+'%':'-'} </span></div>
       <div class="scr">Outlier <span class="scv" style="color:${co}">${s?s.op+'%':'-'}</span></div>
-      <div class="scr">Tempo medio <span class="scv">${s?tempo+'h':'-'}</span></div>
+      <div class="scr">Tempo médio <span class="scv">${s?tempo+'h':'-'}</span></div>
       <div class="scr">Chamados <span class="scv">${s?s.t:'0'}</span></div>
       ${s?pH(s.pp,M89):''}</div>`;
   });
   document.getElementById('vis-content').innerHTML=`
-    <div class="shead"><h2>Visao Geral - ${tag}</h2><span class="stag ${isAC?'stag-ac':'stag-bb'}">${tag}</span></div>
+    <div class="shead"><h2>Visão Geral - ${tag}</h2><span class="stag ${isAC?'stag-ac':'stag-bb'}">${tag}</span></div>
     <div class="krow">
       <div class="kpi"><div class="lb">Chamados analisados</div><div class="vl">${total.t}</div><div class="sb">base filtrada</div></div>
-      <div class="kpi"><div class="lb">No prazo</div><div class="vl" style="color:${good}">${total.pp}%</div><div class="sb">meta minima 88,9%</div></div>
-      <div class="kpi"><div class="lb">Outlier</div><div class="vl" style="color:${bad}">${total.op}%</div><div class="sb">referencia maxima 4,9%</div></div>
-      <div class="kpi"><div class="lb">Tempo medio</div><div class="vl">${avgTime||0}h</div><div class="sb">${isAll?'backbone + acesso':tag.toLowerCase()}</div></div>
+      <div class="kpi"><div class="lb">No prazo</div><div class="vl" style="color:${good}">${total.pp}%</div><div class="sb">meta mínima 88,9%</div></div>
+      <div class="kpi"><div class="lb">Outlier</div><div class="vl" style="color:${bad}">${total.op}%</div><div class="sb">referência máxima 4,9%</div></div>
+      <div class="kpi"><div class="lb">Tempo médio</div><div class="vl">${avgTime||0}h</div><div class="sb">${isAll?'backbone + acesso':tag.toLowerCase()}</div></div>
     </div>
     <div class="sgrid">${cards}</div>
     <div class="cbx" style="margin-top:12px">

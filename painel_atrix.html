@@ -1534,8 +1534,8 @@ function rMetEnc(d){
     <div class="mc c-teal"><div class="mc-label">Total encerrados</div><div class="mc-val" style="color:var(--teal-dk)"><b>${s.total}</b></div><div class="mc-sub">chamados fechados</div></div>
     <div class="mc c-green"><div class="mc-label">Prazo ≤8h</div><div class="mc-val" style="color:var(--green-dk)"><b>${s.prazo}</b></div><div class="mc-sub"><span class="tag tag-green">${pp(s.pPrazo)}%</span> ${s.gapPrazo?pp(s.gapPrazo)+' p.p. fora da meta':'meta atingida'}</div></div>
     <div class="mc c-orange"><div class="mc-label">8h a 24h</div><div class="mc-val" style="color:var(--orange)"><b>${s.intermediario}</b></div><div class="mc-sub"><span class="tag tag-orange">${pp(s.pInter)}%</span> fora da meta 8h</div></div>
-    <div class="mc c-red"><div class="mc-label">Outlier &gt;24h</div><div class="mc-val" style="color:var(--red)"><b>${s.outlier}</b></div><div class="mc-sub"><span class="tag tag-red">${pp(s.pOut)}%</span> ${s.excessoOutlier?pp(s.excessoOutlier)+' p.p. acima do max. 1,98%':'dentro do max. 1,98%'}</div></div>
-    <div class="mc c-orange"><div class="mc-label">Tempo medio</div><div class="mc-val" style="color:var(--orange)">${fh(avg)}</div><div class="mc-sub">tempo total medio</div></div>`;
+    <div class="mc c-red"><div class="mc-label">Outlier &gt;24h</div><div class="mc-val" style="color:var(--red)"><b>${s.outlier}</b></div><div class="mc-sub"><span class="tag tag-red">${pp(s.pOut)}%</span> ${s.excessoOutlier?pp(s.excessoOutlier)+' p.p. acima do máx. 1,98%':'dentro do máx. 1,98%'}</div></div>
+    <div class="mc c-orange"><div class="mc-label">Tempo médio</div><div class="mc-val" style="color:var(--orange)">${fh(avg)}</div><div class="mc-sub">tempo total médio</div></div>`;
 }
 
 function rPillEnc(d){
@@ -1544,7 +1544,7 @@ function rPillEnc(d){
   document.getElementById('prow-enc').innerHTML=`
     <div class="pc"><div class="pico pi-g"><i class="ti ti-circle-check"></i></div><div><div class="pv">${s.prazo}</div><div class="ps">Prazo ≤8h <b>(${pp(s.pPrazo)}%)</b> · meta ≥85%</div></div></div>
     <div class="pc"><div class="pico pi-o"><i class="ti ti-clock-exclamation"></i></div><div><div class="pv">${s.intermediario}</div><div class="ps">8h a 24h <b>(${pp(s.pInter)}%)</b> fora da meta</div></div></div>
-    <div class="pc"><div class="pico pi-r"><i class="ti ti-alert-triangle"></i></div><div><div class="pv">${s.outlier}</div><div class="ps">Outlier &gt;24h <b>(${pp(s.pOut)}%)</b> · max. 1,98%</div></div></div>
+    <div class="pc"><div class="pico pi-r"><i class="ti ti-alert-triangle"></i></div><div><div class="pv">${s.outlier}</div><div class="ps">Outlier &gt;24h <b>(${pp(s.pOut)}%)</b> · máx. 1,98%</div></div></div>
     <div class="pc"><div class="pico pi-b"><i class="ti ti-map-pin"></i></div><div><div class="pv" style="font-size:14px;letter-spacing:-.01em">${tc[0]}</div><div class="ps">${tc[1]} chamados · cluster maior</div></div></div>`;
 }
 function rClusterCards(d){
