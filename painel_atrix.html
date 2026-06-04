@@ -197,11 +197,12 @@ body {
 .sh-line { flex: 1; height: .5px; background: var(--bd); }
 
 /* ─── METRIC CARDS ─── */
-.mrow { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin-bottom: 16px; }
+.mrow { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin-bottom: 16px; align-items: stretch; }
 .mc {
   background: var(--surface); border-radius: var(--rl);
   padding: 14px 16px; box-shadow: var(--shadow-sm);
   border: .5px solid var(--bd); position: relative; overflow: hidden;
+  min-width: 0; min-height: 108px; display: flex; flex-direction: column; justify-content: space-between;
 }
 .mc::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -213,7 +214,7 @@ body {
 .mc.c-orange::before { background: var(--orange); }
 .mc.c-teal::before { background: var(--teal); }
 .mc-label { font-size: 10px; font-weight: 600; color: var(--tx3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; margin-top: 2px; }
-.mc-val { font-size: 26px; font-weight: 300; color: var(--tx); letter-spacing: -.02em; line-height: 1; }
+.mc-val { font-size: clamp(18px,2vw,26px); font-weight: 300; color: var(--tx); letter-spacing: -.02em; line-height: 1.08; overflow-wrap: anywhere; }
 .mc-val b { font-weight: 600; }
 .mc-sub { font-size: 10px; color: var(--tx3); margin-top: 6px; }
 .mc-sub .tag {
@@ -227,11 +228,12 @@ body {
 .tag-teal { background: var(--teal-bg); color: var(--teal-dk); }
 
 /* ─── PILL ROW ─── */
-.prow { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
+.prow { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; align-items: stretch; }
 .pc {
   background: var(--surface); border-radius: var(--rl);
   padding: 12px 14px; box-shadow: var(--shadow-sm);
   border: .5px solid var(--bd); display: flex; align-items: center; gap: 11px;
+  min-width: 0; min-height: 78px;
 }
 .pico {
   width: 36px; height: 36px; border-radius: 10px;
@@ -244,7 +246,7 @@ body {
 .pi-o { background: var(--orange-bg); color: var(--orange); }
 .pi-t { background: var(--teal-bg); color: var(--teal-dk); }
 .pi-p { background: var(--purple-bg); color: var(--purple); }
-.pv { font-size: 19px; font-weight: 600; color: var(--tx); letter-spacing: -.01em; }
+.pv { font-size: clamp(14px,1.45vw,19px); font-weight: 600; color: var(--tx); letter-spacing: -.01em; overflow-wrap: anywhere; }
 .ps { font-size: 10px; color: var(--tx3); line-height: 1.4; margin-top: 1px; }
 
 /* ─── GRID ─── */
@@ -256,6 +258,7 @@ body {
 .card {
   background: var(--surface); border-radius: var(--rl);
   padding: 14px 16px; box-shadow: var(--shadow-sm); border: .5px solid var(--bd);
+  min-width: 0; min-height: 252px; display: flex; flex-direction: column;
 }
 .card-hd {
   display: flex; align-items: center; justify-content: space-between;
@@ -533,7 +536,9 @@ tbody tr.row-validation:hover td { background: rgba(52,199,89,.22); }
 body.is-admin .admin-only { display: flex; }
 
 /* ─── CHART WRAP ─── */
-.cw { position: relative; width: 100%; height: 150px; }
+.cw { position: relative; width: 100%; height: 190px; flex: 1; min-height: 180px; }
+#panel-combustivel .card { min-height: 252px; }
+#fuel-status { flex: 1; min-height: 190px; overflow: auto; }
 
 /* ─── WEEK INDICATOR ─── */
 .week-banner {
@@ -874,6 +879,10 @@ body.is-admin .admin-only { display: flex; }
         <div id="fuel-status"></div>
       </div>
       <div class="card">
+        <div class="card-hd"><span class="card-title">Maiores consumos</span></div>
+        <div class="cw"><canvas id="ch-fuel-top" role="img" aria-label="Ranking dos maiores consumos por condutor">Gráfico.</canvas></div>
+      </div>
+      <div class="card">
         <div class="card-hd"><span class="card-title">Projeção mês atual x próximo</span></div>
         <div class="cw"><canvas id="ch-fuel-proj" role="img" aria-label="Projeção de consumo do mês atual para o próximo mês">Gráfico.</canvas></div>
       </div>
@@ -977,7 +986,7 @@ let dAb=[],dEnc=[];
 let dFuelVehicles=[],dFuelRequests=[],dFuelWithdrawals=[],fuelBalanceTotal=0,fuelCardBalance=null;
 let editingFuelPlate='',editingFuelRequestId='';
 let scAb='slaH',sdAb=-1,scEnc='tempoTotal',sdEnc=-1;
-let chAb=null,chEnc=null,chSem=null,chFuel=null,chFuelProj=null;
+let chAb=null,chEnc=null,chSem=null,chFuel=null,chFuelProj=null,chFuelTop=null;
 let selWeek='';
 let selCluster='';
 let refreshTimer=null;
@@ -1745,7 +1754,13 @@ function renderFuelChart(){
   const trend=trendValues(entries.map(e=>Number(e.proj||0)));
   const moneyTick=v=>brl(Number(v));
   chFuel=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e.label),datasets:[{label:'Consumo atual R$',data:entries.map(e=>Number(e.atual.toFixed(2))),backgroundColor:'rgba(77,142,240,.82)',borderRadius:6},{label:'Projeção próximo mês R$',data:entries.map(e=>Number(e.proj.toFixed(2))),backgroundColor:'rgba(62,207,142,.72)',borderRadius:6},{type:'line',label:'Linha de tendência',data:trend.map(v=>Number(v.toFixed(2))),borderColor:'rgba(255,159,10,.95)',backgroundColor:'rgba(255,159,10,.18)',borderWidth:2,pointRadius:2,tension:.25}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${brl(c.parsed.y||0)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',callback:moneyTick}}}}});
+  renderFuelTopChart();
   renderFuelProjectionChart();
+}
+function renderFuelTopChart(){
+  const ctx=document.getElementById('ch-fuel-top');if(!ctx)return;if(chFuelTop){chFuelTop.destroy();chFuelTop=null}
+  const dk=document.body.dataset.theme==='dark',entries=fuelProjection().slice(0,10).reverse();
+  chFuelTop=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Maior consumo R$',data:entries.map(e=>Number(e[1].valor.toFixed(2))),backgroundColor:'rgba(255,159,10,.78)',borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${brl(c.parsed.x||0)}`}}},scales:{x:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',callback:v=>brl(Number(v))}},y:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}}}}});
 }
 function renderFuelProjectionChart(){
   const ctx=document.getElementById('ch-fuel-proj');if(!ctx)return;if(chFuelProj){chFuelProj.destroy();chFuelProj=null}
@@ -1792,7 +1807,7 @@ function toggleTheme(){
   const dk=document.body.dataset.theme==='dark';
   document.body.dataset.theme=dk?'light':'dark';
   document.getElementById('ti-icon').className=dk?'ti ti-moon':'ti ti-sun';
-  setTimeout(()=>{if(chAb)rChAb();if(chEnc&&dEnc.length)rChEnc(encScope());if(chSem&&dEnc.length)rChSem();if(chFuel||chFuelProj)renderFuelChart();},60);
+  setTimeout(()=>{if(chAb)rChAb();if(chEnc&&dEnc.length)rChEnc(encScope());if(chSem&&dEnc.length)rChSem();if(chFuel||chFuelProj||chFuelTop)renderFuelChart();},60);
 }
 initAuth();renderFuel();
 </script>
