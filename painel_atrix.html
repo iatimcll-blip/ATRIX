@@ -1120,7 +1120,21 @@ function fd(h){const total=Math.max(0,Math.floor((Number(h)||0)*3600));const hh=
 function cf(h){if(h>24)return SLA_ORDER[0];if(h>12)return SLA_ORDER[1];if(h>8)return SLA_ORDER[2];if(h>4)return SLA_ORDER[3];return SLA_ORDER[4]}
 function nk(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toUpperCase()}
 function eh(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function fmtSubstatus(v){const s=String(v||'').trim().replace(/\s+/g,' ');if(!s)return'';return s.toLocaleLowerCase('pt-BR').replace(/(^|[\s/-])([a-z0-9\u00c0-\u024f])/gi,(m,p,c)=>p+c.toLocaleUpperCase('pt-BR')).replace(/\bSla\b/g,'SLA').replace(/\bB2b\b/g,'B2B')}
+function fmtSubstatus(v){
+  const s=String(v||'').trim().replace(/\s+/g,' ');
+  if(!s)return'';
+  const k=nk(s);
+  if(k.includes('PENDENTE')&&k.includes('AGENDAMENTO'))return'Pendente Agendamento';
+  if(k.includes('PENDENTE')&&k.includes('VALID'))return'Pendente Validação';
+  if(k.includes('PENDENTE')&&k.includes('CLIENTE'))return'Pendente Cliente';
+  if(k.includes('AGUARDANDO')&&k.includes('LIBER')&&k.includes('ACESSO'))return'Aguardando Liberação De Acesso';
+  if(k.includes('AGUARDANDO')&&k.includes('DISPONIBILIDADE')&&(k.includes('TECN')||k.includes('TCN')))return'Aguardando Disponibilidade Técnica';
+  if(k.includes('ANALISAR')&&k.includes('RESPOSTA'))return'Analisar Resposta';
+  if(k.includes('ENCAMINHADO')&&k.includes('TECNICO'))return'Encaminhado Ao Técnico';
+  if(k.includes('CANCELADO'))return'Cancelado';
+  if(k.includes('FECHADO'))return'Fechado';
+  return s.replace(/\uFFFD+/g,'').toLocaleLowerCase('pt-BR').replace(/(^|[\s/-])([a-z0-9\u00c0-\u024f])/gi,(m,p,c)=>p+c.toLocaleUpperCase('pt-BR')).replace(/\bSla\b/g,'SLA').replace(/\bB2b\b/g,'B2B')
+}
 function uniqueSubstatuses(values){const map=new Map();values.map(fmtSubstatus).filter(Boolean).forEach(s=>{const k=nk(s);if(!map.has(k))map.set(k,s)});return[...map.values()].sort((a,b)=>a.localeCompare(b,'pt-BR'))}
 function safeUrl(v){const raw=String(v||'').trim();if(!raw)return'';try{const u=new URL(raw,window.location&&window.location.href?window.location.href:'http://localhost/');return['http:','https:'].includes(u.protocol)?u.href:''}catch{return''}}
 function bestLink(...vals){for(const v of vals){const u=safeUrl(v);if(u)return u}return''}
