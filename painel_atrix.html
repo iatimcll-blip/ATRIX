@@ -918,6 +918,7 @@ function fd(h){const total=Math.max(0,Math.floor((Number(h)||0)*3600));const hh=
 function cf(h){if(h>24)return SLA_ORDER[0];if(h>12)return SLA_ORDER[1];if(h>8)return SLA_ORDER[2];if(h>4)return SLA_ORDER[3];return SLA_ORDER[4]}
 function nk(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toUpperCase()}
 function eh(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function fmtSubstatus(v){const s=String(v||'').trim().replace(/\s+/g,' ');if(!s)return'';return s.toLocaleLowerCase('pt-BR').replace(/(^|[\s/-])([a-z0-9\u00c0-\u024f])/gi,(m,p,c)=>p+c.toLocaleUpperCase('pt-BR')).replace(/\bSla\b/g,'SLA').replace(/\bB2b\b/g,'B2B')}
 function safeUrl(v){const raw=String(v||'').trim();if(!raw)return'';try{const u=new URL(raw,window.location&&window.location.href?window.location.href:'http://localhost/');return['http:','https:'].includes(u.protocol)?u.href:''}catch{return''}}
 function bestLink(...vals){for(const v of vals){const u=safeUrl(v);if(u)return u}return''}
 function gv(r,ns){for(const n of ns)if(r[n]!==undefined&&r[n]!=='')return r[n];const m=Object.fromEntries(Object.keys(r).map(k=>[nk(k),k]));for(const n of ns){const k=m[nk(n)];if(k&&r[k]!==undefined&&r[k]!=='')return r[k]}return''}
@@ -940,7 +941,7 @@ function encRuleStats(d){
 }
 function parseOpeningDate(v){if(v===undefined||v===null||v==='')return null;if(v instanceof Date&&!isNaN(v))return v;if(typeof v==='number'&&isFinite(v)){const d=new Date(Math.round((v-25569)*86400*1000));return isNaN(d)?null:d}const raw=String(v).trim();if(!raw)return null;const iso=new Date(raw);if(!isNaN(iso))return iso;const m=raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);if(!m)return null;const y=Number(m[3].length===2?'20'+m[3]:m[3]);const d=new Date(y,Number(m[2])-1,Number(m[1]),Number(m[4]||0),Number(m[5]||0),Number(m[6]||0));return isNaN(d)?null:d}
 function hoursSince(d){return d?Math.max(0,(Date.now()-d.getTime())/3600000):0}
-const PAUSE_SUBSTATUS=['Pendente Cliente','Pendente agendamento','Pendente Valida\u00e7\u00e3o','Cancelado','Fechado','Aguardando libera\u00e7\u00e3o de acesso','Agudando libera\u00e7\u00e3o de acesso'];
+const PAUSE_SUBSTATUS=['Pendente Cliente','Pendente Agendamento','Pendente Valida\u00e7\u00e3o','Cancelado','Fechado','Aguardando Libera\u00e7\u00e3o De Acesso','Agudando Libera\u00e7\u00e3o De Acesso'];
 const OPERATOR_CLIENTS=['OPERADORA','OPERADORAS','TIM','CLARO','VIVO','ONLINE'];
 function isPausedSubstatus(v){const s=nk(v);return PAUSE_SUBSTATUS.some(x=>s===nk(x)||s.includes(nk(x)))||(s.includes('PENDENTE')&&(s.includes('CLIENTE')||s.includes('AGENDAMENTO')||s.includes('VALIDA')))||s.includes('CANCELADO')||s.includes('FECHADO')||(s.includes('LIBER')&&s.includes('ACESSO'))}
 function isOperatorClient(d){const s=nk((d&&d.cliente)||'');return OPERATOR_CLIENTS.some(x=>s.includes(nk(x)))}
@@ -970,7 +971,7 @@ function restoreState(){
     const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;
     const st=JSON.parse(raw);
     if(Array.isArray(st.dAb)&&st.dAb.length){
-      dAb=st.dAb.map((d,i)=>({...d,rowKey:d.rowKey??i,openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}));
+      dAb=st.dAb.map((d,i)=>({...d,rowKey:d.rowKey??i,substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}));
       document.getElementById('nb-ab').textContent=dAb.length;
       document.getElementById('ft-ab').textContent='Base restaurada em '+now2();
       fillFiltersAb();renderAllAb();startRefresh();
@@ -1023,7 +1024,7 @@ function procAb(raw,fname){
     const uf=String(gv(r,['UF','uf'])||'').trim();
     const cidade=String(gv(r,['Cidade','CIDADE'])||'').trim();
     const regiao=String(gv(r,['REGIAO','REGIÃO','Região'])||'').trim();
-    const substatus=String(gv(r,['Substatus','SUBSTATUS'])||'').trim();
+    const substatus=fmtSubstatus(gv(r,['Substatus','SUBSTATUS']));
     const link=bestLink(gv(r,['Link Atrix','LINK','Link','Ticket Bdesk']),id);
     const openedAt=parseOpeningDate(gv(r,['Abertura do Ticket','Abertura','Data Abertura','Data de Abertura','Data/Hora Abertura']));
     const slaLimitH=slaBaseLimit(r);
@@ -1140,7 +1141,7 @@ function rMetAb(){
 }
 function rPillAb(){
   const t=dAb.length||1,fo=dAb.filter(d=>d.statusSla==='FORA DO PRAZO').length,np=t-fo;
-  const tm=se(cnt(dAb,'mop'))[0]||['—',0],ts=se(cnt(dAb,'substatus'))[0]||['—',0];
+  const tm=se(cnt(dAb,'mop'))[0]||['—',0],ts=se(cnt(dAb.map(d=>({...d,substatus:fmtSubstatus(d.substatus)})),'substatus'))[0]||['—',0];
   document.getElementById('prow-ab').innerHTML=`
     <div class="pc"><div class="pico pi-r"><i class="ti ti-alert-circle"></i></div><div><div class="pv">${fo}</div><div class="ps">Fora do prazo <b>(${Math.round(fo/t*100)}%)</b></div></div></div>
     <div class="pc"><div class="pico pi-g"><i class="ti ti-circle-check"></i></div><div><div class="pv">${np}</div><div class="ps">No prazo <b>(${Math.round(np/t*100)}%)</b></div></div></div>
@@ -1157,7 +1158,7 @@ function rMopAb(){
   const e=se(cnt(dAb,'mop'));const mx=Math.max(...e.map(x=>x[1]),1);
   document.getElementById('mop-ab').innerHTML=e.map(([m,v])=>`<div class="brow"><div class="blbl" style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${MOP_CLR[m]||'#8e8e93'};flex-shrink:0"></span>${m}</div><div class="btrk"><div class="bfil" style="width:${Math.round(v/mx*100)}%;background:${MOP_CLR[m]||'#8e8e93'}"></div></div><div class="bn">${v}</div></div>`).join('');
 }
-function rSubAb(){document.getElementById('sub-ab').innerHTML=listRows(se(cnt(dAb,'substatus')),()=>'var(--tx3)')}
+function rSubAb(){document.getElementById('sub-ab').innerHTML=listRows(se(cnt(dAb.map(d=>({...d,substatus:fmtSubstatus(d.substatus)})),'substatus')),()=>'var(--tx3)')}
 function rChAb(){
   const c={};SLA_ORDER.forEach(f=>c[f]=0);dAb.forEach(d=>{if(d.faixa)c[d.faixa]=(c[d.faixa]||0)+1});
   if(chAb){chAb.destroy();chAb=null}
@@ -1167,21 +1168,22 @@ function rChAb(){
 }
 function fillFiltersAb(){
   const mops=[...new Set(dAb.map(d=>d.mop).filter(Boolean))].sort();
-  const subs=[...new Set(dAb.map(d=>d.substatus).filter(Boolean))].sort();
+  const subs=[...new Set(dAb.map(d=>fmtSubstatus(d.substatus)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   const ufs=[...new Set(dAb.map(d=>d.uf).filter(Boolean))].sort();
   document.getElementById('f-mop').innerHTML='<option value="">Todos MOP/EPS</option>'+mops.map(m=>`<option value="${eh(m)}">${eh(m)}</option>`).join('');
   document.getElementById('f-sub').innerHTML='<option value="">Todos substatus</option>'+subs.map(s=>`<option value="${eh(s)}">${eh(s)}</option>`).join('');
   document.getElementById('f-uf').innerHTML='<option value="">Todas UFs</option>'+ufs.map(u=>`<option value="${eh(u)}">${eh(u)}</option>`).join('');
   document.getElementById('f-faixa').innerHTML='<option value="">Todas as faixas</option>'+SLA_ORDER.map(f=>`<option value="${eh(f)}">${eh(f)}</option>`).join('');
 }
-function getSubstatusOptions(current){const subs=[...new Set([...PAUSE_SUBSTATUS,...dAb.map(d=>d.substatus).filter(Boolean)])].sort();if(current&&!subs.includes(current))subs.unshift(current);return subs.map(s=>`<option value="${eh(s)}"${s===current?' selected':''}>${eh(s)}</option>`).join('')}
+function getSubstatusOptions(current){const cur=fmtSubstatus(current);const subs=[...new Set([...PAUSE_SUBSTATUS,...dAb.map(d=>d.substatus)].map(fmtSubstatus).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));if(cur&&!subs.includes(cur))subs.unshift(cur);return subs.map(s=>`<option value="${eh(s)}"${s===cur?' selected':''}>${eh(s)}</option>`).join('')}
 function updateSubstatus(rowKey,value){
   if(!canEdit())return;
   const item=dAb.find(d=>d.rowKey===rowKey);if(!item)return;
-  const now=new Date(),wasPaused=!isOperatorClient(item)&&isPausedSubstatus(item.substatus),willPause=!isOperatorClient(item)&&isPausedSubstatus(value);
+  const next=fmtSubstatus(value);
+  const now=new Date(),wasPaused=!isOperatorClient(item)&&isPausedSubstatus(item.substatus),willPause=!isOperatorClient(item)&&isPausedSubstatus(next);
   if(wasPaused&&!willPause&&item.pauseStart){item.pausedBusinessH=Number(item.pausedBusinessH||0)+businessHoursBetween(item.pauseStart,now);item.pauseStart=null}
   if(!wasPaused&&willPause)item.pauseStart=now;
-  item.substatus=value;
+  item.substatus=next;
   item.slaH=computeSlaHours(item,now);item.faixa=cf(item.slaH);item.statusSla=statusSla(item.slaH,item.mop,item.slaLimitH);
   fillFiltersAb();renderAllAb();saveState()
 }
@@ -1191,7 +1193,7 @@ function gFAb(){
   const srch=(document.getElementById('f-srch-ab').value||'').toLowerCase();
   let f=dAb;
   if(mop)f=f.filter(d=>d.mop===mop);if(faixa)f=f.filter(d=>d.faixa===faixa);
-  if(sub)f=f.filter(d=>d.substatus===sub);if(uf)f=f.filter(d=>d.uf===uf);
+  if(sub)f=f.filter(d=>fmtSubstatus(d.substatus)===sub);if(uf)f=f.filter(d=>d.uf===uf);
   if(srch)f=f.filter(d=>nk(d.cliente).includes(nk(srch))||nk(d.id).includes(nk(srch)));
   return f.slice().sort((a,b)=>typeof a[scAb]==='number'?(a[scAb]-b[scAb])*sdAb:String(a[scAb]).localeCompare(String(b[scAb]))*sdAb);
 }
@@ -1205,7 +1207,7 @@ function renderTAb(){
     const cleanLink=safeUrl(d.link);
     const lk=cleanLink?`<a class="lbtn" href="${eh(cleanLink)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" style="font-size:13px"></i></a>`:'';
     const idHtml=cleanLink?`<a href="${eh(cleanLink)}" target="_blank" rel="noopener noreferrer" title="Abrir ticket">${eh(d.id)}</a>`:eh(d.id);
-    const subHtml=canEdit()?`<select class="substatus-select" title="Alterar substatus" onchange="updateSubstatus(${d.rowKey}, this.value)">${getSubstatusOptions(d.substatus)}</select>`:`<span class="substatus-readonly">${eh(d.substatus||'Sem substatus')}</span>`;
+    const subHtml=canEdit()?`<select class="substatus-select" title="Alterar substatus" onchange="updateSubstatus(${d.rowKey}, this.value)">${getSubstatusOptions(d.substatus)}</select>`:`<span class="substatus-readonly">${eh(fmtSubstatus(d.substatus)||'Sem substatus')}</span>`;
     const rowCls=isValidationSubstatus(d.substatus)?'row-validation':'';
     return`<tr class="${rowCls}"><td class="tid">${idHtml}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)" title="${eh(d.cliente)}">${eh(d.cliente)}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${MOP_CLR[d.mop]||'#8e8e93'};flex-shrink:0"></span>${eh(d.mop)}</span></td><td>${eh(d.cidade||'\u2014')}/${eh(d.uf)}</td><td style="${sc}"><span class="sla-clock">${fd(d.slaH)}</span></td><td><span class="badge ${bc}">${eh(d.faixa)}</span></td><td><span class="badge ${ss}">${eh(d.statusSla)}</span></td><td><span class="substatus-cell">${substatusLamp(d)}${subHtml}</span></td><td>${lk}</td></tr>`;
   }).join('')||'<tr><td colspan="9" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
