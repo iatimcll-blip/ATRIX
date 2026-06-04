@@ -60,12 +60,12 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
 .tlbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);white-space:nowrap}
 
 /* VIEW TOGGLE */
-.vtog{display:flex;background:var(--bg3);border-radius:6px;overflow:hidden;border:1px solid var(--border)}
-.vbtn{padding:6px 16px;font-size:11px;font-weight:600;border:none;background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;letter-spacing:.02em;font-family:inherit}
+.vtog{display:flex;flex-wrap:wrap;background:var(--bg3);border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.vbtn{padding:6px 14px;font-size:11px;font-weight:600;border:none;background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;letter-spacing:.02em;font-family:inherit;white-space:normal;line-height:1.15;text-align:center}
 .vbtn.on{background:var(--blue);color:#fff}
 
 /* PERIOD TOGGLE */
-.period-select{appearance:none;-webkit-appearance:none;min-width:140px;background:var(--bg2);border:.5px solid var(--border2);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:7px 32px 7px 10px;font-size:12px;font-weight:600;color:var(--text);font-family:inherit;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238e8e93' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.period-select{appearance:none;-webkit-appearance:none;min-width:140px;max-width:100%;background:var(--bg2);border:.5px solid var(--border2);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:7px 32px 7px 10px;font-size:12px;font-weight:600;color:var(--text);font-family:inherit;outline:none;cursor:pointer;text-overflow:ellipsis;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238e8e93' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
 .period-select:focus{border-color:var(--blue)}
 
 /* CLUSTER TABS */
@@ -130,7 +130,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
     <span class="topbar-logo"><i class="ti ti-router"></i> REDE</span>
     <div>
       <div class="topbar-title">Painel de Indicadores — Backbone &amp; Acesso</div>
-      <div class="topbar-sub">MA CAP · MA INT · PI · NORTE &nbsp;|&nbsp; Meta: ≥89% prazo · ≤4,9% outlier · TME ≤16,69h</div>
+      <div class="topbar-sub">MA CAP · MA INT · PI · NORTE &nbsp;|&nbsp; Meta: ≥88,9% prazo · ≤4,9% outlier · TME ≤6,0h</div>
     </div>
   </div>
   <div class="topbar-right">
@@ -200,7 +200,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
         <div style="position:relative;height:160px"><canvas id="ch-C-a" role="img" aria-label="MA CAP acesso evolução"></canvas></div>
       </div>
       <div class="cbx"><h4>TME por Período (horas)</h4>
-        <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>TME</span><span><span class="ld" style="background:#f0a14d;opacity:.7"></span>Meta 16,69h</span></div>
+        <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>TME</span><span><span class="ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div>
         <div style="position:relative;height:160px"><canvas id="ch-C-t" role="img" aria-label="MA CAP TME"></canvas></div>
       </div>
     </div>
@@ -230,7 +230,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
         <div style="position:relative;height:160px"><canvas id="ch-I-a" role="img" aria-label="MA INT acesso"></canvas></div>
       </div>
       <div class="cbx"><h4>TME por Período (horas)</h4>
-        <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>TME</span><span><span class="ld" style="background:#f0a14d;opacity:.7"></span>Meta 16,69h</span></div>
+        <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>TME</span><span><span class="ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div>
         <div style="position:relative;height:160px"><canvas id="ch-I-t" role="img" aria-label="MA INT TME"></canvas></div>
       </div>
     </div>
@@ -260,7 +260,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
         <div style="position:relative;height:160px"><canvas id="ch-P-a" role="img" aria-label="PI acesso"></canvas></div>
       </div>
       <div class="cbx"><h4>TME por Período (horas)</h4>
-        <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>TME</span><span><span class="ld" style="background:#f0a14d;opacity:.7"></span>Meta 16,69h</span></div>
+        <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>TME</span><span><span class="ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div>
         <div style="position:relative;height:160px"><canvas id="ch-P-t" role="img" aria-label="PI TME"></canvas></div>
       </div>
     </div>
@@ -305,7 +305,7 @@ let AD=[["I",0,0,1,0,4.16,1,7],["I",0,0,1,0,2.18,1,7],["I",0,0,0,1,21.26,1,7],["
 const CL_NM={"C":"MA CAP","I":"MA INT","P":"PI","N":"NORTE"};
 const CL_CL={"C":"#9d7ef0","I":"#4d8ef0","P":"#3ecf8e","N":"#f0a14d"};
 const CLS=["C","I","P","N"];
-const M89=89,MTME=16.69;
+const M89=88.9,MOUT=4.9,MTME=6.0;
 let modo='m',selMonth='',selWeek='',activeView='bb',charts={};
 const REDE_STORAGE='atrix:rede:bases:v1';
 
@@ -445,9 +445,9 @@ function setKPI(id,s,isAC){
   const el=document.getElementById(id);if(!el)return;
   if(!s){el.innerHTML=`<div class="nodata">Sem dados no período selecionado</div>`;return;}
   const cp=s.pp>=M89?'#3ecf8e':s.pp>=M89*.9?'#f0a14d':'#e05c5c';
-  const co=s.op<=4.9?'#3ecf8e':s.op<=9?'#f0a14d':'#e05c5c';
+  const co=s.op<=MOUT?'#3ecf8e':s.op<=MOUT*1.8?'#f0a14d':'#e05c5c';
   let h=`<div class="kpi"><div class="lb">No Prazo</div><div class="vl" style="color:${cp}">${s.pp}%</div>${pH(s.pp,M89)}</div>`;
-  h+=`<div class="kpi"><div class="lb">Outlier</div><div class="vl" style="color:${co}">${s.op}%</div>${pH(s.op,4.9,true)}</div>`;
+  h+=`<div class="kpi"><div class="lb">Outlier</div><div class="vl" style="color:${co}">${s.op}%</div>${pH(s.op,MOUT,true)}</div>`;
   if(isAC){
     const ct=s.tme<=MTME?'#3ecf8e':s.tme<=MTME*1.2?'#f0a14d':'#e05c5c';
     h+=`<div class="kpi"><div class="lb">TME Médio</div><div class="vl" style="color:${ct}">${s.tme}h</div>${pH(s.tme,MTME,true)}</div>`;
@@ -461,7 +461,7 @@ function setKPI(id,s,isAC){
 
 const chOpts={
   responsive:true,maintainAspectRatio:false,
-  plugins:{legend:{display:false}},
+  plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}}},
   scales:{
     x:{ticks:{color:'#555c78',font:{size:10,family:"'IBM Plex Mono',monospace"},maxRotation:modo==='s'?60:0},grid:{display:false},border:{color:'rgba(255,255,255,.06)'}},
     y:{ticks:{color:'#555c78',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'},border:{color:'rgba(255,255,255,.06)'}}
@@ -482,16 +482,17 @@ function mkCh(id,lbs,ds,opts={}){
 
 function barEv(id,ts){
   mkCh(id,ts.lbs,[
-    {data:ts.pp,backgroundColor:'rgba(77,142,240,.8)',borderRadius:3,order:1,hoverBackgroundColor:'#4d8ef0'},
-    {data:ts.op,backgroundColor:'rgba(224,92,92,.75)',borderRadius:3,order:1,hoverBackgroundColor:'#e05c5c'},
-    {data:ts.lbs.map(()=>89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}
+    {label:'Prazo %',data:ts.pp,backgroundColor:'rgba(77,142,240,.8)',borderRadius:3,order:1,hoverBackgroundColor:'#4d8ef0'},
+    {label:'Outlier %',data:ts.op,backgroundColor:'rgba(224,92,92,.75)',borderRadius:3,order:1,hoverBackgroundColor:'#e05c5c'},
+    {label:'Meta',data:ts.lbs.map(()=>M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0},
+    {label:'Meta Outlier',data:ts.lbs.map(()=>MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0}
   ],{max:100});
 }
 
 function tmeEv(id,ts){
   mkCh(id,ts.lbs,[
-    {data:ts.tme,type:'line',borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,.08)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#3ecf8e',borderWidth:2,order:1},
-    {data:ts.lbs.map(()=>16.69),type:'line',borderColor:'rgba(240,161,77,.6)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}
+    {label:'TME',data:ts.tme,type:'line',borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,.08)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#3ecf8e',borderWidth:2,order:1},
+    {label:'Meta',data:ts.lbs.map(()=>MTME),type:'line',borderColor:'rgba(240,161,77,.6)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}
   ],{type:'line',min:0});
 }
 
@@ -510,12 +511,12 @@ function renderVis(){
   const total=agg(allRows,isAC||isAll)||{t:0,pp:0,op:0,tme:0,tmr:0,cli:0};
   const avgTime=isAC||isAll?total.tme:total.tmr;
   const good=total.pp>=M89?'#3ecf8e':total.pp>=M89*.9?'#f0a14d':'#e05c5c';
-  const bad=total.op<=4.9?'#3ecf8e':total.op<=9?'#f0a14d':'#e05c5c';
+  const bad=total.op<=MOUT?'#3ecf8e':total.op<=MOUT*1.8?'#f0a14d':'#e05c5c';
   let cards='',d1=[],d2=[];
   CLS.forEach(cl=>{
     const rows=rowsFor(cl),s=agg(rows,isAC||isAll);
     const cp=s&&s.pp>=M89?'#3ecf8e':s&&s.pp>=M89*.9?'#f0a14d':'#e05c5c';
-    const co=s&&s.op<=4.9?'#3ecf8e':s&&s.op<=9?'#f0a14d':'#e05c5c';
+    const co=s&&s.op<=MOUT?'#3ecf8e':s&&s.op<=MOUT*1.8?'#f0a14d':'#e05c5c';
     d1.push(s?s.pp:0);d2.push(s?s.op:0);
     const tempo=s?(isAC||isAll?s.tme:s.tmr):0;
     cards+=`<div class="sc"><div class="sct">${CL_NM[cl]}</div>
@@ -529,20 +530,21 @@ function renderVis(){
     <div class="shead"><h2>Visao Geral - ${tag}</h2><span class="stag ${isAC?'stag-ac':'stag-bb'}">${tag}</span></div>
     <div class="krow">
       <div class="kpi"><div class="lb">Chamados analisados</div><div class="vl">${total.t}</div><div class="sb">base filtrada</div></div>
-      <div class="kpi"><div class="lb">No prazo</div><div class="vl" style="color:${good}">${total.pp}%</div><div class="sb">meta minima 89%</div></div>
+      <div class="kpi"><div class="lb">No prazo</div><div class="vl" style="color:${good}">${total.pp}%</div><div class="sb">meta minima 88,9%</div></div>
       <div class="kpi"><div class="lb">Outlier</div><div class="vl" style="color:${bad}">${total.op}%</div><div class="sb">referencia maxima 4,9%</div></div>
       <div class="kpi"><div class="lb">Tempo medio</div><div class="vl">${avgTime||0}h</div><div class="sb">${isAll?'backbone + acesso':tag.toLowerCase()}</div></div>
     </div>
     <div class="sgrid">${cards}</div>
     <div class="cbx" style="margin-top:12px">
       <h4>Comparativo por cluster - no prazo x outlier (${tag})</h4>
-      <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>No prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span><span style="font-size:10px;color:var(--text3)">linha laranja = meta 89%</span></div>
+      <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>No prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span><span style="font-size:10px;color:var(--text3)">Meta prazo 88,9% - Meta outlier 4,9%</span></div>
       <div style="position:relative;height:210px"><canvas id="cv-main" role="img" aria-label="Comparativo por cluster"></canvas></div>
     </div>`;
   mkCh('cv-main',CLS.map(c=>CL_NM[c]),[
     {label:'No prazo %',data:d1,backgroundColor:'rgba(77,142,240,.8)',borderRadius:4,order:1},
     {label:'Outlier %',data:d2,backgroundColor:'rgba(224,92,92,.75)',borderRadius:4,order:1},
-    {label:'Meta',data:CLS.map(()=>89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}
+    {label:'Meta',data:CLS.map(()=>M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0},
+    {label:'Meta Outlier',data:CLS.map(()=>MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0}
   ],{max:100});
 }
 
