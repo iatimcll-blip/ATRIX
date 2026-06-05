@@ -410,17 +410,32 @@ body {
 .quick-mop-btn:hover { transform: translateY(-1px); border-color: var(--blue); color: var(--tx); }
 .quick-mop-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
 .fuel-gauge {
-  display: grid; grid-template-columns: 86px 1fr; gap: 14px; align-items: center;
+  display: grid; grid-template-columns: minmax(112px,132px) 1fr; gap: 14px; align-items: center;
   padding: 12px; background: var(--surface); border: .5px solid var(--bd);
   border-radius: 12px; box-shadow: var(--shadow-sm); margin-bottom: 12px;
 }
+#fuel-balance-summary {
+  display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 10px; min-width: 0;
+}
+.fuel-pump-wrap {
+  display: grid; grid-template-columns: 22px 76px; gap: 8px; align-items: stretch; justify-content: center;
+}
+.fuel-scale {
+  display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+  font-size: 10px; color: var(--tx3); font-weight: 800; letter-spacing: .08em; line-height: 1;
+  padding: 5px 0; text-transform: uppercase;
+}
+.fuel-scale span { writing-mode: horizontal-tb; }
+.fuel-scale .fuel-full { color: var(--green-dk); }
+.fuel-scale .fuel-empty { color: var(--red); }
 .fuel-pump {
   width: 72px; height: 112px; border: 2px solid var(--tx2); border-radius: 12px 12px 8px 8px;
-  position: relative; overflow: hidden; background: var(--surface2);
+  position: relative; overflow: hidden; background: linear-gradient(180deg,var(--surface2),rgba(142,142,147,.08));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 8px 20px rgba(0,0,0,.08);
 }
 .fuel-pump:before {
   content: ''; position: absolute; left: 15px; right: 15px; top: 12px; height: 30px;
-  border: 2px solid var(--tx3); border-radius: 6px; background: var(--surface);
+  border: 2px solid var(--tx3); border-radius: 6px; background: rgba(255,255,255,.22);
   z-index: 2;
 }
 .fuel-pump:after {
@@ -429,15 +444,31 @@ body {
 }
 .fuel-fill {
   position: absolute; left: 0; right: 0; bottom: 0; height: var(--fuel-level,0%);
-  background: var(--fuel-color,var(--green)); transition: height .35s ease, background .35s ease;
+  background: linear-gradient(180deg,rgba(255,255,255,.28),var(--fuel-color,var(--green)) 28%,var(--fuel-color,var(--green)));
+  transition: height .35s ease, background .35s ease;
+  box-shadow: inset 0 12px 18px rgba(255,255,255,.22), inset 0 -14px 18px rgba(0,0,0,.12);
+}
+.fuel-fill:before {
+  content:''; position:absolute; left:-22%; right:-22%; top:8px; height:100%;
+  background:
+    radial-gradient(circle at 16% 18%,rgba(255,255,255,.42) 0 2px,transparent 3px),
+    radial-gradient(circle at 44% 42%,rgba(255,255,255,.32) 0 1.5px,transparent 3px),
+    radial-gradient(circle at 72% 26%,rgba(255,255,255,.36) 0 2px,transparent 3px);
+  opacity:.55; animation:fuelBubbles 3.2s linear infinite;
+}
+.fuel-fill:after {
+  content:''; position:absolute; left:-35%; right:-35%; top:-12px; height:24px;
+  background:rgba(255,255,255,.24); border-radius:48%;
+  animation:fuelWaveAlt 2.7s ease-in-out infinite alternate;
 }
 .fuel-wave {
-  position: absolute; left: -30%; right: -30%; top: -9px; height: 18px;
+  position: absolute; left: -36%; right: -36%; top: -10px; height: 20px;
   background: rgba(255,255,255,.34); border-radius: 50%;
   animation: fuelWave 2.1s linear infinite;
 }
 @keyframes fuelWave { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
-.fuel-scale { display: flex; justify-content: space-between; font-size: 10px; color: var(--tx3); margin-top: 4px; }
+@keyframes fuelWaveAlt { from { transform: translateX(10%) scaleY(.85); } to { transform: translateX(-10%) scaleY(1.08); } }
+@keyframes fuelBubbles { from { transform: translateY(20%); } to { transform: translateY(-28%); } }
 .tw { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 11px; }
 th {
@@ -461,11 +492,16 @@ tbody tr.row-validation:hover td { background: rgba(52,199,89,.22); }
 .lbtn:hover { color: var(--blue); }
 .substatus-select {
   appearance: none; -webkit-appearance: none;
-  max-width: 160px; width: 150px;
-  border: .5px solid var(--bd); border-radius: 8px;
-  background: var(--surface2); color: var(--tx2);
-  padding: 5px 24px 5px 8px; font-size: 11px; font-family: inherit;
-  outline: none; cursor: pointer; min-width: 0; text-overflow: ellipsis;
+  max-width: 180px; min-width: 100px; width: auto;
+  border: 1px solid var(--bd2); border-radius: 8px;
+  background: var(--surface); color: var(--tx);
+  padding: 5px 26px 5px 9px; font-size: 11px; font-family: inherit;
+  outline: none; cursor: pointer; text-overflow: ellipsis;
+  box-shadow: var(--shadow-sm);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%238e8e93' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: border-color .13s, box-shadow .13s;
 }
 .substatus-select:focus { border-color: var(--blue); }
 .substatus-cell { display: inline-flex; align-items: center; gap: 6px; max-width: 190px; min-width: 0; }
@@ -643,6 +679,8 @@ body.is-admin .admin-only { display: flex; }
   .login-logo{height:140px}
   .nav-brand{padding:4px 8px;margin-right:8px}
   .nav-logo{width:156px;height:46px}
+  .fuel-gauge{grid-template-columns:1fr;justify-items:center}
+  #fuel-balance-summary{width:100%;grid-template-columns:1fr}
   .upload-pill{font-size:0;padding:6px 8px}
   .upload-pill i{font-size:14px}
   .nav-btn{width:28px;height:28px}
@@ -935,9 +973,9 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
 
   <div class="panel" id="panel-combustivel">
     <div class="fuel-gauge">
-      <div>
+      <div class="fuel-pump-wrap">
+        <div class="fuel-scale"><span class="fuel-full">FULL</span><span class="fuel-empty">E</span></div>
         <div class="fuel-pump" id="fuel-pump"><div class="fuel-fill" id="fuel-fill"><div class="fuel-wave"></div></div></div>
-        <div class="fuel-scale"><span>E</span><span>FULL</span></div>
       </div>
       <div id="fuel-balance-summary"></div>
     </div>
@@ -1332,7 +1370,16 @@ function computeSlaHours(d,now=new Date()){if(!d.openedAt)return d.originalSlaH|
 function slaBaseLimit(r){const v=gv(r,['SLA Base','SLA Meta','Meta SLA','Prazo SLA','SLA Prazo','SLA Contratado','SLA Limite','SLA limite (h)','Prazo (h)','Prazo']);return v===''?0:ph(v)}
 function statusSla(slaH,mop,limitH){const m={'SLN MA':8,'SLN PA':8,'GIGA+ MA':8,'GIGA+ PI':8,'ADX':4};const lim=limitH||m[mop]||8;return slaH>lim?'FORA DO PRAZO':'NO PRAZO'}
 function refreshAbTimes(){const now=new Date();dAb.forEach(d=>{d.slaH=computeSlaHours(d,now);d.faixa=cf(d.slaH);d.statusSla=statusSla(d.slaH,d.mop,d.slaLimitH)})}
-function startRefresh(){if(refreshTimer)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!dAb.length)return;refreshAbTimes();renderTAb()},1000)}
+function startRefresh(){
+  if(refreshTimer)clearInterval(refreshTimer);
+  refreshTimer=setInterval(()=>{
+    if(!dAb.length)return;
+    refreshAbTimes();
+    // Não re-renderiza enquanto substatus dropdown estiver aberto/focado
+    if(document.activeElement&&document.activeElement.classList.contains('substatus-select'))return;
+    renderTAb();
+  },1000);
+}
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
 function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,users:getUsers(),selWeek,selCluster,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
@@ -2155,17 +2202,24 @@ function renderFuelDriverDetail(){
   box.style.display='block';
   box.innerHTML=`<div class="tsec-hd"><span class="tsec-title">Transações do condutor: ${eh(selectedFuelDriver)}</span><span id="cnt-fuel-driver" style="color:var(--tx3)">${rows.length} transações</span></div><div class="fuel-driver-summary"><div><span>Total consumido</span><b>${brl(total)}</b></div><div><span>Placas usadas</span><b>${plates.length?plates.map(eh).join(', '):'-'}</b></div><div><span>Último registro</span><b>${rows[0]?eh(rows[0].data):'-'}</b></div></div><div class="tw"><table><thead><tr><th>Data</th><th>Placa</th><th>Valor</th><th>Observação</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${eh(r.data)}</td><td class="tid">${eh(r.placa)}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(r.obs||'')}</td></tr>`).join('')||'<tr><td colspan="4" class="nores">Nenhuma transação para este condutor</td></tr>'}</tbody></table></div>`;
 }
+function fuelCycleWindow(ref=new Date()){
+  const base=new Date(ref.getFullYear(),ref.getMonth(),ref.getDate());
+  const start=base.getDate()>=16?new Date(base.getFullYear(),base.getMonth(),16):new Date(base.getFullYear(),base.getMonth()-1,16);
+  const end=new Date(start.getFullYear(),start.getMonth()+1,15);
+  const totalDays=Math.round((end-start)/86400000)+1;
+  const elapsed=Math.max(1,Math.min(totalDays,Math.round((base-start)/86400000)+1));
+  return{start,end,totalDays,elapsed,label:`${start.toLocaleDateString('pt-BR')} a ${end.toLocaleDateString('pt-BR')}`};
+}
 function fuelProjectionWindow(){
   const dates=fuelValidRequests().map(r=>new Date((r.data||'')+'T00:00:00')).filter(d=>!isNaN(d));
   const ref=dates.length?new Date(Math.max(...dates)):new Date();
-  const y=ref.getFullYear(),m=ref.getMonth(),elapsed=Math.max(1,...dates.filter(d=>d.getFullYear()===y&&d.getMonth()===m).map(d=>d.getDate()));
-  return{y,m,elapsed,nextDays:new Date(y,m+2,0).getDate()};
+  return fuelCycleWindow(ref);
 }
 function fuelMonthProjection(){
   const win=fuelProjectionWindow(),by={};
   dFuelVehicles.forEach(v=>{by[v.placa]={label:`${v.placa} - ${v.condutor||'Sem condutor'}`,placa:v.placa,atual:0,proj:0,count:0}});
-  fuelValidRequests().forEach(r=>{const d=new Date((r.data||'')+'T00:00:00');if(isNaN(d)||d.getFullYear()!==win.y||d.getMonth()!==win.m)return;const placa=String(r.placa||'').toUpperCase().trim();if(!by[placa])return;by[placa].atual+=Number(r.valor||0);by[placa].count++});
-  Object.values(by).forEach(v=>v.proj=v.atual/win.elapsed*win.nextDays);
+  fuelValidRequests().forEach(r=>{const d=new Date((r.data||'')+'T00:00:00');if(isNaN(d)||d<win.start||d>win.end)return;const placa=String(r.placa||'').toUpperCase().trim();if(!by[placa])return;by[placa].atual+=Number(r.valor||0);by[placa].count++});
+  Object.values(by).forEach(v=>v.proj=v.atual/win.elapsed*win.totalDays);
   return Object.values(by).sort((a,b)=>a.atual-b.atual||a.proj-b.proj||a.label.localeCompare(b.label));
 }
 function fuelNextMonthSuggestion(){return fuelMonthProjection().reduce((s,e)=>s+Number(e.proj||0),0)}
@@ -2179,9 +2233,10 @@ function renderFuel(){
   ensureFuelData();
   const validRequests=fuelValidRequests();
   const bal=fuelBalance(),levelBase=bal.total||bal.available,level=levelBase?Math.max(0,Math.min(100,bal.available/levelBase*100)):0,color=level>60?'#7ee787':level>30?'#ffcc66':'#ff6b6b';
+  const fuelCycle=fuelCycleWindow();
   const totalValor=bal.spent,active=dFuelVehicles.filter(v=>v.status==='Ativo').length;
   document.getElementById('fuel-fill').style.setProperty('--fuel-level',level+'%');document.getElementById('fuel-fill').style.setProperty('--fuel-color',color);
-  document.getElementById('fuel-balance-summary').innerHTML=`<div class="mc c-blue"><div class="mc-label">Saldo Geral Solicitado</div><div class="mc-val">${brl(bal.total)}</div><div class="mc-sub">aporte editável do ciclo</div></div><div class="mc c-green"><div class="mc-label">Saldo Disponível</div><div class="mc-val" style="color:${color}">${brl(bal.available)}</div><div class="mc-sub">reflete o saldo combustível/cartão</div></div>`;
+  document.getElementById('fuel-balance-summary').innerHTML=`<div class="mc c-blue"><div class="mc-label">Saldo Geral Solicitado</div><div class="mc-val">${brl(bal.total)}</div><div class="mc-sub">aporte editável do ciclo</div></div><div class="mc c-green"><div class="mc-label">Saldo Disponível</div><div class="mc-val" style="color:${color}">${brl(bal.available)}</div><div class="mc-sub">reflete o saldo combustível/cartão</div></div><div class="mc c-orange"><div class="mc-label">Período de renovação</div><div class="mc-val" style="font-size:15px">${eh(fuelCycle.label)}</div><div class="mc-sub">ciclo do dia 16 ao dia 15</div></div>`;
   document.getElementById('mrow-fuel').innerHTML=`<div class="mc c-blue"><div class="mc-label">Veículos</div><div class="mc-val"><b>${dFuelVehicles.length}</b></div><div class="mc-sub">${active} ativos</div></div><div class="mc c-green"><div class="mc-label">Solicitações</div><div class="mc-val" style="color:var(--green-dk)"><b>${validRequests.length}</b></div><div class="mc-sub">histórico validado</div></div><div class="mc c-orange"><div class="mc-label">Consumido registrado</div><div class="mc-val" style="color:var(--orange)">${brl(totalValor)}</div><div class="mc-sub">total das solicitações válidas</div></div><div class="mc c-red"><div class="mc-label">Retiradas</div><div class="mc-val" style="color:var(--red)">${brl(bal.withdrawn)}</div><div class="mc-sub">empréstimos/outros fins</div></div><div class="mc c-blue"><div class="mc-label">Total movimentado</div><div class="mc-val">${brl(bal.moved)}</div><div class="mc-sub">retiradas - solicitações</div></div>`;
   const top=fuelProjection()[0]||['-',{valor:0,litros:0,count:0}];
   const nextSuggestion=fuelNextMonthSuggestion();
