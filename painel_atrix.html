@@ -1079,7 +1079,6 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         </div>
         <div class="tw"><table>
           <thead><tr>
-            <th>Protocolo</th>
             <th>Título / Cliente</th>
             <th>Repetições</th>
             <th>NumPlan (F)</th>
@@ -1290,6 +1289,7 @@ function uniqueSubstatuses(values){const map=new Map();values.map(fmtSubstatus).
 function safeUrl(v){const raw=String(v||'').trim();if(!raw)return'';try{const u=new URL(raw,window.location&&window.location.href?window.location.href:'http://localhost/');return['http:','https:'].includes(u.protocol)?u.href:''}catch{return''}}
 function bestLink(...vals){for(const v of vals){const u=safeUrl(v);if(u)return u}return''}
 function gv(r,ns){for(const n of ns)if(r[n]!==undefined&&r[n]!=='')return r[n];const m=Object.fromEntries(Object.keys(r).map(k=>[nk(k),k]));for(const n of ns){const k=m[nk(n)];if(k&&r[k]!==undefined&&r[k]!=='')return r[k]}return''}
+function colVal(r,idx,ns){const byName=gv(r,ns);if(byName!==undefined&&byName!==null&&byName!=='')return byName;return Object.values(r)[idx]??''}
 function fmtMop(v){const raw=String(v||'').trim().replace(/\s+/g,' ').toUpperCase();const k=raw.replace(/\s+/g,'');if(k==='GIGA+PI'||k==='GIGAPI')return'GIGA+ PI';if(k==='GIGA+MA'||k==='GIGAMA')return'GIGA+ MA';if(k==='SLNMA')return'SLN MA';if(k==='SLNPA')return'SLN PA';if(k==='ADX')return'ADX';return raw}
 function iMop(uf,reg){const u=String(uf||'').toUpperCase().trim(),r=String(reg||'').toUpperCase().trim();if(u==='MA')return r.includes('INT')?'GIGA+ MA':'SLN MA';if(u==='PA')return'SLN PA';if(u==='PI')return'GIGA+ PI';if(u==='AM'||u==='AP')return'ADX';return'SLN MA'}
 function cnt(arr,key){const r={};arr.forEach(d=>{if(d[key])r[d[key]]=(r[d[key]]||0)+1});return r}
@@ -1505,7 +1505,7 @@ function procAb(raw,fname){
 function procEnc(raw,fname){
   dEnc=raw.filter(r=>r['ticket_id']||r['protocolo']).map(r=>{
     const protocolo=String(r['protocolo']||r['ticket_id']||'').trim();
-    const cliente=String(r['Cliente']||r['cliente']||'').trim();
+    const cliente=String(colVal(r,10,['Cliente','cliente'])||'').trim();
     const uf=String(r['ufservico']||r['UF']||'').trim();
     const cidade=String(r['cidadeservico']||r['cidade']||'').trim();
     const clusterCalc=String(r['cluster_calc']||'').trim();
@@ -1516,7 +1516,7 @@ function procEnc(raw,fname){
     const segmento=repairPtBR(String(r['segmento_cliente']||'').trim());
     const numplan=String(gv(r,['numplan','NUMPLAN','Num Plan','num_plan','NumPlan','num plan'])||'').trim();
     const clienteId=String(gv(r,['cliente_id','CLIENTE_ID','cliente id','ID Cliente','clienteid','ClienteId'])||'').trim();
-    const titulo=String(gv(r,['titulo','TITULO','Título','nome_cliente','NOME_CLIENTE','Nome Cliente','razao_social','Razao Social','plano','PLANO','nome_plano','Nome Plano','nome_titulo','Nome Titulo'])||'').trim();
+    const titulo=String(colVal(r,2,['titulo','TITULO','Título','nome_cliente','NOME_CLIENTE','Nome Cliente','razao_social','Razao Social','plano','PLANO','nome_plano','Nome Plano','nome_titulo','Nome Titulo'])||'').trim();
     const agingRaw=String(r['aging_ccs']||'').trim();
     const faixa=AGING_MAP[agingRaw]||cf(ph(r['tempo_b2b']||0));
     const tempoTotal=typeof r['tempo_total']==='number'?r['tempo_total']:ph(r['tempo_total']);
@@ -2269,7 +2269,9 @@ function buildRepMap(data){
     if(!map.has(key)){
       // Escolher melhor nome de exibição: prefere campo não-genérico
       const isCode=s=>!s||/^\d{4,}$/.test(s.trim())||s.trim().length<3;
-      const nome=!isCode(x.cliente)?x.cliente:(!isCode(x.titulo)?x.titulo:x.cliente||x.titulo||'—');
+      const clienteNome=!isCode(x.cliente)?x.cliente:'';
+      const tituloNome=!isCode(x.titulo)?x.titulo:'';
+      const nome=tituloNome&&clienteNome&&nk(tituloNome)!==nk(clienteNome)?`${tituloNome} / ${clienteNome}`:(tituloNome||clienteNome||x.cliente||x.titulo||'—');
       map.set(key,{
         nome,                          // título visual: Título / Cliente
         numplan:np,                    // coluna F
@@ -2290,8 +2292,10 @@ function buildRepMap(data){
     if(x.segmento)e.segmentos[x.segmento]=(e.segmentos[x.segmento]||0)+1;
     // Atualiza nome se encontrar versão mais descritiva
     const isCode2=s=>!s||/^\d{4,}$/.test(s.trim())||s.trim().length<3;
-    if(x.cliente&&!isCode2(x.cliente)&&x.cliente.length>e.nome.length)e.nome=x.cliente;
-    if(x.titulo&&!isCode2(x.titulo)&&x.titulo.length>e.nome.length)e.nome=x.titulo;
+    const clienteNome=!isCode2(x.cliente)?x.cliente:'';
+    const tituloNome=!isCode2(x.titulo)?x.titulo:'';
+    const nome=tituloNome&&clienteNome&&nk(tituloNome)!==nk(clienteNome)?`${tituloNome} / ${clienteNome}`:(tituloNome||clienteNome);
+    if(nome&&nome.length>e.nome.length)e.nome=nome;
   });
   return[...map.values()].filter(v=>v.records.length>=2).sort((a,b)=>b.records.length-a.records.length);
 }
@@ -2355,7 +2359,6 @@ function renderPanelRepetidos(){
     const ol=r.outlier24h?'<span class="badge b-red">Sim</span>':'<span style="color:var(--tx3)">—</span>';
     const sc=r.tempoTotal>24?'color:var(--red);font-weight:600':r.tempoTotal>8?'color:var(--orange);font-weight:600':'color:var(--green-dk)';
     return`<tr>
-      <td class="tid">${eh(r.protocolo)}</td>
       <td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx);font-weight:600" title="${eh(r._nome)}">${eh(r._nome||'—')}</td>
       <td><span class="badge b-purple">${eh(r._count)}x</span></td>
       <td><code style="background:var(--blue-bg);color:var(--blue);padding:1px 5px;border-radius:4px;font-size:10px;white-space:nowrap">${eh(r._numplan||'—')}</code></td>
@@ -2368,7 +2371,7 @@ function renderPanelRepetidos(){
       <td><span class="badge ${bc}">${eh(r.faixa)}</span></td>
       <td>${d8}</td><td>${ol}</td>
     </tr>`;
-  }).join('')||'<tr><td colspan="13" class="nores"><i class="ti ti-search-off"></i>Nenhum chamado repetido encontrado</td></tr>';
+  }).join('')||'<tr><td colspan="12" class="nores"><i class="ti ti-search-off"></i>Nenhum chamado repetido encontrado</td></tr>';
   document.getElementById('ft-rep').textContent='Atualizado em '+now2();
 }
 function renderRepClientsChart(all,dk){
@@ -2401,7 +2404,6 @@ function renderRepAccordion(all){
       const d8=r.dentro8h?'<span class="badge b-in" style="font-size:9px">≤8h</span>':'<span class="badge b-out" style="font-size:9px">&gt;8h</span>';
       const ol=r.outlier24h?'<span class="badge b-red" style="font-size:9px;margin-left:3px">+24h</span>':'';
       return`<tr>
-        <td class="tid">${eh(r.protocolo)}</td>
         <td><span class="badge b-teal" style="font-size:9px">${eh(r.semana||'—')}</span></td>
         <td><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:5px;height:5px;border-radius:50%;background:${(CLUSTER_INFO[r.cluster]||{}).clr||'#8e8e93'};flex-shrink:0"></span>${eh(r.cluster||'—')}</span></td>
         <td>${eh(r.cidade||'—')} / ${eh(r.uf)}</td>
@@ -2446,7 +2448,7 @@ function renderRepAccordion(all){
         </div>
         <!-- Chamados do cliente -->
         <div class="tw"><table>
-          <thead><tr><th>Protocolo</th><th>Semana</th><th>Cluster</th><th>Cidade/UF</th><th>Causa Raiz</th><th>Tempo</th><th>SLA</th></tr></thead>
+          <thead><tr><th>Semana</th><th>Cluster</th><th>Cidade/UF</th><th>Causa Raiz</th><th>Tempo</th><th>SLA</th></tr></thead>
           <tbody>${rows}</tbody>
         </table></div>
       </div>
@@ -2456,8 +2458,8 @@ function renderRepAccordion(all){
 function exportRepCSV(){
   const all=buildRepMap(repScope());
   const rows=all.flatMap(v=>v.records.map(r=>({...r,_nome:v.nome,_numplan:v.numplan,_clienteId:v.clienteId,_titulo:v.titulo,_total:v.records.length})));
-  const hdr=['Título / Cliente','Repetições','NumPlan (col F)','Cliente ID (col J)','Título Plano','Total Ocorrências','Protocolo','Semana','Cluster','Cidade','UF','Causa Raiz','Tempo Total (h)','Faixa SLA','Dentro 8h','Outlier +24h','Segmento'];
-  const data=rows.map(r=>[r._nome,r._total,r._numplan||'',r._clienteId||'',r._titulo||'',r._total,r.protocolo,r.semana,r.cluster,r.cidade,r.uf,r.causaRaiz,r.tempoTotal.toFixed(2),r.faixa,r.dentro8h?'Sim':'Não',r.outlier24h?'Sim':'Não',r.segmento]);
+  const hdr=['Título / Cliente','Repetições','NumPlan (col F)','Cliente ID (col J)','Título Plano','Total Ocorrências','Semana','Cluster','Cidade','UF','Causa Raiz','Tempo Total (h)','Faixa SLA','Dentro 8h','Outlier +24h','Segmento'];
+  const data=rows.map(r=>[r._nome,r._total,r._numplan||'',r._clienteId||'',r._titulo||'',r._total,r.semana,r.cluster,r.cidade,r.uf,r.causaRaiz,r.tempoTotal.toFixed(2),r.faixa,r.dentro8h?'Sim':'Não',r.outlier24h?'Sim':'Não',r.segmento]);
   const csv=[hdr,...data].map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
