@@ -99,14 +99,15 @@ body {
 .nav-brand-sub { font-size: 10px; color: var(--tx3); letter-spacing: .01em; }
 
 /* NAV TABS */
-.nav-tabs { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.nav-tabs { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow: visible; scrollbar-width: none; flex-wrap: wrap; row-gap: 4px; }
 .nav-tabs::-webkit-scrollbar { display: none; }
 .ntab {
   display: flex; align-items: center; gap: 6px;
-  padding: 6px 14px; border-radius: var(--r);
+  padding: 6px 10px; border-radius: var(--r);
   font-size: 12px; font-weight: 500; color: var(--tx3);
   cursor: pointer; background: none; border: none;
   font-family: inherit; transition: all .15s; user-select: none; white-space: nowrap;
+  flex-shrink: 0;
 }
 .ntab:hover { background: var(--surface2); color: var(--tx2); }
 .ntab.active { background: var(--surface); color: var(--blue); box-shadow: var(--shadow-sm); }
@@ -642,11 +643,17 @@ body.is-admin .admin-only { display: flex; }
 
 @media(max-width:1180px){
   .navbar{padding:8px 12px}
-  .nav-brand{margin-right:12px}
-  .nav-logo{width:clamp(180px,18vw,220px);height:58px}
-  .ntab{padding:6px 10px}
+  .nav-brand{margin-right:10px;padding:4px 8px}
+  .nav-logo{width:clamp(170px,16vw,210px);height:54px}
+  .ntab{padding:6px 8px;font-size:11px;gap:4px}
+  .ntab i{font-size:13px}
+  .ntab-badge{font-size:8px;padding:1px 4px;min-width:16px}
   .upload-pill{padding:5px 9px}
   .panel{padding:18px 16px 28px}
+}
+@media(max-width:1080px){
+  .upload-pill{font-size:0;padding:6px 8px}
+  .upload-pill i{font-size:14px}
 }
 @media(max-width:960px){
   .g2,.g3,.g4{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
@@ -1171,7 +1178,7 @@ const CLUSTER_INFO={
 const CLUSTER_ORDER=['MA CAP','MA INT','PA CAP','PA INT','PI CAP','PI INT','AM/AP'];
 
 let dAb=[],dEnc=[];
-let dFuelVehicles=[],dFuelRequests=[],dFuelWithdrawals=[],fuelBalanceTotal=0,fuelCardBalance=null,fuelCycleStartDay=16,fuelCycleEndDay=15,fuelCalendarEditing=false;
+let dFuelVehicles=[],dFuelRequests=[],dFuelWithdrawals=[],fuelBalanceTotal=0,fuelCardBalance=null,fuelCycleStartDay=16,fuelCycleEndDay=15,fuelCycleStartDate='',fuelCycleEndDate='',fuelCalendarEditing=false;
 let editingFuelPlate='',editingFuelRequestId='',selectedFuelDriver='';
 let scAb='slaH',sdAb=-1,scEnc='tempoTotal',sdEnc=-1;
 let chAb=null,chEnc=null,chSem=null,chFuel=null,chFuelProj=null,chFuelTop=null;
@@ -1382,7 +1389,7 @@ function startRefresh(){
 }
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
-function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,users:getUsers(),selWeek,selCluster,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
+function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>({...d,rowKey:d.rowKey??i,mop:fmtMop(d.mop),substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}))}
 function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>({...d,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}))}
 function repairPtBR(s){
@@ -1444,6 +1451,8 @@ function applyState(st,label){
   fuelCardBalance=st.fuelCardBalance===null||st.fuelCardBalance===undefined?null:Number(st.fuelCardBalance||0);
   fuelCycleStartDay=Math.min(28,Math.max(1,Number(st.fuelCycleStartDay||16)));
   fuelCycleEndDay=Math.min(28,Math.max(1,Number(st.fuelCycleEndDay||15)));
+  fuelCycleStartDate=/^\d{4}-\d{2}-\d{2}$/.test(st.fuelCycleStartDate||'')?st.fuelCycleStartDate:'';
+  fuelCycleEndDate=/^\d{4}-\d{2}-\d{2}$/.test(st.fuelCycleEndDate||'')?st.fuelCycleEndDate:'';
   renderFuel();
   if(clearLegacyFuelRequests)saveState();
   if(changed)applyPermissions();
@@ -2209,7 +2218,11 @@ function fuelCycleWindow(ref=new Date()){
   const sd=Math.min(28,Math.max(1,Number(fuelCycleStartDay||16)));
   const ed=Math.min(28,Math.max(1,Number(fuelCycleEndDay||15)));
   let start,end;
-  if(sd>ed){
+  const manualStart=fuelCycleStartDate?new Date(fuelCycleStartDate+'T00:00:00'):null;
+  const manualEnd=fuelCycleEndDate?new Date(fuelCycleEndDate+'T00:00:00'):null;
+  if(manualStart&&!isNaN(manualStart)&&manualEnd&&!isNaN(manualEnd)&&manualEnd>=manualStart){
+    start=manualStart;end=manualEnd;
+  }else if(sd>ed){
     start=base.getDate()>=sd?new Date(base.getFullYear(),base.getMonth(),sd):new Date(base.getFullYear(),base.getMonth()-1,sd);
     end=new Date(start.getFullYear(),start.getMonth()+1,ed);
   }else{
@@ -2219,7 +2232,7 @@ function fuelCycleWindow(ref=new Date()){
   }
   const totalDays=Math.round((end-start)/86400000)+1;
   const elapsed=Math.max(1,Math.min(totalDays,Math.round((base-start)/86400000)+1));
-  return{start,end,totalDays,elapsed,startDay:sd,endDay:ed,label:`${start.toLocaleDateString('pt-BR')} a ${end.toLocaleDateString('pt-BR')}`};
+  return{start,end,totalDays,elapsed,startDay:start.getDate(),endDay:end.getDate(),startDate:start.toISOString().slice(0,10),endDate:end.toISOString().slice(0,10),manual:!!(fuelCycleStartDate&&fuelCycleEndDate),label:`${start.toLocaleDateString('pt-BR')} a ${end.toLocaleDateString('pt-BR')}`};
 }
 function fuelProjectionWindow(){
   const dates=fuelValidRequests().map(r=>new Date((r.data||'')+'T00:00:00')).filter(d=>!isNaN(d));
@@ -2237,12 +2250,13 @@ function fuelNextMonthSuggestion(){return fuelMonthProjection().reduce((s,e)=>s+
 function toggleFuelCalendarEdit(){if(!canEdit())return;fuelCalendarEditing=!fuelCalendarEditing;renderFuel()}
 function setFuelCycleCalendar(){
   if(!canEdit())return;
-  const s=Number(document.getElementById('fuel-cycle-start')?.value||16);
-  const e=Number(document.getElementById('fuel-cycle-end')?.value||15);
-  if(!s||!e||s<1||s>28||e<1||e>28){alert('Informe dias entre 1 e 28 para o ciclo.');return}
-  fuelCycleStartDay=s;fuelCycleEndDay=e;fuelCalendarEditing=false;renderFuel();saveState();
+  const s=String(document.getElementById('fuel-cycle-start')?.value||'');
+  const e=String(document.getElementById('fuel-cycle-end')?.value||'');
+  const sd=s?new Date(s+'T00:00:00'):null,ed=e?new Date(e+'T00:00:00'):null;
+  if(!s||!e||isNaN(sd)||isNaN(ed)||ed<sd){alert('Informe uma data inicial e uma data final válida para o ciclo.');return}
+  fuelCycleStartDate=s;fuelCycleEndDate=e;fuelCycleStartDay=sd.getDate();fuelCycleEndDay=ed.getDate();fuelCalendarEditing=false;renderFuel();saveState();
 }
-function resetFuelCycleCalendar(){if(!canEdit())return;fuelCycleStartDay=16;fuelCycleEndDay=15;fuelCalendarEditing=false;renderFuel();saveState()}
+function resetFuelCycleCalendar(){if(!canEdit())return;fuelCycleStartDay=16;fuelCycleEndDay=15;fuelCycleStartDate='';fuelCycleEndDate='';fuelCalendarEditing=false;renderFuel();saveState()}
 function trendValues(values){
   const n=values.length;if(!n)return[];
   const sx=values.reduce((s,_,i)=>s+i,0),sy=values.reduce((s,v)=>s+v,0),sxy=values.reduce((s,v,i)=>s+i*v,0),sx2=values.reduce((s,_,i)=>s+i*i,0);
@@ -2256,9 +2270,9 @@ function renderFuel(){
   const fuelCycle=fuelCycleWindow();
   const totalValor=bal.spent,active=dFuelVehicles.filter(v=>v.status==='Ativo').length;
   document.getElementById('fuel-fill').style.setProperty('--fuel-level',level+'%');document.getElementById('fuel-fill').style.setProperty('--fuel-color',color);
-  const cycleEditor=fuelCalendarEditing?`<div style="display:grid;grid-template-columns:repeat(2,minmax(72px,1fr));gap:6px;margin-top:8px"><input class="finput" id="fuel-cycle-start" type="number" min="1" max="28" value="${fuelCycle.startDay}" title="Dia inicial do ciclo"><input class="finput" id="fuel-cycle-end" type="number" min="1" max="28" value="${fuelCycle.endDay}" title="Dia final do ciclo"><span class="card-action" onclick="setFuelCycleCalendar()">Salvar</span><span class="card-action" onclick="resetFuelCycleCalendar()">Padrão 16-15</span></div>`:'';
+  const cycleEditor=fuelCalendarEditing?`<div style="display:grid;grid-template-columns:repeat(2,minmax(118px,1fr));gap:6px;margin-top:8px"><input class="finput" id="fuel-cycle-start" type="date" value="${fuelCycle.startDate}" title="Data inicial do ciclo"><input class="finput" id="fuel-cycle-end" type="date" value="${fuelCycle.endDate}" title="Data final do ciclo"><span class="card-action" onclick="setFuelCycleCalendar()">Salvar</span><span class="card-action" onclick="resetFuelCycleCalendar()">Padrão 16-15</span></div>`:'';
   const cycleAction=canEdit()?`<span class="card-action" onclick="toggleFuelCalendarEdit()">${fuelCalendarEditing?'Fechar':'Editar calendário'}</span>`:'';
-  document.getElementById('fuel-balance-summary').innerHTML=`<div class="mc c-blue"><div class="mc-label">Saldo Geral Solicitado</div><div class="mc-val">${brl(bal.total)}</div><div class="mc-sub">aporte editável do ciclo</div></div><div class="mc c-green"><div class="mc-label">Saldo Disponível</div><div class="mc-val" style="color:${color}">${brl(bal.available)}</div><div class="mc-sub">reflete o saldo combustível/cartão</div></div><div class="mc c-orange"><div class="mc-label">Período de renovação</div><div class="mc-val" style="font-size:15px">${eh(fuelCycle.label)}</div><div class="mc-sub">ciclo do dia ${fuelCycle.startDay} ao dia ${fuelCycle.endDay} ${cycleAction}</div>${cycleEditor}</div>`;
+  document.getElementById('fuel-balance-summary').innerHTML=`<div class="mc c-blue"><div class="mc-label">Saldo Geral Solicitado</div><div class="mc-val">${brl(bal.total)}</div><div class="mc-sub">aporte editável do ciclo</div></div><div class="mc c-green"><div class="mc-label">Saldo Disponível</div><div class="mc-val" style="color:${color}">${brl(bal.available)}</div><div class="mc-sub">reflete o saldo combustível/cartão</div></div><div class="mc c-orange"><div class="mc-label">Período de renovação</div><div class="mc-val" style="font-size:15px">${eh(fuelCycle.label)}</div><div class="mc-sub">${fuelCycle.manual?'calendário manual':'ciclo automático 16-15'} ${cycleAction}</div>${cycleEditor}</div>`;
   document.getElementById('mrow-fuel').innerHTML=`<div class="mc c-blue"><div class="mc-label">Veículos</div><div class="mc-val"><b>${dFuelVehicles.length}</b></div><div class="mc-sub">${active} ativos</div></div><div class="mc c-green"><div class="mc-label">Solicitações</div><div class="mc-val" style="color:var(--green-dk)"><b>${validRequests.length}</b></div><div class="mc-sub">histórico validado</div></div><div class="mc c-orange"><div class="mc-label">Consumido registrado</div><div class="mc-val" style="color:var(--orange)">${brl(totalValor)}</div><div class="mc-sub">total das solicitações válidas</div></div><div class="mc c-red"><div class="mc-label">Retiradas</div><div class="mc-val" style="color:var(--red)">${brl(bal.withdrawn)}</div><div class="mc-sub">empréstimos/outros fins</div></div><div class="mc c-blue"><div class="mc-label">Total movimentado</div><div class="mc-val">${brl(bal.moved)}</div><div class="mc-sub">retiradas - solicitações</div></div>`;
   const top=fuelProjection()[0]||['-',{valor:0,litros:0,count:0}];
   const nextSuggestion=fuelNextMonthSuggestion();
