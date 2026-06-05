@@ -1157,7 +1157,7 @@ function fmtCausaRaiz(v){
   if((k.includes('ELETR')||k.includes('ELTR'))&&k.includes('POP'))return'Falha Elétrica no POP';
   if(k.includes('DEMAIS')&&k.includes('CAUSAS')&&k.includes('ROMPIMENTO'))return'Demais Causas de Rompimento';
   if(k.includes('SEM')&&k.includes('ACAO'))return'Sem Ação';
-  return s.replace(/\uFFFD+/g,'').replace(/�+/g,'').toLocaleLowerCase('pt-BR').replace(/(^|[\s/-])([a-z0-9\u00c0-\u024f])/gi,(m,p,c)=>p+c.toLocaleUpperCase('pt-BR')).replace(/\bPop\b/g,'POP')
+  return s.replace(/\uFFFD+/g,'').toLocaleLowerCase('pt-BR').replace(/(^|[\s/-])([a-z0-9\u00c0-\u024f])/gi,(m,p,c)=>p+c.toLocaleUpperCase('pt-BR')).replace(/\bPop\b/g,'POP')
 }
 function uniqueSubstatuses(values){const map=new Map();values.map(fmtSubstatus).filter(Boolean).forEach(s=>{const k=nk(s);if(!map.has(k))map.set(k,s)});return[...map.values()].sort((a,b)=>a.localeCompare(b,'pt-BR'))}
 function safeUrl(v){const raw=String(v||'').trim();if(!raw)return'';try{const u=new URL(raw,window.location&&window.location.href?window.location.href:'http://localhost/');return['http:','https:'].includes(u.protocol)?u.href:''}catch{return''}}
@@ -1214,12 +1214,15 @@ function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>({..
 function repairPtBR(s){
   if(!s)return s;
   s=String(s);
+  const bad='\uFFFD';
   const f=[
-    [/P[�\?]+blico/gi,'Público'],[/Publico/gi,'Público'],
-    [/Opera[�\?]+es/g,'Operações'],[/Operacoes/g,'Operações'],
-    [/Combust[�\?]+vel/gi,'Combustível'],[/Combust[ií]vel/gi,'Combustível'],
-    [/Solicita[�\?]+es/gi,'Solicitações'],[/Transa[�\?]+es/gi,'Transações'],
-    [/Observa[�\?]+o/gi,'Observação'],[/Ve[�\?]+culos/gi,'Veículos']
+    [new RegExp('P['+bad+'?]+blico','gi'),'Público'],[/Publico/gi,'Público'],
+    [new RegExp('Opera['+bad+'?]+es','g'),'Operações'],[/Operacoes/g,'Operações'],
+    [new RegExp('Combust['+bad+'?]+vel','gi'),'Combustível'],[/Combust[ií]vel/gi,'Combustível'],
+    [new RegExp('Solicita['+bad+'?]+es','gi'),'Solicitações'],
+    [new RegExp('Transa['+bad+'?]+es','gi'),'Transações'],
+    [new RegExp('Observa['+bad+'?]+o','gi'),'Observação'],
+    [new RegExp('Ve['+bad+'?]+culos','gi'),'Veículos']
   ];
   for(const[p,r]of f)s=s.replace(p,r);
   return s;
