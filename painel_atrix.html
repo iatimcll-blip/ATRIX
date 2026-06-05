@@ -2559,6 +2559,7 @@ function renderRepAccordion(all){
       <div style="padding:12px 16px;border-top:.5px solid var(--bd)">
         <!-- Identificação completa -->
         <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;padding:10px;background:var(--surface2);border-radius:var(--r);font-size:11px">
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:180px"><span style="color:var(--tx3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Cliente</span><b style="color:var(--tx)">${eh(v.nome||'—')}</b></div>
           <div style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--tx3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Repetições</span><b style="color:var(--purple)">${v.records.length}x</b></div>
           ${v.numplan?`<div style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--tx3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">NumPlan (col F)</span><code style="background:var(--blue-bg);color:var(--blue);padding:2px 7px;border-radius:5px;font-size:11px">${eh(v.numplan)}</code></div>`:''}
           ${v.clienteId?`<div style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--tx3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Cliente ID (col J)</span><code style="background:var(--purple-bg);color:var(--purple);padding:2px 7px;border-radius:5px;font-size:11px">${eh(v.clienteId)}</code></div>`:''}
