@@ -91,7 +91,7 @@ body {
   font-size: 14px; color: #fff; font-weight: 600; flex-shrink: 0;
 }
 .nav-logo {
-  width: clamp(220px, 18vw, 280px); height: 58px; object-fit: contain; display: block;
+  width: clamp(140px, 15vw, 260px); height: 58px; object-fit: contain; display: block;
   filter: drop-shadow(0 6px 14px rgba(0,0,0,.18));
 }
 [data-theme=dark] .nav-brand { background: rgba(28,28,30,.72); }
@@ -99,15 +99,15 @@ body {
 .nav-brand-sub { font-size: 10px; color: var(--tx3); letter-spacing: .01em; }
 
 /* NAV TABS */
-.nav-tabs { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow: visible; scrollbar-width: none; flex-wrap: wrap; row-gap: 4px; }
+.nav-tabs { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow: visible; scrollbar-width: none; flex-wrap: nowrap; }
 .nav-tabs::-webkit-scrollbar { display: none; }
 .ntab {
   display: flex; align-items: center; gap: 6px;
-  padding: 6px 10px; border-radius: var(--r);
+  padding: 6px 8px; border-radius: var(--r);
   font-size: 12px; font-weight: 500; color: var(--tx3);
   cursor: pointer; background: none; border: none;
   font-family: inherit; transition: all .15s; user-select: none; white-space: nowrap;
-  flex-shrink: 0;
+  flex: 1 1 0; min-width: 0; justify-content: center;
 }
 .ntab:hover { background: var(--surface2); color: var(--tx2); }
 .ntab.active { background: var(--surface); color: var(--blue); box-shadow: var(--shadow-sm); }
@@ -643,9 +643,9 @@ body.is-admin .admin-only { display: flex; }
 
 @media(max-width:1180px){
   .navbar{padding:8px 12px}
-  .nav-brand{margin-right:10px;padding:4px 8px}
-  .nav-logo{width:clamp(170px,16vw,210px);height:54px}
-  .ntab{padding:6px 8px;font-size:11px;gap:4px}
+  .nav-brand{margin-right:8px;padding:4px 6px}
+  .nav-logo{width:clamp(110px,13vw,170px);height:50px}
+  .ntab{padding:6px 6px;font-size:11px;gap:4px}
   .ntab i{font-size:13px}
   .ntab-badge{font-size:8px;padding:1px 4px;min-width:16px}
   .upload-pill{padding:5px 9px}
@@ -658,6 +658,10 @@ body.is-admin .admin-only { display: flex; }
 @media(max-width:960px){
   .g2,.g3,.g4{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
   .nav-brand-sub{display:none}
+  .nav-logo{width:clamp(82px,12vw,125px);height:42px}
+  .nav-brand{margin-right:6px;padding:3px 5px}
+  .ntab{font-size:10px;padding:5px 4px;gap:3px}
+  .ntab i{display:none}
   .week-label{display:none}
   .user-form{grid-template-columns:1fr}
   .user-form button{height:34px}
@@ -665,11 +669,14 @@ body.is-admin .admin-only { display: flex; }
 }
 @media(max-width:760px){
   body{overflow:auto;min-height:100vh;height:auto}
-  .navbar{position:sticky;top:0;flex-wrap:wrap;align-items:center;row-gap:8px}
-  .nav-brand{order:1}
-  .nav-right{order:2;margin-left:auto}
-  .nav-tabs{order:3;flex-basis:100%;padding-bottom:2px}
-  .week-select-wrap{order:4;margin-left:0;max-width:calc(50% - 4px)}
+  .navbar{position:sticky;top:0;flex-wrap:nowrap;align-items:center;gap:4px;padding:6px}
+  .nav-brand{order:0;margin-right:2px;padding:2px 4px}
+  .nav-logo{width:62px;height:34px}
+  .nav-tabs{order:0;flex-basis:auto;padding-bottom:0;gap:1px}
+  .ntab{font-size:9px;padding:5px 3px;border-radius:8px}
+  .ntab-badge{display:none}
+  .nav-right{order:0;margin-left:2px;gap:3px}
+  .week-select-wrap{order:0;margin-left:0;max-width:92px}
   .week-select{width:100%;min-width:0}
   .app-body{overflow:visible}
   .panel{overflow:visible;padding:16px 12px 28px}
@@ -684,13 +691,13 @@ body.is-admin .admin-only { display: flex; }
   .login-screen{justify-content:flex-start;padding-left:12px;padding-right:12px}
   .login-card{width:min(340px,100%);padding:18px}
   .login-logo{height:140px}
-  .nav-brand{padding:4px 8px;margin-right:8px}
-  .nav-logo{width:156px;height:46px}
+  .nav-brand{padding:2px 3px;margin-right:1px}
+  .nav-logo{width:44px;height:30px}
   .fuel-gauge{grid-template-columns:1fr;justify-items:center}
   #fuel-balance-summary{width:100%;grid-template-columns:1fr}
   .upload-pill{font-size:0;padding:6px 8px}
   .upload-pill i{font-size:14px}
-  .nav-btn{width:28px;height:28px}
+  .nav-btn{width:24px;height:24px}
   .avatar-btn{width:26px;height:26px}
 }
 </style>
@@ -1184,8 +1191,10 @@ let scAb='slaH',sdAb=-1,scEnc='tempoTotal',sdEnc=-1;
 let chAb=null,chEnc=null,chSem=null,chFuel=null,chFuelProj=null,chFuelTop=null;
 let selWeek='';
 let selCluster='';
+let activeTab='abertos';
 let refreshTimer=null;
 const STORAGE_KEY='atrix:painel:bases:v1';
+const ACTIVE_TAB_KEY='atrix:painel:aba:v1';
 const REMOTE_STATE_API='/api/painel-state';
 const USERS_KEY='atrix:usuarios:v1';
 const SESSION_KEY='atrix:sessao:v1';
@@ -1244,7 +1253,7 @@ async function loginUser(ev){
   currentUser=user;
   localStorage.setItem(SESSION_KEY,user.username);
   document.getElementById('login-pass').value='';
-  hideLogin();restoreState();applyPermissions();
+  hideLogin();restoreState();restoreActiveTab();applyPermissions();
 }
 function logoutUser(){
   localStorage.removeItem(SESSION_KEY);
@@ -1389,7 +1398,7 @@ function startRefresh(){
 }
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
-function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
+function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,activeTab,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>({...d,rowKey:d.rowKey??i,mop:fmtMop(d.mop),substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}))}
 function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>({...d,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}))}
 function repairPtBR(s){
@@ -1494,6 +1503,10 @@ function restoreState(){
     applyState(st,'Base restaurada');
     restoreRemoteState();
   }catch(e){console.warn('Não foi possível restaurar as bases salvas:',e)}
+}
+function restoreActiveTab(){
+  const saved=localStorage.getItem(ACTIVE_TAB_KEY)||activeTab||'abertos';
+  switchTab(saved,false);
 }
 
 function barRows(entries,clrFn,lmax){
@@ -2558,8 +2571,10 @@ function exportRepCSV(){
 }
 
 /* ─── NAV & THEME ─── */
-function switchTab(tab){
+function switchTab(tab,persist=true){
   if(!['abertos','encerrados','rede','combustivel','repetidos'].includes(tab))tab='abertos';
+  activeTab=tab;
+  if(persist)localStorage.setItem(ACTIVE_TAB_KEY,tab);
   const isAb=tab==='abertos',isEnc=tab==='encerrados',isRede=tab==='rede',isFuel=tab==='combustivel',isRep=tab==='repetidos';
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
   const tabId='ntab-'+(isAb?'ab':isEnc?'enc':isRede?'rede':isFuel?'fuel':'rep');
