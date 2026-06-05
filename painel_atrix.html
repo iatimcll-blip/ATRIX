@@ -2361,18 +2361,28 @@ function exportCSV(tipo){
 let chRepClients=null,chRepCausas=null;
 
 function repCausa(v){return fmtCausaRaiz(repairPtBR(v))||'Não informada'}
+function repText(v){
+  const s=repairPtBR(String(v||'').replace(/\s+/g,' ').trim());
+  if(!s)return'';
+  const acr={B2b:'B2B',Sla:'SLA',Id:'ID',Uf:'UF',Pop:'POP',Mop:'MOP',Eps:'EPS',Cnpj:'CNPJ',Cpf:'CPF'};
+  return s.toLocaleLowerCase('pt-BR')
+    .replace(/(^|[\s/(\-])([a-zà-ÿ0-9])/gi,(m,p,c)=>p+c.toLocaleUpperCase('pt-BR'))
+    .replace(/\b(De|Da|Do|Das|Dos|E)\b/g,m=>m.toLocaleLowerCase('pt-BR'))
+    .replace(/\b(Sao)\b/g,'São')
+    .replace(/\b(B2b|Sla|Id|Uf|Pop|Mop|Eps|Cnpj|Cpf)\b/g,m=>acr[m]||m);
+}
 function repScope(){
   const sem=document.getElementById('rep-f-semana')?.value||'';
   const cl=document.getElementById('rep-f-cluster')?.value||'';
   const ca=document.getElementById('rep-f-causa')?.value||'';
   const sg=document.getElementById('rep-f-seg')?.value||'';
   const sr=nk(document.getElementById('rep-srch')?.value||'');
-  let f=dEnc.map(d=>({...d,causaRaiz:repCausa(d.causaRaiz),segmento:repairPtBR(d.segmento)}));
+  let f=dEnc.map(d=>({...d,cliente:repText(d.cliente),titulo:repText(d.titulo),cidade:repText(d.cidade),causaRaiz:repText(repCausa(d.causaRaiz)),segmento:repText(d.segmento)}));
   if(sem)f=f.filter(d=>d.semana===sem);
   if(cl)f=f.filter(d=>d.cluster===cl);
   if(ca)f=f.filter(d=>d.causaRaiz===ca);
   if(sg)f=f.filter(d=>d.segmento===sg);
-  if(sr)f=f.filter(d=>nk(d.cliente).includes(sr)||nk(d.clienteId).includes(sr)||nk(d.numplan).includes(sr));
+  if(sr)f=f.filter(d=>nk(d.cliente).includes(sr)||nk(d.titulo).includes(sr)||nk(d.clienteId).includes(sr)||nk(d.numplan).includes(sr));
   return f;
 }
 function buildRepMap(data){
@@ -2420,8 +2430,8 @@ function buildRepMap(data){
 function fillRepFilters(){
   const sem=[...new Set(dEnc.map(d=>d.semana).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
   const cl=CLUSTER_ORDER.filter(c=>dEnc.some(d=>d.cluster===c));
-  const ca=[...new Set(dEnc.map(d=>repCausa(d.causaRaiz)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-  const sg=[...new Set(dEnc.map(d=>repairPtBR(d.segmento)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const ca=[...new Set(dEnc.map(d=>repText(repCausa(d.causaRaiz))).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const sg=[...new Set(dEnc.map(d=>repText(d.segmento)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   const sel=(id,arr,lbl)=>{const el=document.getElementById(id);if(!el)return;const v=el.value;el.innerHTML=`<option value="">${lbl}</option>`+arr.map(s=>`<option value="${eh(s)}">${eh(s)}</option>`).join('');el.value=[...el.options].some(o=>o.value===v)?v:''};
   sel('rep-f-semana',sem,'Todas semanas');sel('rep-f-cluster',cl,'Todos clusters');sel('rep-f-causa',ca,'Todas causas');sel('rep-f-seg',sg,'Todos segmentos');
 }
