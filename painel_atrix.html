@@ -1548,8 +1548,9 @@ const AB_CLIENTE_COLC_ALIASES=new Set([
   'FUNDO ESPECIAL DE MODERNIZACAO E REAPARELHAMENTO'
 ].map(nk));
 function clienteAbertoNome(r){
-  const clienteK=String(colVal(r,10,['Cliente','CLIENTE'])||'').trim();
-  const clienteC=String(colVal(r,2,['Cliente Final','CLIENTE FINAL','Unidade','UNIDADE','Titulo','TITULO','Título','Nome','NOME','Razao Social','RAZAO SOCIAL'])||'').trim();
+  const vals=Object.values(r);
+  const clienteK=String(vals[10]??gv(r,['Cliente','CLIENTE'])??'').trim();
+  const clienteC=String(vals[2]??colVal(r,2,['Cliente Final','CLIENTE FINAL','Unidade','UNIDADE','Titulo','TITULO','Título','Nome','NOME','Razao Social','RAZAO SOCIAL'])??'').trim();
   return AB_CLIENTE_COLC_ALIASES.has(nk(clienteK))&&clienteC?clienteC:clienteK;
 }
 function procAb(raw,fname){
