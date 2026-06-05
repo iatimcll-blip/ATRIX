@@ -1541,10 +1541,21 @@ document.getElementById('file-fuel').addEventListener('change',function(e){
 });
 
 /* ─── PROCESS ABERTOS ─── */
+const AB_CLIENTE_COLC_ALIASES=new Set([
+  'MUNICIPIO DE SAO LUIS SEMED',
+  'MUNICIPIO DE SAO LUIS SEMIT',
+  'FUNDO MUNICIPAL DE SAUDE DE SAO LUIS MARANHAO',
+  'FUNDO ESPECIAL DE MODERNIZACAO E REAPARELHAMENTO'
+].map(nk));
+function clienteAbertoNome(r){
+  const clienteK=String(colVal(r,10,['Cliente','CLIENTE'])||'').trim();
+  const clienteC=String(colVal(r,2,['Cliente Final','CLIENTE FINAL','Unidade','UNIDADE','Titulo','TITULO','Título','Nome','NOME','Razao Social','RAZAO SOCIAL'])||'').trim();
+  return AB_CLIENTE_COLC_ALIASES.has(nk(clienteK))&&clienteC?clienteC:clienteK;
+}
 function procAb(raw,fname){
   dAb=raw.filter(r=>gv(r,['ID Ticket','ID_TICKET'])!=='').map((r,rowKey)=>{
     const id=String(gv(r,['ID Ticket','ID_TICKET'])||'').trim();
-    const cliente=String(gv(r,['Cliente','CLIENTE'])||'').trim();
+    const cliente=clienteAbertoNome(r);
     const uf=String(gv(r,['UF','uf'])||'').trim();
     const cidade=repairPtBR(String(gv(r,['Cidade','CIDADE'])||'').trim());
     const regiao=repairPtBR(String(gv(r,['REGIAO','Região'])||'').trim());
