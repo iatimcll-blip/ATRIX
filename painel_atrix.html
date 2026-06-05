@@ -677,11 +677,11 @@ body.is-admin .admin-only { display: flex; }
 
   <div class="nav-tabs">
     <button class="ntab active" id="ntab-ab" onclick="switchTab('abertos')">
-      <i class="ti ti-layout-dashboard"></i> Dashboard
+      <i class="ti ti-layout-dashboard"></i> B2B Abertos
       <span class="ntab-badge nb-blue" id="nb-ab">0</span>
     </button>
     <button class="ntab" id="ntab-enc" onclick="switchTab('encerrados')">
-      <i class="ti ti-circle-check"></i> Encerrados
+      <i class="ti ti-circle-check"></i> B2B Encerrados
       <span class="ntab-badge nb-green" id="nb-enc">0</span>
     </button>
     <button class="ntab" id="ntab-rede" onclick="switchTab('rede')"><i class="ti ti-router"></i> Rede</button>
@@ -798,6 +798,7 @@ body.is-admin .admin-only { display: flex; }
       <div class="prow" id="prow-enc"></div>
       <div class="section-hd">Performance por cluster <span class="sh-line"></span></div>
       <div class="cluster-grid" id="cluster-cards"></div>
+      <div id="rank-rep-enc"></div>
       <div class="g3">
         <div class="card">
           <div class="card-hd"><span class="card-title">Faixa de SLA (aging CCS)</span></div>
@@ -863,6 +864,7 @@ body.is-admin .admin-only { display: flex; }
           <tbody id="tb-enc"></tbody>
         </table></div>
       </div>
+      <div id="exec-report"></div>
       <div class="pfooter">ATRIX · Chamados Encerrados · <span id="ft-enc"></span></div>
     </div>
   </div>
@@ -883,6 +885,7 @@ body.is-admin .admin-only { display: flex; }
     <div class="mrow" id="mrow-fuel"></div>
     <div class="prow" id="prow-fuel"></div>
     <div id="fuel-driver-detail" class="fuel-driver-detail" style="display:none"></div>
+    <div id="fuel-projection-detail"></div>
     <div class="g2">
       <div class="card">
         <div class="card-hd"><span class="card-title">Consumo por condutor e projeção</span></div>
@@ -949,6 +952,12 @@ body.is-admin .admin-only { display: flex; }
       </div>
       <div class="tsec">
         <div class="tsec-hd"><span class="tsec-title">Solicitações registradas</span><span id="cnt-fuel-r" style="color:var(--tx3)"></span></div>
+        <div class="fbar" style="padding:8px 16px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2);cursor:pointer">
+            <input type="checkbox" id="show-alelo-imports" onchange="renderFuel()" style="cursor:pointer">
+            Mostrar importações Alelo
+          </label>
+        </div>
         <div class="tw"><table><thead><tr><th>Data</th><th>Placa</th><th>Condutor</th><th>Valor</th><th>Observação</th><th class="admin-only">Ações</th></tr></thead><tbody id="tb-fuel-r"></tbody></table></div>
       </div>
     </div>
@@ -963,10 +972,10 @@ body.is-admin .admin-only { display: flex; }
 
 <script>
 /* ─── CONSTANTS ─── */
-const SLA_ORDER=['Maior que 24h','Entre 12h e 24h','Entre 8h e 12h','Entre 4h e 8h','Ate 4h'];
-const SLA_CLR={'Maior que 24h':'#ff3b30','Entre 12h e 24h':'#ff9500','Entre 8h e 12h':'#ffcc00','Entre 4h e 8h':'#34c759','Ate 4h':'#007aff'};
-const SLA_BADGE={'Maior que 24h':'b-red','Entre 12h e 24h':'b-orange','Entre 8h e 12h':'b-yellow','Entre 4h e 8h':'b-green','Ate 4h':'b-blue'};
-const AGING_MAP={'Maior que 24h':'Maior que 24h','Entre 12h e 24h':'Entre 12h e 24h','Entre 8h e 12h':'Entre 8h e 12h','Entre 4h e 8h':'Entre 4h e 8h','Ate 4h':'Ate 4h','Até 4h':'Ate 4h'};
+const SLA_ORDER=['Maior que 24h','Entre 12h e 24h','Entre 8h e 12h','Entre 4h e 8h','Até 4h'];
+const SLA_CLR={'Maior que 24h':'#ff3b30','Entre 12h e 24h':'#ff9500','Entre 8h e 12h':'#ffcc00','Entre 4h e 8h':'#34c759','Até 4h':'#007aff'};
+const SLA_BADGE={'Maior que 24h':'b-red','Entre 12h e 24h':'b-orange','Entre 8h e 12h':'b-yellow','Entre 4h e 8h':'b-green','Até 4h':'b-blue'};
+const AGING_MAP={'Maior que 24h':'Maior que 24h','Entre 12h e 24h':'Entre 12h e 24h','Entre 8h e 12h':'Entre 8h e 12h','Entre 4h e 8h':'Entre 4h e 8h','Ate 4h':'Até 4h','Até 4h':'Até 4h','Ate 8h':'Até 8h','Até 8h':'Até 8h','Ate 12h':'Até 12h','Até 12h':'Até 12h','Ate 24h':'Até 24h','Até 24h':'Até 24h'};
 const MOP_CLR={'SLN MA':'#007aff','GIGA+ MA':'#34c759','SLN PA':'#af52de','GIGA+ PI':'#ff6b35','ADX':'#8e8e93'};
 const MOP_QUICK=['GIGA+ PI','GIGA+ MA','SLN MA','SLN PA','ADX'];
 const FUEL_STATUS=['Ativo','Inativo','Oficina','Bloqueado'];
@@ -1202,8 +1211,21 @@ function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.t
 function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,users:getUsers(),selWeek,selCluster,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>({...d,rowKey:d.rowKey??i,mop:fmtMop(d.mop),substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}))}
 function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>({...d,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}))}
-function normalizeFuelVehicles(list){const source=Array.isArray(list)&&list.length?list:FUEL_BASE,by=new Map();source.forEach(v=>{const placa=String(v.placa||'').toUpperCase().trim();if(placa)by.set(placa,{...v,placa,tipoCartao:['Próprio','Coringa'].includes(v.tipoCartao)?v.tipoCartao:'Próprio',status:FUEL_STATUS.includes(v.status)?v.status:'Ativo'})});return[...by.values()]}
-function normalizeFuelRequests(list){const base=Array.isArray(list)?list:[],by=new Map();base.forEach((r,i)=>{const placa=String(r.placa||'').toUpperCase().trim(),v=fuelVehicleByPlate(placa);if(!placa||!v.placa)return;const id=r.id||('REQ'+Date.now()+i);by.set(id,{...r,id,placa,condutor:v.condutor||r.condutor||placa,valor:Number(r.valor||0),data:r.data||new Date().toISOString().slice(0,10)})});return[...by.values()]}
+function repairPtBR(s){
+  if(!s)return s;
+  s=String(s);
+  const f=[
+    [/P[�\?]+blico/gi,'Público'],[/Publico/gi,'Público'],
+    [/Opera[�\?]+es/g,'Operações'],[/Operacoes/g,'Operações'],
+    [/Combust[�\?]+vel/gi,'Combustível'],[/Combust[ií]vel/gi,'Combustível'],
+    [/Solicita[�\?]+es/gi,'Solicitações'],[/Transa[�\?]+es/gi,'Transações'],
+    [/Observa[�\?]+o/gi,'Observação'],[/Ve[�\?]+culos/gi,'Veículos']
+  ];
+  for(const[p,r]of f)s=s.replace(p,r);
+  return s;
+}
+function normalizeFuelVehicles(list){const source=Array.isArray(list)&&list.length?list:FUEL_BASE,by=new Map();source.forEach(v=>{const placa=String(v.placa||'').toUpperCase().trim();if(placa)by.set(placa,{...v,placa,setor:repairPtBR(v.setor||''),tipoCartao:['Próprio','Coringa'].includes(v.tipoCartao)?v.tipoCartao:'Próprio',status:FUEL_STATUS.includes(v.status)?v.status:'Ativo'})});return[...by.values()]}
+function normalizeFuelRequests(list){const base=Array.isArray(list)?list:[],by=new Map();base.forEach((r,i)=>{const placa=String(r.placa||'').toUpperCase().trim(),v=fuelVehicleByPlate(placa);if(!placa||!v.placa)return;const id=r.id||('REQ'+Date.now()+i);by.set(id,{...r,id,placa,condutor:v.condutor||r.condutor||placa,obs:repairPtBR(r.obs||''),valor:Number(r.valor||0),data:r.data||new Date().toISOString().slice(0,10)})});return[...by.values()]}
 function normalizeFuelWithdrawals(list){return(Array.isArray(list)?list:[]).map((r,i)=>({...r,id:r.id||('WDR'+Date.now()+i),valor:Number(r.valor||0),data:r.data||new Date().toISOString().slice(0,10)})).filter(r=>r.valor>0)}
 function applyState(st,label){
   if(!st||typeof st!=='object')return false;
@@ -1313,7 +1335,7 @@ document.getElementById('file-fuel').addEventListener('change',function(e){
   const f=e.target.files[0];if(!f)return;
   const rd=new FileReader();
   rd.onload=ev=>{try{importFuelAlelo(String(ev.target.result||''),f.name)}catch(er){alert('Erro Alelo: '+er.message)}};
-  rd.readAsText(f,'UTF-8');this.value='';
+  rd.readAsText(f,'windows-1252');this.value='';
 });
 
 /* ─── PROCESS ABERTOS ─── */
@@ -1322,9 +1344,9 @@ function procAb(raw,fname){
     const id=String(gv(r,['ID Ticket','ID_TICKET'])||'').trim();
     const cliente=String(gv(r,['Cliente','CLIENTE'])||'').trim();
     const uf=String(gv(r,['UF','uf'])||'').trim();
-    const cidade=String(gv(r,['Cidade','CIDADE'])||'').trim();
-    const regiao=String(gv(r,['REGIAO','Região'])||'').trim();
-    const substatus=fmtSubstatus(gv(r,['Substatus','SUBSTATUS']));
+    const cidade=repairPtBR(String(gv(r,['Cidade','CIDADE'])||'').trim());
+    const regiao=repairPtBR(String(gv(r,['REGIAO','Região'])||'').trim());
+    const substatus=fmtSubstatus(repairPtBR(String(gv(r,['Substatus','SUBSTATUS'])||'')));
     const link=bestLink(gv(r,['Link Atrix','LINK','Link','Ticket Bdesk']),id);
     const openedAt=parseOpeningDate(gv(r,['Abertura do Ticket','Abertura','Data Abertura','Data de Abertura','Data/Hora Abertura']));
     const slaLimitH=slaBaseLimit(r);
@@ -1358,15 +1380,17 @@ function procEnc(raw,fname){
     const clusterCalc=String(r['cluster_calc']||'').trim();
     const cluster=normCluster(clusterCalc);
     const clusterNome=String(r['cluster']||'').trim();
-    const causaRaiz=fmtCausaRaiz(r['Tipo_Encerramento']||r['Causa_Raiz']);
+    const causaRaiz=fmtCausaRaiz(repairPtBR(String(r['Tipo_Encerramento']||r['Causa_Raiz']||'')));
     const semana=String(r['semana']||'').trim();
-    const segmento=String(r['segmento_cliente']||'').trim();
+    const segmento=repairPtBR(String(r['segmento_cliente']||'').trim());
+    const numplan=String(gv(r,['numplan','NUMPLAN','Num Plan','num_plan'])||'').trim();
+    const clienteId=String(gv(r,['cliente_id','CLIENTE_ID','cliente id','ID Cliente'])||'').trim();
     const agingRaw=String(r['aging_ccs']||'').trim();
     const faixa=AGING_MAP[agingRaw]||cf(ph(r['tempo_b2b']||0));
     const tempoTotal=typeof r['tempo_total']==='number'?r['tempo_total']:ph(r['tempo_total']);
     const dentro8h=encBucket(tempoTotal)==='prazo';
     const outlier24h=encBucket(tempoTotal)==='outlier';
-    return{protocolo,cliente,uf,cidade,cluster,clusterCalc,clusterNome,causaRaiz,semana,segmento,faixa,tempoTotal,dentro8h,outlier24h};
+    return{protocolo,cliente,uf,cidade,cluster,clusterCalc,clusterNome,causaRaiz,semana,segmento,faixa,tempoTotal,dentro8h,outlier24h,numplan,clienteId};
   });
   document.getElementById('nb-enc').textContent=dEnc.length;
   document.getElementById('ft-enc').textContent='Atualizado em '+now2();
@@ -1482,7 +1506,7 @@ function rChAb(){
   if(chAb){chAb.destroy();chAb=null}
   const ctx=document.getElementById('ch-ab');if(!ctx)return;
   const dk=document.body.dataset.theme==='dark';
-  chAb=new Chart(ctx,{type:'bar',data:{labels:SLA_ORDER.map(f=>f.replace(/[🔴🟠🟡🟢🔵]\s*/,'')),datasets:[{data:SLA_ORDER.map(f=>c[f]),backgroundColor:SLA_ORDER.map(f=>SLA_CLR[f]),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93'}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:1}}}}});
+  chAb=new Chart(ctx,{type:'bar',data:{labels:SLA_ORDER.map(f=>f.replace(/[🔴🟠🟡🟢🔵]\s*/,'')),datasets:[{data:SLA_ORDER.map(f=>c[f]),backgroundColor:SLA_ORDER.map(f=>SLA_CLR[f]),borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>c2.label+': '+c2.parsed.y+' chamados'}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93'}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:1}}}}});
 }
 function fillFiltersAb(){
   const curMop=document.getElementById('f-mop')?.value||'';
@@ -1539,9 +1563,9 @@ function sAb(c){scAb===c?sdAb*=-1:(scAb=c,sdAb=-1);renderTAb()}
 /* ─── RENDER ENCERRADOS ─── */
 function renderAllEnc(){
   const d=encScope();
-  rBanner(d);rMetEnc(d);rPillEnc(d);rClusterCards(d);
+  rBanner(d);rMetEnc(d);rPillEnc(d);rClusterCards(d);renderRankRepEnc(d);
   rSlaEnc(d);rCausaEnc(d);rMeta8(d);rChEnc(d);rChSem();
-  rSegEnc(d);rUfEnc(d);renderTEnc();
+  rSegEnc(d);rUfEnc(d);renderExecReport(d);renderTEnc();
 }
 
 function rBanner(d){
@@ -1564,7 +1588,8 @@ function rMetEnc(d){
     <div class="mc c-green"><div class="mc-label">Prazo ≤8h</div><div class="mc-val" style="color:var(--green-dk)"><b>${s.prazo}</b></div><div class="mc-sub"><span class="tag tag-green">${pp(s.pPrazo)}%</span> ${s.gapPrazo?pp(s.gapPrazo)+' p.p. fora da meta':'meta atingida'}</div></div>
     <div class="mc c-orange"><div class="mc-label">8h a 24h</div><div class="mc-val" style="color:var(--orange)"><b>${s.intermediario}</b></div><div class="mc-sub"><span class="tag tag-orange">${pp(s.pInter)}%</span> fora da meta 8h</div></div>
     <div class="mc c-red"><div class="mc-label">Outlier &gt;24h</div><div class="mc-val" style="color:var(--red)"><b>${s.outlier}</b></div><div class="mc-sub"><span class="tag tag-red">${pp(s.pOut)}%</span> ${s.excessoOutlier?pp(s.excessoOutlier)+' p.p. acima do máx. 1,98%':'dentro do máx. 1,98%'}</div></div>
-    <div class="mc c-orange"><div class="mc-label">Tempo médio</div><div class="mc-val" style="color:var(--orange)">${fh(avg)}</div><div class="mc-sub">tempo total médio</div></div>`;
+    <div class="mc c-orange"><div class="mc-label">Tempo médio</div><div class="mc-val" style="color:var(--orange)">${fh(avg)}</div><div class="mc-sub">tempo total médio</div></div>
+    <div class="mc c-purple" style="--purple:#af52de;--purple-bg:rgba(175,82,222,.1)"><div class="mc-label">Clientes repetidos</div><div class="mc-val" style="color:var(--purple)" id="cnt-rep-enc">—</div><div class="mc-sub">com ≥2 chamados</div></div>`;
 }
 
 function rPillEnc(d){
@@ -1649,7 +1674,7 @@ function rChEnc(d){
   if(chEnc){chEnc.destroy();chEnc=null}
   const ctx=document.getElementById('ch-enc');if(!ctx)return;
   const dk=document.body.dataset.theme==='dark';
-  chEnc=new Chart(ctx,{type:'bar',data:{labels:['Prazo ≤8h','8h a 24h','Outlier >24h'],datasets:[{data:[s.prazo,s.intermediario,s.outlier],backgroundColor:['#34c759','#ff9500','#ff3b30'],borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93'}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:1}}}}});
+  chEnc=new Chart(ctx,{type:'bar',data:{labels:['Prazo ≤8h','8h a 24h','Outlier >24h'],datasets:[{data:[s.prazo,s.intermediario,s.outlier],backgroundColor:['#34c759','#ff9500','#ff3b30'],borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>c2.label+': '+c2.parsed.y+' chamados'}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93'}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:1}}}}});
 }
 
 function rChSem(){
@@ -1662,12 +1687,12 @@ function rChSem(){
   if(chSem){chSem.destroy();chSem=null}
   const ctx=document.getElementById('ch-sem');if(!ctx)return;
   const dk=document.body.dataset.theme==='dark';
-  chSem=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:dk?'#636366':'#8e8e93',maxRotation:45,autoSkip:false}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:10}}}}});
+  chSem=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>'Semana '+c2.label+': '+c2.parsed.y+' chamados'}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:dk?'#636366':'#8e8e93',maxRotation:45,autoSkip:false}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:10}}}}});
 }
 
 function rSegEnc(d){
   const SCLR={'Público':'#007aff','Corporativo':'#af52de','Operadoras':'#ff6b35','Provedores':'#34c759'};
-  document.getElementById('seg-enc').innerHTML=listRows(se(cnt(d,'segmento')),k=>SCLR[k]||'#8e8e93');
+  document.getElementById('seg-enc').innerHTML=listRows(se(cnt(d.map(x=>({...x,segmento:repairPtBR(x.segmento)})),'segmento')),k=>SCLR[k]||'#8e8e93');
 }
 function rUfEnc(d){
   const UCLR={'MA':'#007aff','PA':'#af52de','PI':'#ff6b35','AM':'#34c759','AP':'#8e8e93'};
@@ -1680,7 +1705,7 @@ function fillFiltersEnc(){
   const causas=[...new Set(dEnc.map(d=>fmtCausaRaiz(d.causaRaiz)).filter(Boolean))].sort();
   const ufs=[...new Set(dEnc.map(d=>d.uf).filter(Boolean))].sort();
   const semanas=[...new Set(dEnc.map(d=>d.semana).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
-  const segs=[...new Set(dEnc.map(d=>d.segmento).filter(Boolean))].sort();
+  const segs=[...new Set(dEnc.map(d=>repairPtBR(d.segmento)).filter(Boolean))].sort();
   document.getElementById('fe-cluster').innerHTML='<option value="">Todos clusters</option>'+clusters.map(c=>`<option>${c}</option>`).join('');
   document.getElementById('fe-causa').innerHTML='<option value="">Todas causas</option>'+causas.map(c=>`<option>${c}</option>`).join('');
   document.getElementById('fe-uf').innerHTML='<option value="">Todas UFs</option>'+ufs.map(u=>`<option>${u}</option>`).join('');
@@ -1697,11 +1722,88 @@ function gFEnc(){
   let f=encScope();
   if(cl)f=f.filter(d=>d.cluster===cl);if(ag)f=f.filter(d=>d.faixa===ag);
   if(ca)f=f.filter(d=>fmtCausaRaiz(d.causaRaiz)===ca);if(uf)f=f.filter(d=>d.uf===uf);
-  if(sm)f=f.filter(d=>d.semana===sm);if(sg)f=f.filter(d=>d.segmento===sg);
+  if(sm)f=f.filter(d=>d.semana===sm);if(sg)f=f.filter(d=>repairPtBR(d.segmento)===sg);
   if(srch)f=f.filter(d=>d.cliente.toLowerCase().includes(srch)||d.protocolo.toLowerCase().includes(srch));
   return f.slice().sort((a,b)=>typeof a[scEnc]==='number'?(a[scEnc]-b[scEnc])*sdEnc:String(a[scEnc]).localeCompare(String(b[scEnc]))*sdEnc);
 }
 
+function renderExecReport(d){
+  const el=document.getElementById('exec-report');if(!el)return;
+  if(!d||!d.length){el.innerHTML='';return}
+  const S=selWeek||'(todas as semanas)';
+  const s=encRuleStats(d);
+  const total=s.total||1;
+  /* B2B Reparo 8h */
+  const fora8=s.fora8,pFora8=pp(s.pFora8);
+  /* Recorte por cluster */
+  const clusterMap={};
+  d.forEach(x=>{
+    const k=x.cluster;if(!k)return;
+    if(!clusterMap[k])clusterMap[k]={total:0,fora8:0,outlier:0};
+    clusterMap[k].total++;
+    if(encBucket(x.tempoTotal)!=='prazo')clusterMap[k].fora8++;
+    if(encBucket(x.tempoTotal)==='outlier')clusterMap[k].outlier++;
+  });
+  const clusterLines=CLUSTER_ORDER.filter(k=>clusterMap[k]&&clusterMap[k].total>0).map(k=>{
+    const g=clusterMap[k];
+    return`${k} ${pp(g.fora8/g.total*100)}% (${g.fora8}/${g.total})`;
+  }).join('; ');
+  /* Causa dominante */
+  const causaCnt={};d.forEach(x=>{const c=fmtCausaRaiz(x.causaRaiz)||'Não informada';causaCnt[c]=(causaCnt[c]||0)+1});
+  const dominante=se(causaCnt)[0]||['Não informada',0];
+  /* B2B Outlier >24h */
+  const outlier=s.outlier,pOut=pp(s.pOut);
+  const clusterLinesOut=CLUSTER_ORDER.filter(k=>clusterMap[k]&&clusterMap[k].outlier>0).map(k=>{
+    const g=clusterMap[k];
+    return`${k} ${pp(g.outlier/g.total*100)}% (${g.outlier}/${g.total})`;
+  }).join('; ');
+  /* Cidades que mais impactaram nos outliers */
+  const cidadeOut={};d.filter(x=>x.outlier24h).forEach(x=>{if(x.cidade)cidadeOut[x.cidade]=(cidadeOut[x.cidade]||0)+1});
+  const topCidades=se(cidadeOut).slice(0,5).map(([c,n])=>`${c} (${n})`).join(', ');
+  const texto=`B2B Reparo 8h — Semana ${S} apresentou ${pFora8}% do indicador fora da meta (${fora8}/${total}).\nRecorte regional: ${clusterLines||'N/A'}.\nCausa dominante: ${dominante[0]}.\n\nB2B Outlier >24h — Semana ${S} apresentou ${pOut}% de impacto (${outlier}/${total}).\nRecorte regional: ${clusterLinesOut||'N/A'}.\nCidades que mais impactaram: ${topCidades||'N/A'}.`;
+  el.innerHTML=`<div class="tsec" style="margin-bottom:16px">
+    <div class="tsec-hd">
+      <span class="tsec-title"><i class="ti ti-report" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Relatório Executivo Automático</span>
+      <span class="card-action" onclick="(function(){navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('exec-report-text').textContent).then(()=>alert('Texto copiado!')).catch(()=>{const ta=document.createElement('textarea');ta.value=document.getElementById('exec-report-text').textContent;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('Texto copiado!')})})()"><i class="ti ti-copy" style="font-size:11px;vertical-align:-1px"></i> Copiar</span>
+    </div>
+    <div style="padding:12px 16px">
+      <pre id="exec-report-text" style="font-family:inherit;font-size:12px;white-space:pre-wrap;line-height:1.7;color:var(--tx2)">${eh(texto)}</pre>
+    </div>
+  </div>`;
+}
+function renderRankRepEnc(d){
+  /* Agrupa por clienteId (se disponível) ou por cliente normalizado */
+  const map=new Map();
+  d.forEach(x=>{
+    const key=x.clienteId||nk(x.cliente);
+    if(!key)return;
+    if(!map.has(key))map.set(key,{nome:x.cliente,clienteId:x.clienteId||'',count:0});
+    map.get(key).count++;
+  });
+  const repeated=[...map.values()].filter(v=>v.count>=2).sort((a,b)=>b.count-a.count);
+  const repCount=repeated.length;
+  /* Atualizar contador de métrica */
+  const cntEl=document.getElementById('cnt-rep-enc');
+  if(cntEl)cntEl.textContent=repCount;
+  const el=document.getElementById('rank-rep-enc');if(!el)return;
+  if(!repCount){el.innerHTML='';return}
+  const top10=repeated.slice(0,10);
+  const maxC=top10[0].count||1;
+  el.innerHTML=`<div class="tsec" style="margin-bottom:16px">
+    <div class="tsec-hd">
+      <span class="tsec-title">Ranking — Clientes com chamados repetidos</span>
+      <span style="color:var(--tx3);font-size:11px">${repCount} clientes com ≥2 chamados</span>
+    </div>
+    <div style="padding:12px 16px">
+      ${top10.map((v,i)=>`<div class="brow">
+        <div class="blbl" title="${eh(v.nome)}" style="flex-basis:180px">${i+1}. ${eh(v.nome.length>22?v.nome.slice(0,21)+'…':v.nome)}</div>
+        <div class="btrk"><div class="bfil" style="width:${Math.round(v.count/maxC*100)}%;background:var(--purple)"></div></div>
+        <div class="bn">${v.count}</div>
+        ${v.clienteId?`<div style="font-size:9px;color:var(--tx3);margin-left:6px;min-width:0;overflow:hidden;text-overflow:ellipsis">${eh(v.clienteId)}</div>`:''}
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
 function renderTEnc(){
   const f=gFEnc();
   document.getElementById('cnt-enc').textContent=f.length+' de '+encScope().length+' chamados';
@@ -1717,6 +1819,51 @@ function renderTEnc(){
 }
 function sEnc(c){scEnc===c?sdEnc*=-1:(scEnc=c,sdEnc=-1);renderTEnc()}
 
+/* ─── FUEL PROJECTION DETAIL ─── */
+function renderFuelProjectionDetail(){
+  const el=document.getElementById('fuel-projection-detail');if(!el)return;
+  const proj=fuelMonthProjection();
+  if(!proj.length){el.innerHTML='';return}
+  /* Calcular média histórica por placa (todos os meses registrados) */
+  const histByPlaca={};
+  fuelValidRequests().forEach(r=>{
+    const p=String(r.placa||'').toUpperCase().trim();
+    if(!histByPlaca[p])histByPlaca[p]={sum:0,months:new Set()};
+    histByPlaca[p].sum+=Number(r.valor||0);
+    const d=new Date((r.data||'')+'T00:00:00');
+    if(!isNaN(d))histByPlaca[p].months.add(`${d.getFullYear()}-${d.getMonth()}`);
+  });
+  const rows=proj.filter(e=>e.label&&(e.atual>0||e.proj>0)).map(e=>{
+    const h=histByPlaca[e.placa]||{sum:0,months:new Set([`0-0`])};
+    const media=h.sum/Math.max(h.months.size,1);
+    const tendencia=e.proj>media*1.1?'↑':e.proj<media*0.9?'↓':'=';
+    const tColor=tendencia==='↑'?'var(--red)':tendencia==='↓'?'var(--green-dk)':'var(--tx3)';
+    const v=dFuelVehicles.find(vv=>vv.placa===e.placa);
+    const condutorLabel=v?(v.condutor||e.placa):e.placa;
+    return{condutorLabel,atual:e.atual,media,proj:e.proj,tendencia,tColor};
+  }).sort((a,b)=>b.proj-a.proj);
+  el.innerHTML=`<div class="tsec" style="margin-bottom:16px">
+    <div class="tsec-hd"><span class="tsec-title"><i class="ti ti-chart-arrows-vertical" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Projeção detalhada por condutor</span></div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Condutor</th>
+        <th>Mês atual (R$)</th>
+        <th>Média histórica (R$)</th>
+        <th>Projeção mês atual (R$)</th>
+        <th>Tendência</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r=>`<tr>
+          <td style="color:var(--tx)">${eh(r.condutorLabel)}</td>
+          <td>${brl(r.atual)}</td>
+          <td>${brl(r.media)}</td>
+          <td style="font-weight:600">${brl(r.proj)}</td>
+          <td style="font-size:16px;font-weight:700;color:${r.tColor}" title="${r.tendencia==='↑'?'Acima da média':r.tendencia==='↓'?'Abaixo da média':'Na média'}">${r.tendencia}</td>
+        </tr>`).join('')||'<tr><td colspan="5" class="nores">Sem dados de projeção</td></tr>'}
+      </tbody>
+    </table></div>
+  </div>`;
+}
 /* FUEL PANEL */
 function ensureFuelData(){
   if(!dFuelVehicles.length)dFuelVehicles=normalizeFuelVehicles(FUEL_BASE);
@@ -1735,7 +1882,7 @@ function addFuelVehicle(){
   if(!canEdit())return;
   const placa=document.getElementById('fuel-placa').value.toUpperCase().trim();
   if(!placa){alert('Informe a placa.');return}
-  const item={placa,modelo:document.getElementById('fuel-modelo').value.trim(),ano:document.getElementById('fuel-ano').value.trim(),condutor:document.getElementById('fuel-condutor').value.trim(),setor:document.getElementById('fuel-setor').value.trim(),superior:document.getElementById('fuel-superior').value.trim(),tipo:document.getElementById('fuel-tipo').value,tipoCartao:document.getElementById('fuel-tipo-cartao').value,status:document.getElementById('fuel-status-new').value};
+  const item={placa,modelo:document.getElementById('fuel-modelo').value.trim(),ano:document.getElementById('fuel-ano').value.trim(),condutor:document.getElementById('fuel-condutor').value.trim(),setor:repairPtBR(document.getElementById('fuel-setor').value.trim()),superior:document.getElementById('fuel-superior').value.trim(),tipo:document.getElementById('fuel-tipo').value,tipoCartao:document.getElementById('fuel-tipo-cartao').value,status:document.getElementById('fuel-status-new').value};
   const idx=dFuelVehicles.findIndex(v=>v.placa===placa);
   if(idx>=0&&(!editingFuelPlate||placa!==editingFuelPlate)){alert('Placa já cadastrada. Edite o registro existente para evitar duplicidade.');return}
   if(editingFuelPlate){const editIdx=dFuelVehicles.findIndex(v=>v.placa===editingFuelPlate);if(editIdx>=0)dFuelVehicles[editIdx]={...dFuelVehicles[editIdx],...item};dFuelRequests=dFuelRequests.map(r=>r.placa===editingFuelPlate?{...r,placa:item.placa,condutor:item.condutor||r.condutor}:r)}else dFuelVehicles.push(item);
@@ -1764,7 +1911,7 @@ function addFuelRequest(){
   const valor=Number(document.getElementById('fuel-req-valor').value||0);
   if(!placa||!data||!valor){alert('Informe placa, data e valor da solicitação.');return}
   const v=fuelVehicleByPlate(placa);
-  const item={id:editingFuelRequestId||('REQ'+Date.now()),data,placa,condutor:v.condutor||'',valor,obs:document.getElementById('fuel-req-obs').value.trim()};
+  const item={id:editingFuelRequestId||('REQ'+Date.now()),data,placa,condutor:v.condutor||'',valor,obs:repairPtBR(document.getElementById('fuel-req-obs').value.trim())};
   if(editingFuelRequestId){const idx=dFuelRequests.findIndex(r=>r.id===editingFuelRequestId);if(idx>=0){const prev=Number(dFuelRequests[idx].valor||0);dFuelRequests[idx]=item;reduceFuelCardBalance(valor-prev)}}else{dFuelRequests.push(item);reduceFuelCardBalance(valor)}
   clearFuelRequestForm();
   renderFuel();saveState();
@@ -1818,23 +1965,32 @@ function importFuelAlelo(text,fname){
   const findCol=names=>{for(const name of names){const max=Math.max(2,Math.ceil(headerKey(name).length*.25)),best=keys.map(key=>({key,dist:headerDistance(key,name)})).sort((a,b)=>a.dist-b.dist)[0];if(best&&best.dist<=max)return best.key}return ''};
   const col={placa:findCol(['Placa do veículo','Placa do veiculo']),driver:findCol(['Nome do motorista']),tipo:findCol(['Tipo de mercadoria','Descrição da transação','Descricao da transacao']),status:findCol(['Status da transação','Status da transacao']),auth:findCol(['Número de autorização da transação','Numero de autorizacao da transacao']),valor:findCol(['Valor da transação','Valor da transacao']),data:findCol(['Data/hora da transação','Data/hora da transacao']),mercadoria:findCol(['Mercadoria'])};
   const val=(r,k)=>k?String(r[k]||''):'';
-  let imported=0,ignored=0,dups=0;
+  let imported=0,importedByDriver=0,ignored=0,dups=0;
   rows.forEach((r,i)=>{
-    const placa=val(r,col.placa).toUpperCase().trim(),driver=val(r,col.driver).trim();
+    let placa=val(r,col.placa).toUpperCase().trim();
+    const driver=val(r,col.driver).trim();
     const tipo=val(r,col.tipo),status=val(r,col.status);
-    if(!placa||!plates.has(placa)){ignored++;return}
     if(!/combust/i.test(tipo)||!/aprov/i.test(status)){ignored++;return}
     const auth=val(r,col.auth).trim(),valor=moneyBR(val(r,col.valor));
     if(!valor){ignored++;return}
+    let matchedByDriver=false;
+    if(!placa||!plates.has(placa)){
+      /* Tentar match por nome do condutor */
+      if(driver){
+        const driverNorm=nk(driver);
+        const vMatch=dFuelVehicles.find(v=>nk(v.condutor||'')===driverNorm);
+        if(vMatch){placa=vMatch.placa;matchedByDriver=true}else{ignored++;return}
+      }else{ignored++;return}
+    }
     const data=aleloDate(val(r,col.data));
     const id='ALELO-'+(auth||`${data}-${placa}-${i}`);
     if(dFuelRequests.some(x=>x.id===id)){dups++;return}
     const v=fuelVehicleByPlate(placa);
-    dFuelRequests.push({id,data,placa,condutor:v.condutor||driver,valor,obs:`Importado da base Alelo - ${val(r,col.mercadoria)||tipo}`});
-    imported++;
+    dFuelRequests.push({id,data,placa,condutor:v.condutor||driver,valor,obs:repairPtBR(`Importado da base Alelo - ${val(r,col.mercadoria)||tipo}`)});
+    if(matchedByDriver)importedByDriver++;else imported++;
   });
   renderFuel();saveState();
-  alert(`Base Alelo importada: ${imported} transações, ${dups} duplicadas, ${ignored} ignoradas.`);
+  alert(`Base Alelo importada: ${imported} compatibilizados por placa, ${importedByDriver} por condutor, ${dups} duplicadas, ${ignored} ignorados (placa/condutor não cadastrado).`);
 }
 function fuelProjection(){const by={};fuelValidRequests().forEach(r=>{const v=fuelVehicleByPlate(r.placa),name=v.condutor||r.condutor||r.placa;if(!by[name])by[name]={valor:0,count:0};by[name].valor+=Number(r.valor||0);by[name].count++});return Object.entries(by).sort((a,b)=>b[1].valor-a[1].valor)}
 function fuelDriverName(r){const v=fuelVehicleByPlate(r.placa);return r.condutor||v.condutor||r.placa||'Sem condutor'}
@@ -1881,13 +2037,16 @@ function renderFuel(){
   const driverOptions=fuelDriverOptions();if(selectedFuelDriver&&!driverOptions.includes(selectedFuelDriver))selectedFuelDriver='';
   document.getElementById('prow-fuel').innerHTML=`<div class="pc"><div class="pico pi-b"><i class="ti ti-gas-station"></i></div><div><div class="pv">${brl(bal.available)}</div><div class="ps">saldo disponível</div></div></div><div class="pc"><div class="pico pi-o"><i class="ti ti-user-dollar"></i></div><div><div class="pv" style="font-size:14px">${eh(top[0])}</div><div class="ps">maior consumo ${brl(top[1].valor)}</div></div></div><div class="pc"><div class="pico pi-g"><i class="ti ti-chart-line"></i></div><div><div class="pv">${brl(nextSuggestion)}</div><div class="ps">sugestão para próximo mês</div></div></div><div class="pc"><div class="pico pi-t"><i class="ti ti-user-search"></i></div><div style="min-width:0;flex:1"><div class="pv" style="font-size:14px">Condutor</div><div class="ps">transações e datas</div><select class="pc-select" onchange="onFuelDriverChange(this.value)"><option value="">Selecionar condutor</option>${driverOptions.map(n=>`<option value="${eh(n)}"${n===selectedFuelDriver?' selected':''}>${eh(n)}</option>`).join('')}</select></div></div>`;
   renderFuelDriverDetail();
+  renderFuelProjectionDetail();
   document.getElementById('fuel-status').innerHTML=listRows(se(cnt(dFuelVehicles,'status')),k=>({Ativo:'var(--green)',Inativo:'var(--tx3)',Oficina:'var(--orange)',Bloqueado:'var(--red)'}[k]||'var(--blue)'));
   const sel=document.getElementById('fuel-req-placa');if(sel){const cur=sel.value;sel.innerHTML='<option value="">Selecionar placa</option>'+dFuelVehicles.filter(v=>v.status==='Ativo').map(v=>`<option value="${eh(v.placa)}">${eh(v.placa)} - ${eh(v.condutor)}</option>`).join('');sel.value=[...sel.options].some(o=>o.value===cur)?cur:''}
   ['fuel-withdraw-date'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)});
   document.getElementById('cnt-fuel-v').textContent=dFuelVehicles.length+' veículos';
-  document.getElementById('tb-fuel-v').innerHTML=dFuelVehicles.map(v=>`<tr><td class="tid">${eh(v.placa)}</td><td>${eh(v.modelo)}</td><td>${eh(v.ano)}</td><td>${eh(v.condutor)}</td><td>${eh(v.setor)}</td><td>${eh(v.superior)}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelCardType('${eh(v.placa)}',this.value)"><option value="Próprio"${(v.tipoCartao||'Próprio')==='Próprio'?' selected':''}>Próprio</option><option value="Coringa"${v.tipoCartao==='Coringa'?' selected':''}>Coringa</option></select>`:eh(v.tipoCartao||'Próprio')}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelStatus('${eh(v.placa)}',this.value)">${FUEL_STATUS.map(s=>`<option value="${s}"${s===v.status?' selected':''}>${s}</option>`).join('')}</select>`:eh(v.status)}</td><td class="admin-only"><span class="card-action" onclick="editFuelVehicle('${eh(v.placa)}')">Editar</span></td></tr>`).join('');
-  document.getElementById('cnt-fuel-r').textContent=validRequests.length+' solicitações';
-  document.getElementById('tb-fuel-r').innerHTML=validRequests.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td class="tid">${eh(r.placa)}</td><td>${eh(r.condutor||fuelVehicleByPlate(r.placa).condutor||'-')}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(r.obs||'')}</td><td class="admin-only"><span class="card-action" onclick="editFuelRequest('${eh(r.id)}')">Editar</span><span class="card-action" onclick="deleteFuelRequest('${eh(r.id)}')">Excluir</span></td></tr>`).join('')||'<tr><td colspan="6" class="nores">Nenhuma solicitação registrada</td></tr>';
+  document.getElementById('tb-fuel-v').innerHTML=dFuelVehicles.map(v=>`<tr><td class="tid">${eh(v.placa)}</td><td>${eh(v.modelo)}</td><td>${eh(v.ano)}</td><td>${eh(v.condutor)}</td><td>${eh(repairPtBR(v.setor))}</td><td>${eh(v.superior)}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelCardType('${eh(v.placa)}',this.value)"><option value="Próprio"${(v.tipoCartao||'Próprio')==='Próprio'?' selected':''}>Próprio</option><option value="Coringa"${v.tipoCartao==='Coringa'?' selected':''}>Coringa</option></select>`:eh(v.tipoCartao||'Próprio')}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelStatus('${eh(v.placa)}',this.value)">${FUEL_STATUS.map(s=>`<option value="${s}"${s===v.status?' selected':''}>${s}</option>`).join('')}</select>`:eh(v.status)}</td><td class="admin-only"><span class="card-action" onclick="editFuelVehicle('${eh(v.placa)}')">Editar</span></td></tr>`).join('');
+  const showAlelo=document.getElementById('show-alelo-imports')&&document.getElementById('show-alelo-imports').checked;
+  const displayRequests=showAlelo?validRequests:validRequests.filter(r=>!String(r.obs||'').includes('Importado da base Alelo'));
+  document.getElementById('cnt-fuel-r').textContent=validRequests.length+' solicitações'+(showAlelo?'':` (${displayRequests.length} manuais, ${validRequests.length-displayRequests.length} Alelo ocultos)`);
+  document.getElementById('tb-fuel-r').innerHTML=displayRequests.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td class="tid">${eh(r.placa)}</td><td>${eh(r.condutor||fuelVehicleByPlate(r.placa).condutor||'-')}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(repairPtBR(r.obs||''))}</td><td class="admin-only"><span class="card-action" onclick="editFuelRequest('${eh(r.id)}')">Editar</span><span class="card-action" onclick="deleteFuelRequest('${eh(r.id)}')">Excluir</span></td></tr>`).join('')||'<tr><td colspan="6" class="nores">Nenhuma solicitação registrada</td></tr>';
   document.getElementById('cnt-fuel-w').textContent=dFuelWithdrawals.length+' retiradas';
   document.getElementById('tb-fuel-w').innerHTML=dFuelWithdrawals.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(r.reason||'')}</td></tr>`).join('')||'<tr><td colspan="3" class="nores">Nenhuma retirada registrada</td></tr>';
   renderFuelChart();
@@ -1897,14 +2056,14 @@ function renderFuelChart(){
   const entries=fuelMonthProjection(),dk=document.body.dataset.theme==='dark';
   const trend=trendValues(entries.map(e=>Number(e.proj||0)));
   const moneyTick=v=>brl(Number(v));
-  chFuel=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e.label),datasets:[{label:'Consumo atual R$',data:entries.map(e=>Number(e.atual.toFixed(2))),backgroundColor:'rgba(77,142,240,.82)',borderRadius:6},{label:'Projeção próximo mês R$',data:entries.map(e=>Number(e.proj.toFixed(2))),backgroundColor:'rgba(62,207,142,.72)',borderRadius:6},{type:'line',label:'Linha de tendência',data:trend.map(v=>Number(v.toFixed(2))),borderColor:'rgba(255,159,10,.95)',backgroundColor:'rgba(255,159,10,.18)',borderWidth:2,pointRadius:2,tension:.25}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${brl(c.parsed.y||0)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',callback:moneyTick}}}}});
+  chFuel=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e.label),datasets:[{label:'Consumo atual R$',data:entries.map(e=>Number(e.atual.toFixed(2))),backgroundColor:'rgba(0,122,255,.82)',borderRadius:8},{label:'Projeção próximo mês R$',data:entries.map(e=>Number(e.proj.toFixed(2))),backgroundColor:'rgba(52,199,89,.72)',borderRadius:8},{type:'line',label:'Linha de tendência',data:trend.map(v=>Number(v.toFixed(2))),borderColor:'rgba(255,159,10,.95)',backgroundColor:'rgba(255,159,10,.18)',borderWidth:2,pointRadius:2,tension:.25}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${brl(c.parsed.y||0)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',callback:moneyTick}}}}});
   renderFuelTopChart();
   renderFuelProjectionChart();
 }
 function renderFuelTopChart(){
   const ctx=document.getElementById('ch-fuel-top');if(!ctx)return;if(chFuelTop){chFuelTop.destroy();chFuelTop=null}
   const dk=document.body.dataset.theme==='dark',entries=fuelProjection().slice(0,10);
-  chFuelTop=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Maior consumo R$',data:entries.map(e=>Number(e[1].valor.toFixed(2))),backgroundColor:'rgba(255,159,10,.78)',borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${brl(c.parsed.x||0)}`}}},scales:{x:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',callback:v=>brl(Number(v))}},y:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}}}}});
+  chFuelTop=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Maior consumo R$',data:entries.map(e=>Number(e[1].valor.toFixed(2))),backgroundColor:'rgba(255,149,0,.85)',borderRadius:8}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${brl(c.parsed.x||0)}`}}},scales:{x:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',callback:v=>brl(Number(v))}},y:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}}}}});
 }
 function renderFuelProjectionChart(){
   const ctx=document.getElementById('ch-fuel-proj');if(!ctx)return;if(chFuelProj){chFuelProj.destroy();chFuelProj=null}
@@ -1921,7 +2080,7 @@ function exportCSV(tipo){
     data=rows.map(d=>[d.id,d.cliente,d.mop,d.cidade,d.uf,d.slaH.toFixed(2),d.faixa,d.statusSla,d.substatus]);
   }else{
     hdr=['Protocolo','Cliente','UF','Cluster','Tempo Total (h)','Faixa SLA','Dentro 8h','Outlier +24h','Causa Raiz','Semana','Segmento'];
-    data=rows.map(d=>[d.protocolo,d.cliente,d.uf,d.cluster,d.tempoTotal.toFixed(2),d.faixa,d.dentro8h?'Sim':'Não',d.outlier24h?'Sim':'Não',fmtCausaRaiz(d.causaRaiz),d.semana,d.segmento]);
+    data=rows.map(d=>[d.protocolo,d.cliente,d.uf,d.cluster,d.tempoTotal.toFixed(2),d.faixa,d.dentro8h?'Sim':'Não',d.outlier24h?'Sim':'Não',fmtCausaRaiz(d.causaRaiz),d.semana,repairPtBR(d.segmento)]);
   }
   const csv=[hdr,...data].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
