@@ -118,6 +118,11 @@ body {
 }
 .nb-blue { background: var(--blue-bg); color: var(--blue); }
 .nb-green { background: var(--green-bg); color: var(--green-dk); }
+.nb-purple { background: var(--purple-bg); color: var(--purple); }
+.mc.c-purple::before { background: var(--purple); }
+.rep-details summary::-webkit-details-marker { display:none; }
+.rep-details[open] .rep-chevron { transform: rotate(180deg); }
+.rep-chevron { transition: transform .2s; }
 
 /* WEEK SELECTOR */
 .week-select-wrap {
@@ -549,7 +554,17 @@ body.is-admin .admin-only { display: flex; }
 
 /* ─── CHART WRAP ─── */
 .cw { position: relative; width: 100%; height: clamp(176px,24vh,260px); flex: 1; min-height: 176px; }
-#panel-combustivel .card { min-height: clamp(224px,28vh,312px); }
+#panel-combustivel .cw { height: clamp(300px,40vh,500px); min-height: 300px; }
+#panel-combustivel .card { min-height: clamp(360px,50vh,580px); display: flex; flex-direction: column; }
+.g2-charts { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 16px; }
+.g3-charts { display: grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap: 12px; margin-bottom: 16px; }
+.g3-charts .card { min-height: clamp(340px,44vh,520px); display: flex; flex-direction: column; }
+.g3-charts .cw { height: clamp(280px,38vh,460px); min-height: 280px; }
+.fuel-split { display: flex; margin-bottom: 16px; gap: 0; min-height: 280px; }
+.fuel-split-pane { overflow: auto; min-width: 180px; flex: 0 0 50%; background: var(--surface); border-radius: var(--rxl); box-shadow: var(--shadow-sm); border: .5px solid var(--bd); }
+.fuel-split-handle { width: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: col-resize; user-select: none; }
+.fuel-split-handle::after { content:''; width: 4px; height: 48px; border-radius: 3px; background: var(--bd2); transition: background .15s, transform .15s; }
+.fuel-split-handle:hover::after,.fuel-split-handle.dragging::after { background: var(--blue); transform: scaleX(1.5); }
 #fuel-status { flex: 1; min-height: 190px; overflow: auto; }
 .fuel-driver-detail {
   background: var(--surface); border: .5px solid var(--bd); border-radius: var(--rl);
@@ -677,6 +692,41 @@ body.is-admin .admin-only { display: flex; }
   </div>
 </div>
 
+<!-- ═══ GOOGLE SHEETS MODAL ═══ -->
+<div class="user-panel" id="sheets-panel">
+  <div class="user-card" style="width:min(560px,100%);max-height:90vh;overflow:auto">
+    <div class="user-card-hd">
+      <div class="user-card-title" style="display:flex;align-items:center;gap:8px"><i class="ti ti-brand-google" style="color:#34a853"></i> Google Sheets — Backup automático</div>
+      <button class="mini-btn" onclick="closeSheetsSettings()">Fechar</button>
+    </div>
+    <p style="font-size:12px;color:var(--tx3);margin-bottom:14px;line-height:1.6">Cole abaixo a URL do seu <b>Google Apps Script Web App</b> para habilitar o envio automático dos dados de combustível para o Google Sheets.</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <input id="sheets-url" class="finput" style="flex:1;min-width:200px" placeholder="https://script.google.com/macros/s/.../exec">
+      <button class="mini-btn" style="background:var(--green-dk);color:#fff;border-color:var(--green-dk);white-space:nowrap;padding:0 14px" onclick="saveSheetsUrl()">Salvar URL</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+        <input type="checkbox" id="sheets-auto" onchange="toggleSheetsAuto(this.checked)" style="cursor:pointer">
+        Salvar automaticamente ao atualizar dados
+      </label>
+      <button class="mini-btn" style="background:var(--blue);color:#fff;border-color:var(--blue);white-space:nowrap;padding:0 14px" onclick="saveToGoogleSheets(true)"><i class="ti ti-send" style="font-size:12px;margin-right:4px"></i>Enviar agora</button>
+    </div>
+    <div id="sheets-status" style="font-size:11px;color:var(--tx3);margin-bottom:12px;min-height:16px"></div>
+    <details style="font-size:11px;color:var(--tx3);line-height:1.6;border:.5px solid var(--bd);border-radius:10px;padding:10px 14px">
+      <summary style="cursor:pointer;font-weight:600;color:var(--tx2);margin-bottom:6px">Como configurar o Apps Script</summary>
+      <ol style="padding-left:16px;margin-top:8px;display:flex;flex-direction:column;gap:5px">
+        <li>Acesse <b>script.google.com</b> e crie um novo projeto</li>
+        <li>Cole o código abaixo e troque <code style="background:var(--surface2);padding:1px 5px;border-radius:4px">SEU_SHEET_ID</code> pelo ID da planilha (na URL do Google Sheets)</li>
+        <li>Salve e vá em <b>Implantar → Nova implantação → Web App</b></li>
+        <li>Escolha: <b>Executar como: Eu mesmo</b> · <b>Acesso: Qualquer pessoa</b></li>
+        <li>Copie a URL gerada e cole no campo acima</li>
+      </ol>
+      <pre id="sheets-script-code" style="background:var(--surface2);border-radius:8px;padding:10px;margin-top:10px;overflow-x:auto;font-size:10px;line-height:1.5;white-space:pre-wrap;cursor:pointer" title="Clique para copiar" onclick="copyScriptCode()">function doPost(e){try{var d=JSON.parse(e.postData.contents);var ss=SpreadsheetApp.openById('SEU_SHEET_ID');var ts=new Date().toLocaleString('pt-BR');var sv=ss.getSheetByName('Veiculos')||ss.insertSheet('Veiculos');sv.clearContents();sv.appendRow(['Placa','Modelo','Ano','Condutor','Setor','Superior','Tipo','Cartao','Status','Atualizado']);(d.dFuelVehicles||[]).forEach(function(v){sv.appendRow([v.placa,v.modelo,v.ano,v.condutor,v.setor,v.superior,v.tipo,v.tipoCartao,v.status,ts])});var sr=ss.getSheetByName('Solicitacoes')||ss.insertSheet('Solicitacoes');sr.clearContents();sr.appendRow(['ID','Data','Placa','Condutor','Valor','Observacao','Atualizado']);(d.dFuelRequests||[]).forEach(function(r){sr.appendRow([r.id,r.data,r.placa,r.condutor,r.valor,r.obs,ts])});return ContentService.createTextOutput(JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON)}catch(err){return ContentService.createTextOutput(JSON.stringify({status:'error',msg:err.message})).setMimeType(ContentService.MimeType.JSON)}}
+function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON)}</pre>
+    </details>
+  </div>
+</div>
+
 <!-- ═══ NAVBAR ═══ -->
 <nav class="navbar">
   <div class="nav-brand">
@@ -691,6 +741,10 @@ body.is-admin .admin-only { display: flex; }
     <button class="ntab" id="ntab-enc" onclick="switchTab('encerrados')">
       <i class="ti ti-circle-check"></i> B2B Encerrados
       <span class="ntab-badge nb-green" id="nb-enc">0</span>
+    </button>
+    <button class="ntab" id="ntab-rep" onclick="switchTab('repetidos')">
+      <i class="ti ti-repeat"></i> B2B Repetidos
+      <span class="ntab-badge nb-purple" id="nb-rep">0</span>
     </button>
     <button class="ntab" id="ntab-rede" onclick="switchTab('rede')"><i class="ti ti-router"></i> Rede</button>
     <button class="ntab" id="ntab-fuel" onclick="switchTab('combustivel')"><i class="ti ti-gas-station"></i> Combustíveis</button>
@@ -839,6 +893,7 @@ body.is-admin .admin-only { display: flex; }
           <div id="uf-enc"></div>
         </div>
       </div>
+      <div id="exec-report"></div>
       <div class="tsec">
         <div class="tsec-hd">
           <span class="tsec-title">Chamados encerrados</span>
@@ -870,7 +925,6 @@ body.is-admin .admin-only { display: flex; }
           <tbody id="tb-enc"></tbody>
         </table></div>
       </div>
-      <div id="exec-report"></div>
       <div class="pfooter">ATRIX · Chamados Encerrados · <span id="ft-enc"></span></div>
     </div>
   </div>
@@ -892,22 +946,24 @@ body.is-admin .admin-only { display: flex; }
     <div class="prow" id="prow-fuel"></div>
     <div id="fuel-driver-detail" class="fuel-driver-detail" style="display:none"></div>
     <div id="fuel-projection-detail"></div>
-    <div class="g2">
+    <div class="g2-charts">
       <div class="card">
-        <div class="card-hd"><span class="card-title">Consumo por condutor e projeção</span></div>
+        <div class="card-hd"><span class="card-title">Consumo por condutor — mês atual vs. projeção e tendência</span></div>
         <div class="cw"><canvas id="ch-fuel" role="img" aria-label="Consumo por condutor, projeção mensal e linha de tendência">Gráfico.</canvas></div>
       </div>
+    </div>
+    <div class="g3-charts">
       <div class="card">
-        <div class="card-hd"><span class="card-title">Resumo por status</span></div>
-        <div id="fuel-status"></div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><span class="card-title">Maiores consumos</span></div>
+        <div class="card-hd"><span class="card-title">Ranking maiores consumos</span></div>
         <div class="cw"><canvas id="ch-fuel-top" role="img" aria-label="Ranking dos maiores consumos por condutor">Gráfico.</canvas></div>
       </div>
       <div class="card">
-        <div class="card-hd"><span class="card-title">Projeção mês atual x próximo</span></div>
+        <div class="card-hd"><span class="card-title">Projeção mês atual × próximo</span></div>
         <div class="cw"><canvas id="ch-fuel-proj" role="img" aria-label="Projeção de consumo do mês atual para o próximo mês">Gráfico.</canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Resumo por status de frota</span></div>
+        <div id="fuel-status"></div>
       </div>
     </div>
     <div class="tsec admin-only">
@@ -951,14 +1007,15 @@ body.is-admin .admin-only { display: flex; }
         <span class="card-action" onclick="clearFuelRequestForm()">Limpar</span>
       </div>
     </div>
-    <div class="g2">
-      <div class="tsec">
-        <div class="tsec-hd"><span class="tsec-title">Veículos e condutores</span><span id="cnt-fuel-v" style="color:var(--tx3)"></span></div>
+    <div class="fuel-split" id="fuel-split">
+      <div class="fuel-split-pane" id="fuel-split-left">
+        <div class="tsec-hd" style="padding:12px 16px;border-bottom:.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between"><span class="tsec-title">Veículos e condutores</span><span id="cnt-fuel-v" style="color:var(--tx3);font-size:11px"></span></div>
         <div class="tw"><table><thead><tr><th>Placa</th><th>Modelo</th><th>Ano</th><th>Condutor</th><th>Setor</th><th>Superior</th><th>Tipo cartão</th><th>Status</th><th class="admin-only">Ações</th></tr></thead><tbody id="tb-fuel-v"></tbody></table></div>
       </div>
-      <div class="tsec">
-        <div class="tsec-hd"><span class="tsec-title">Solicitações registradas</span><span id="cnt-fuel-r" style="color:var(--tx3)"></span></div>
-        <div class="fbar" style="padding:8px 16px">
+      <div class="fuel-split-handle" id="fuel-split-handle" title="Arraste para redimensionar os painéis"></div>
+      <div class="fuel-split-pane" id="fuel-split-right">
+        <div class="tsec-hd" style="padding:12px 16px;border-bottom:.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between"><span class="tsec-title">Solicitações registradas</span><span id="cnt-fuel-r" style="color:var(--tx3);font-size:11px"></span></div>
+        <div class="fbar" style="padding:8px 16px;background:var(--surface2);border-bottom:.5px solid var(--bd)">
           <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2);cursor:pointer">
             <input type="checkbox" id="show-alelo-imports" onchange="renderFuel()" style="cursor:pointer">
             Mostrar importações Alelo
@@ -972,6 +1029,66 @@ body.is-admin .admin-only { display: flex; }
       <div class="tw"><table><thead><tr><th>Data</th><th>Valor</th><th>Motivo / destino</th></tr></thead><tbody id="tb-fuel-w"></tbody></table></div>
     </div>
     <div class="pfooter">ATRIX · Consumo de Combustíveis · dados compartilhados</div>
+  </div>
+
+  <!-- ── PAINEL B2B REPETIDOS ── -->
+  <div class="panel" id="panel-repetidos">
+    <div id="empty-rep" class="empty">
+      <div class="empty-icon"><i class="ti ti-repeat"></i></div>
+      <h2>Base de encerrados não carregada</h2>
+      <p>Carregue a base de encerrados para visualizar o ranking de clientes com chamados repetidos e todos os detalhes.</p>
+      <label class="empty-btn" for="file-enc" style="background:var(--purple);color:#fff;border-color:var(--purple)"><i class="ti ti-upload" style="font-size:14px"></i> Carregar Encerrados</label>
+    </div>
+    <div id="dash-rep" style="display:none">
+      <!-- Filtros -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:var(--surface);border-radius:var(--rl);box-shadow:var(--shadow-sm);border:.5px solid var(--bd);margin-bottom:14px">
+        <span style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-right:2px">Filtros</span>
+        <select class="fsel" id="rep-f-semana" onchange="renderPanelRepetidos()"><option value="">Todas semanas</option></select>
+        <select class="fsel" id="rep-f-cluster" onchange="renderPanelRepetidos()"><option value="">Todos clusters</option></select>
+        <select class="fsel" id="rep-f-causa" onchange="renderPanelRepetidos()"><option value="">Todas causas</option></select>
+        <select class="fsel" id="rep-f-seg" onchange="renderPanelRepetidos()"><option value="">Todos segmentos</option></select>
+        <input class="finput" id="rep-srch" placeholder="Buscar cliente…" oninput="renderPanelRepetidos()" style="min-width:180px">
+        <span class="card-action" onclick="document.getElementById('rep-f-semana').value='';document.getElementById('rep-f-cluster').value='';document.getElementById('rep-f-causa').value='';document.getElementById('rep-f-seg').value='';document.getElementById('rep-srch').value='';renderPanelRepetidos()">Limpar filtros</span>
+      </div>
+      <!-- Métricas -->
+      <div class="mrow" id="rep-mrow"></div>
+      <!-- Pills -->
+      <div class="prow" id="rep-prow"></div>
+      <!-- Gráficos -->
+      <div class="g2" style="margin-bottom:16px">
+        <div class="card" style="min-height:clamp(320px,42vh,500px);display:flex;flex-direction:column">
+          <div class="card-hd"><span class="card-title"><i class="ti ti-chart-bar" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--purple)"></i>Top clientes — volume de chamados repetidos</span></div>
+          <div class="cw" style="flex:1;height:clamp(280px,38vh,460px)"><canvas id="ch-rep-clients" role="img" aria-label="Top clientes com chamados repetidos">Gráfico.</canvas></div>
+        </div>
+        <div class="card" style="min-height:clamp(320px,42vh,500px);display:flex;flex-direction:column">
+          <div class="card-hd"><span class="card-title"><i class="ti ti-tools" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--red)"></i>Causas dominantes dos chamados repetidos</span></div>
+          <div class="cw" style="flex:1;height:clamp(280px,38vh,460px)"><canvas id="ch-rep-causas" role="img" aria-label="Causas dos chamados repetidos">Gráfico.</canvas></div>
+        </div>
+      </div>
+      <!-- Detalhamento por cliente (accordion) -->
+      <div class="section-hd">Detalhamento por cliente <span class="sh-line"></span></div>
+      <div id="rep-accordion" style="margin-bottom:16px"></div>
+      <!-- Tabela completa -->
+      <div class="tsec">
+        <div class="tsec-hd">
+          <span class="tsec-title">Todos os chamados repetidos</span>
+          <div class="tsec-meta">
+            <span id="rep-cnt" style="color:var(--tx3)"></span>
+            <span class="card-action" onclick="exportRepCSV()"><i class="ti ti-download" style="font-size:11px;vertical-align:-1px"></i> Exportar CSV</span>
+          </div>
+        </div>
+        <div class="tw"><table>
+          <thead><tr>
+            <th>Protocolo</th><th>Cliente</th><th>ID/NumPlan</th>
+            <th>Semana</th><th>Cluster</th><th>Cidade/UF</th>
+            <th>Causa Raiz</th><th>Tempo Total</th><th>Faixa SLA</th>
+            <th>≤8h</th><th>Outlier +24h</th>
+          </tr></thead>
+          <tbody id="tb-rep"></tbody>
+        </table></div>
+      </div>
+      <div class="pfooter">ATRIX · B2B Repetidos · <span id="ft-rep"></span></div>
+    </div>
   </div>
 
 </div>
@@ -1296,6 +1413,7 @@ function saveState(){
   if(canEdit()){
     clearTimeout(remoteSaveTimer);
     remoteSaveTimer=setTimeout(()=>saveRemoteState(st),450);
+    if(localStorage.getItem(SHEETS_AUTO_KEY)==='1')saveToGoogleSheets(false);
   }
 }
 async function restoreRemoteState(){
@@ -1405,6 +1523,7 @@ function procEnc(raw,fname){
   document.getElementById('ft-enc').textContent='Atualizado em '+now2();
   fillFiltersEnc();fillWeekSelector();fillClusterSelector();
   renderAllEnc();
+  renderPanelRepetidos();
   document.getElementById('empty-enc').style.display='none';
   document.getElementById('dash-enc').style.display='block';
   const showControls=document.getElementById('panel-encerrados').classList.contains('active');
@@ -1561,8 +1680,7 @@ function renderTAb(){
     const cleanLink=safeUrl(d.link);
     const lk=cleanLink?`<a class="lbtn" href="${eh(cleanLink)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" style="font-size:13px"></i></a>`:'';
     const idHtml=cleanLink?`<a href="${eh(cleanLink)}" target="_blank" rel="noopener noreferrer" title="Abrir ticket">${eh(d.id)}</a>`:eh(d.id);
-    const subKey=JSON.stringify(String(d.id||d.rowKey)).replace(/</g,'\\u003c');
-    const subHtml=canEdit()?`<select class="substatus-select" title="Alterar substatus" onclick="event.stopPropagation()" onchange="updateSubstatus(${subKey}, this.value)">${getSubstatusOptions(d.substatus)}</select>`:`<span class="substatus-readonly">${eh(fmtSubstatus(d.substatus)||'Sem substatus')}</span>`;
+    const subHtml=canEdit()?`<select class="substatus-select" title="Alterar substatus" onclick="event.stopPropagation()" onchange="updateSubstatus(${d.rowKey},this.value)">${getSubstatusOptions(d.substatus)}</select>`:`<span class="substatus-readonly">${eh(fmtSubstatus(d.substatus)||'Sem substatus')}</span>`;
     const rowCls=isValidationSubstatus(d.substatus)?'row-validation':'';
     return`<tr class="${rowCls}"><td class="tid">${idHtml}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)" title="${eh(d.cliente)}">${eh(d.cliente)}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${MOP_CLR[d.mop]||'#8e8e93'};flex-shrink:0"></span>${eh(d.mop)}</span></td><td>${eh(d.cidade||'\u2014')}/${eh(d.uf)}</td><td style="${sc}"><span class="sla-clock">${fd(d.slaH)}</span></td><td><span class="badge ${bc}">${eh(d.faixa)}</span></td><td><span class="badge ${ss}">${eh(d.statusSla)}</span></td><td><span class="substatus-cell">${substatusLamp(d)}${subHtml}</span></td><td>${lk}</td></tr>`;
   }).join('')||'<tr><td colspan="9" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
@@ -1780,36 +1898,55 @@ function renderExecReport(d){
     </div>
   </div>`;
 }
+function bestClientName(nome,clienteId,numplan){
+  const isGeneric=s=>!s||/^\d{5,}$/.test(s.trim())||s.trim().length<4;
+  if(!isGeneric(nome))return{display:nome,id:clienteId||numplan||''};
+  if(!isGeneric(clienteId))return{display:clienteId,id:numplan||nome||''};
+  if(!isGeneric(numplan))return{display:numplan,id:nome||''};
+  return{display:nome||clienteId||numplan||'—',id:''};
+}
 function renderRankRepEnc(d){
-  /* Agrupa por clienteId (se disponível) ou por cliente normalizado */
   const map=new Map();
   d.forEach(x=>{
-    const key=x.clienteId||nk(x.cliente);
+    // Chave primária: clienteId (col J) > numplan (col F) > nome normalizado
+    const key=x.clienteId||x.numplan||nk(x.cliente);
     if(!key)return;
-    if(!map.has(key))map.set(key,{nome:x.cliente,clienteId:x.clienteId||'',count:0});
-    map.get(key).count++;
+    if(!map.has(key)){
+      const best=bestClientName(x.cliente,x.clienteId,x.numplan);
+      map.set(key,{display:best.display,id:best.id,nomes:new Set(),count:0});
+    }
+    const entry=map.get(key);
+    entry.count++;
+    if(x.cliente)entry.nomes.add(x.cliente);
+    // Atualizar para nome mais longo e mais descritivo
+    if(x.cliente&&x.cliente.length>(entry.display||'').length&&!/^\d+$/.test(x.cliente))entry.display=x.cliente;
   });
   const repeated=[...map.values()].filter(v=>v.count>=2).sort((a,b)=>b.count-a.count);
   const repCount=repeated.length;
-  /* Atualizar contador de métrica */
   const cntEl=document.getElementById('cnt-rep-enc');
   if(cntEl)cntEl.textContent=repCount;
   const el=document.getElementById('rank-rep-enc');if(!el)return;
   if(!repCount){el.innerHTML='';return}
-  const top10=repeated.slice(0,10);
-  const maxC=top10[0].count||1;
+  const top15=repeated.slice(0,15);
+  const maxC=top15[0].count||1;
   el.innerHTML=`<div class="tsec" style="margin-bottom:16px">
-    <div class="tsec-hd">
-      <span class="tsec-title">Ranking — Clientes com chamados repetidos</span>
-      <span style="color:var(--tx3);font-size:11px">${repCount} clientes com ≥2 chamados</span>
+    <div class="tsec-hd" style="background:linear-gradient(90deg,rgba(175,82,222,.06),transparent)">
+      <span class="tsec-title"><i class="ti ti-repeat" style="font-size:13px;vertical-align:-2px;margin-right:5px;color:var(--purple)"></i>Clientes com chamados repetidos</span>
+      <span style="color:var(--tx3);font-size:11px">${repCount} clientes · ≥2 ocorrências na semana selecionada</span>
     </div>
-    <div style="padding:12px 16px">
-      ${top10.map((v,i)=>`<div class="brow">
-        <div class="blbl" title="${eh(v.nome)}" style="flex-basis:180px">${i+1}. ${eh(v.nome.length>22?v.nome.slice(0,21)+'…':v.nome)}</div>
-        <div class="btrk"><div class="bfil" style="width:${Math.round(v.count/maxC*100)}%;background:var(--purple)"></div></div>
-        <div class="bn">${v.count}</div>
-        ${v.clienteId?`<div style="font-size:9px;color:var(--tx3);margin-left:6px;min-width:0;overflow:hidden;text-overflow:ellipsis">${eh(v.clienteId)}</div>`:''}
-      </div>`).join('')}
+    <div style="padding:10px 16px 14px">
+      ${top15.map((v,i)=>{
+        const barClr=i===0?'var(--red)':i<3?'var(--orange)':i<6?'var(--purple)':'var(--teal-dk)';
+        const rankBadge=i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="color:var(--tx3);font-weight:700;font-size:10px">${i+1}.</span>`;
+        const nm=v.display||'—';
+        return`<div class="brow" style="padding:7px 0;gap:10px">
+          <div style="width:22px;text-align:center;flex-shrink:0;font-size:14px">${rankBadge}</div>
+          <div class="blbl" style="flex:1;max-width:220px;font-size:11px;font-weight:500" title="${eh(nm)}">${eh(nm.length>28?nm.slice(0,27)+'…':nm)}</div>
+          <div class="btrk" style="flex:1"><div class="bfil" style="width:${Math.round(v.count/maxC*100)}%;background:${barClr}"></div></div>
+          <div class="bn" style="font-size:13px;min-width:28px;color:${barClr}">${v.count}</div>
+          ${v.id?`<div style="font-size:9px;color:var(--tx3);min-width:50px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(v.id)}">${eh(v.id)}</div>`:''}
+        </div>`;
+      }).join('')}
     </div>
   </div>`;
 }
@@ -2097,23 +2234,190 @@ function exportCSV(tipo){
   a.download='atrix_'+tipo+'_'+(selWeek||'all')+'_'+(selCluster||'allclusters')+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
 }
 
+/* ─── PAINEL B2B REPETIDOS ─── */
+let chRepClients=null,chRepCausas=null;
+
+function repCausa(v){return fmtCausaRaiz(repairPtBR(v))||'Não informada'}
+function repScope(){
+  const sem=document.getElementById('rep-f-semana')?.value||'';
+  const cl=document.getElementById('rep-f-cluster')?.value||'';
+  const ca=document.getElementById('rep-f-causa')?.value||'';
+  const sg=document.getElementById('rep-f-seg')?.value||'';
+  const sr=nk(document.getElementById('rep-srch')?.value||'');
+  let f=dEnc.map(d=>({...d,causaRaiz:repCausa(d.causaRaiz),segmento:repairPtBR(d.segmento)}));
+  if(sem)f=f.filter(d=>d.semana===sem);
+  if(cl)f=f.filter(d=>d.cluster===cl);
+  if(ca)f=f.filter(d=>d.causaRaiz===ca);
+  if(sg)f=f.filter(d=>d.segmento===sg);
+  if(sr)f=f.filter(d=>nk(d.cliente).includes(sr)||nk(d.clienteId).includes(sr)||nk(d.numplan).includes(sr));
+  return f;
+}
+function buildRepMap(data){
+  const map=new Map();
+  data.forEach(x=>{
+    const key=x.clienteId||x.numplan||nk(x.cliente);
+    if(!key)return;
+    if(!map.has(key)){
+      const b=bestClientName(x.cliente,x.clienteId,x.numplan);
+      map.set(key,{display:b.display,id:b.id,records:[],dentro8h:0,outlier:0,causas:{},clusters:{},semanas:{},segmentos:{}});
+    }
+    const e=map.get(key);
+    e.records.push(x);
+    if(x.dentro8h)e.dentro8h++;
+    if(x.outlier24h)e.outlier++;
+    const c=repCausa(x.causaRaiz);
+    e.causas[c]=(e.causas[c]||0)+1;
+    if(x.cluster)e.clusters[x.cluster]=(e.clusters[x.cluster]||0)+1;
+    if(x.semana)e.semanas[x.semana]=(e.semanas[x.semana]||0)+1;
+    if(x.segmento)e.segmentos[x.segmento]=(e.segmentos[x.segmento]||0)+1;
+    if(x.cliente&&x.cliente.length>e.display.length&&!/^\d+$/.test(x.cliente.trim()))e.display=x.cliente;
+  });
+  return[...map.values()].filter(v=>v.records.length>=2).sort((a,b)=>b.records.length-a.records.length);
+}
+function fillRepFilters(){
+  const sem=[...new Set(dEnc.map(d=>d.semana).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  const cl=CLUSTER_ORDER.filter(c=>dEnc.some(d=>d.cluster===c));
+  const ca=[...new Set(dEnc.map(d=>repCausa(d.causaRaiz)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const sg=[...new Set(dEnc.map(d=>repairPtBR(d.segmento)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const sel=(id,arr,lbl)=>{const el=document.getElementById(id);if(!el)return;const v=el.value;el.innerHTML=`<option value="">${lbl}</option>`+arr.map(s=>`<option value="${eh(s)}">${eh(s)}</option>`).join('');el.value=[...el.options].some(o=>o.value===v)?v:''};
+  sel('rep-f-semana',sem,'Todas semanas');sel('rep-f-cluster',cl,'Todos clusters');sel('rep-f-causa',ca,'Todas causas');sel('rep-f-seg',sg,'Todos segmentos');
+}
+function renderPanelRepetidos(){
+  if(!dEnc.length){
+    const d=document.getElementById('dash-rep');if(d)d.style.display='none';
+    const e=document.getElementById('empty-rep');if(e)e.style.display='flex';
+    return;
+  }
+  const d=document.getElementById('dash-rep');if(d)d.style.display='block';
+  const e=document.getElementById('empty-rep');if(e)e.style.display='none';
+  fillRepFilters();
+  const data=repScope();
+  const all=buildRepMap(data);
+  const totalRep=all.reduce((s,v)=>s+v.records.length,0);
+  const pct=data.length?totalRep/data.length*100:0;
+  const top=all[0]||null;
+  const nb=document.getElementById('nb-rep');if(nb)nb.textContent=all.length;
+  /* Causas globais */
+  const allCausas={};all.forEach(v=>Object.entries(v.causas).forEach(([c,n])=>{allCausas[c]=(allCausas[c]||0)+n}));
+  const topCausa=se(allCausas)[0]||['—',0];
+  /* Cluster mais impactado */
+  const allClusters={};all.forEach(v=>Object.entries(v.clusters).forEach(([k,n])=>{allClusters[k]=(allClusters[k]||0)+n}));
+  const topCluster=se(allClusters)[0]||['—',0];
+  const dk=document.body.dataset.theme==='dark';
+  const totDentro=all.reduce((s,v)=>s+v.dentro8h,0);
+  const totOutlier=all.reduce((s,v)=>s+v.outlier,0);
+  /* ─ Métricas ─ */
+  document.getElementById('rep-mrow').innerHTML=`
+    <div class="mc c-purple"><div class="mc-label">Clientes repetidos</div><div class="mc-val" style="color:var(--purple)"><b>${all.length}</b></div><div class="mc-sub">com ≥2 chamados</div></div>
+    <div class="mc c-orange"><div class="mc-label">Chamados repetidos</div><div class="mc-val" style="color:var(--orange)"><b>${totalRep}</b></div><div class="mc-sub"><span class="tag tag-orange">${pp(pct)}%</span> da base filtrada</div></div>
+    <div class="mc c-red"><div class="mc-label">Maior recorrência</div><div class="mc-val" style="color:var(--red)">${top?top.records.length:0}</div><div class="mc-sub" title="${top?top.display:''}">${top?top.display.slice(0,22)+(top.display.length>22?'…':''):'—'}</div></div>
+    <div class="mc c-green"><div class="mc-label">Dentro de 8h</div><div class="mc-val" style="color:var(--green-dk)"><b>${totDentro}</b></div><div class="mc-sub"><span class="tag tag-green">${totalRep?pp(totDentro/totalRep*100):0}%</span> dos repetidos</div></div>
+    <div class="mc c-red"><div class="mc-label">Outlier +24h</div><div class="mc-val" style="color:var(--red-dk)"><b>${totOutlier}</b></div><div class="mc-sub"><span class="tag tag-red">${totalRep?pp(totOutlier/totalRep*100):0}%</span> dos repetidos</div></div>`;
+  /* ─ Pills ─ */
+  document.getElementById('rep-prow').innerHTML=`
+    <div class="pc"><div class="pico pi-p"><i class="ti ti-user-exclamation"></i></div><div><div class="pv" style="font-size:13px" title="${top?top.display:''}">${top?(top.display.length>16?top.display.slice(0,15)+'…':top.display):'—'}</div><div class="ps">mais recorrente · <b>${top?top.records.length:0}×</b></div></div></div>
+    <div class="pc"><div class="pico pi-r"><i class="ti ti-tools"></i></div><div><div class="pv" style="font-size:13px">${topCausa[0].length>16?topCausa[0].slice(0,15)+'…':topCausa[0]}</div><div class="ps">causa dominante · <b>${topCausa[1]}</b> chamados</div></div></div>
+    <div class="pc"><div class="pico pi-b"><i class="ti ti-map-pin"></i></div><div><div class="pv">${topCluster[0]}</div><div class="ps">cluster mais afetado · <b>${topCluster[1]}</b> chamados</div></div></div>
+    <div class="pc"><div class="pico pi-o"><i class="ti ti-percentage"></i></div><div><div class="pv">${pp(pct)}%</div><div class="ps">taxa de recorrência na base filtrada</div></div></div>`;
+  /* ─ Gráficos ─ */
+  renderRepClientsChart(all,dk);
+  renderRepCausasChart(allCausas,dk);
+  /* ─ Accordion ─ */
+  renderRepAccordion(all);
+  /* ─ Tabela ─ */
+  const allRecs=all.flatMap(v=>v.records.map(r=>({...r,_display:v.display,_id:v.id||r.clienteId||r.numplan||''})));
+  allRecs.sort((a,b)=>b.records?b.records.length-a.records.length:0||a._display.localeCompare(b._display,'pt-BR'));
+  document.getElementById('rep-cnt').textContent=allRecs.length+' chamados · '+all.length+' clientes';
+  document.getElementById('tb-rep').innerHTML=allRecs.map(r=>{
+    const bc=SLA_BADGE[r.faixa]||'b-blue';
+    const d8=r.dentro8h?'<span class="badge b-in">Sim</span>':'<span class="badge b-out">Não</span>';
+    const ol=r.outlier24h?'<span class="badge b-red">Sim</span>':'<span style="color:var(--tx3)">—</span>';
+    const sc=r.tempoTotal>24?'color:var(--red);font-weight:600':r.tempoTotal>8?'color:var(--orange);font-weight:600':'color:var(--green-dk)';
+    return`<tr><td class="tid">${eh(r.protocolo)}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx);font-weight:500" title="${eh(r._display)}">${eh(r._display)}</td><td style="font-size:10px;color:var(--tx3);white-space:nowrap">${eh(r._id||'—')}</td><td><span class="badge b-teal">${eh(r.semana||'—')}</span></td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${(CLUSTER_INFO[r.cluster]||{}).clr||'#8e8e93'};flex-shrink:0"></span>${eh(r.cluster||'—')}</span></td><td style="white-space:nowrap">${eh(r.cidade||'—')}/${eh(r.uf)}</td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(r.causaRaiz)}">${eh(r.causaRaiz||'—')}</td><td style="${sc};white-space:nowrap">${fh(r.tempoTotal)}</td><td><span class="badge ${bc}">${eh(r.faixa)}</span></td><td>${d8}</td><td>${ol}</td></tr>`;
+  }).join('')||'<tr><td colspan="11" class="nores"><i class="ti ti-search-off"></i>Nenhum chamado repetido encontrado</td></tr>';
+  document.getElementById('ft-rep').textContent='Atualizado em '+now2();
+}
+function renderRepClientsChart(all,dk){
+  const ctx=document.getElementById('ch-rep-clients');if(!ctx)return;
+  if(chRepClients){chRepClients.destroy();chRepClients=null;}
+  const top=all.slice(0,15);
+  const palette=['#af52de','#ff3b30','#ff9500','#007aff','#34c759','#5ac8fa','#ff6b35','#ffcc00','#bf5af2','#ff9f0a','#30d158','#64d2ff','#ff453a','#ffd60a','#32d74b'];
+  chRepClients=new Chart(ctx,{type:'bar',data:{labels:top.map(v=>v.display.length>22?v.display.slice(0,21)+'…':v.display),datasets:[{label:'Chamados repetidos',data:top.map(v=>v.records.length),backgroundColor:top.map((_,i)=>palette[i]||'#8e8e93'),borderRadius:8,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.x} chamados`},backgroundColor:dk?'#1c1c1e':'#ffffff',titleColor:dk?'#f2f2f7':'#1c1c1e',bodyColor:dk?'#ebebf0':'#3a3a3c',borderColor:dk?'rgba(255,255,255,.12)':'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',stepSize:1}},y:{grid:{display:false},ticks:{font:{size:10},color:dk?'#ebebf0':'#3a3a3c'}}}}});
+}
+function renderRepCausasChart(causas,dk){
+  const ctx=document.getElementById('ch-rep-causas');if(!ctx)return;
+  if(chRepCausas){chRepCausas.destroy();chRepCausas=null;}
+  const CCLR={'Rompimento de Fibra':'#ff3b30','Normalizado Sem Intervenção':'#34c759','Ajuste de Atenuação':'#ffcc00','Configuração':'#007aff','Falha Elétrica Cliente':'#ff9500','Ação Cliente':'#af52de','Falha Elétrica no POP':'#ff6b35','Demais Causas de Rompimento':'#ff6b35','Sem Ação':'#8e8e93'};
+  const sorted=se(causas);
+  chRepCausas=new Chart(ctx,{type:'bar',data:{labels:sorted.map(([k])=>k.length>24?k.slice(0,23)+'…':k),datasets:[{label:'Ocorrências',data:sorted.map(([,n])=>n),backgroundColor:sorted.map(([k])=>CCLR[k]||'#af52de'),borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.y} ocorrências`},backgroundColor:dk?'#1c1c1e':'#ffffff',titleColor:dk?'#f2f2f7':'#1c1c1e',bodyColor:dk?'#ebebf0':'#3a3a3c',borderColor:dk?'rgba(255,255,255,.12)':'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',maxRotation:35}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',stepSize:1}}}}});
+}
+function renderRepAccordion(all){
+  const el=document.getElementById('rep-accordion');if(!el)return;
+  el.innerHTML=all.slice(0,30).map((v,i)=>{
+    const pct8=v.records.length?Math.round(v.dentro8h/v.records.length*100):0;
+    const pctOl=v.records.length?Math.round(v.outlier/v.records.length*100):0;
+    const topCausa=se(v.causas)[0]||['—',0];
+    const clusterStr=Object.entries(v.clusters).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<span style="display:inline-flex;align-items:center;gap:3px"><span style="width:5px;height:5px;border-radius:50%;background:${(CLUSTER_INFO[k]||{}).clr||'#8e8e93'};flex-shrink:0"></span>${eh(k)} (${n})</span>`).join(' · ');
+    const semStr=Object.keys(v.semanas).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).join(', ');
+    const segStr=Object.keys(v.segmentos).filter(Boolean).join(', ')||'—';
+    const badgeClr=i===0?'var(--red)':i<3?'var(--orange)':i<7?'var(--purple)':'var(--teal-dk)';
+    const rows=v.records.slice().sort((a,b)=>String(a.semana).localeCompare(String(b.semana),undefined,{numeric:true})).map(r=>{
+      const sc=r.tempoTotal>24?'color:var(--red);font-weight:600':r.tempoTotal>8?'color:var(--orange);font-weight:600':'color:var(--green-dk)';
+      const d8=r.dentro8h?'<span class="badge b-in" style="font-size:9px">≤8h</span>':'<span class="badge b-out" style="font-size:9px">&gt;8h</span>';
+      const ol=r.outlier24h?'<span class="badge b-red" style="font-size:9px;margin-left:3px">+24h</span>':'';
+      return`<tr><td class="tid">${eh(r.protocolo)}</td><td><span class="badge b-teal" style="font-size:9px">${eh(r.semana||'—')}</span></td><td><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:5px;height:5px;border-radius:50%;background:${(CLUSTER_INFO[r.cluster]||{}).clr||'#8e8e93'};flex-shrink:0"></span>${eh(r.cluster||'—')}</span></td><td>${eh(r.cidade||'—')}/&nbsp;${eh(r.uf)}</td><td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(r.causaRaiz)}">${eh(r.causaRaiz||'—')}</td><td style="${sc};white-space:nowrap">${fh(r.tempoTotal)}</td><td>${d8}${ol}</td></tr>`;
+    }).join('');
+    return`<details class="tsec rep-details" style="margin-bottom:8px;overflow:hidden">
+      <summary style="display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;list-style:none;background:var(--surface2)">
+        <span style="font-size:20px;font-weight:800;color:${badgeClr};min-width:32px;text-align:center">${v.records.length}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(v.display)}">${eh(v.display)}</div>
+          ${v.id?`<div style="font-size:10px;color:var(--tx3)">${eh(v.id)}</div>`:''}
+        </div>
+        <span class="badge ${pct8>=85?'b-green':pct8>=60?'b-orange':'b-red'}" style="white-space:nowrap">${pct8}% ≤8h</span>
+        ${pctOl>0?`<span class="badge b-red" style="white-space:nowrap">${pctOl}% +24h</span>`:''}
+        <i class="ti ti-chevron-down rep-chevron" style="font-size:13px;color:var(--tx3);flex-shrink:0"></i>
+      </summary>
+      <div style="padding:12px 16px;border-top:.5px solid var(--bd)">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:12px;font-size:11px">
+          <div><span style="color:var(--tx3);text-transform:uppercase;font-size:9px;font-weight:700;letter-spacing:.06em">Causa principal</span><div style="color:var(--tx);margin-top:3px;font-weight:500">${eh(topCausa[0])} <span style="color:var(--tx3)">(${topCausa[1]}×)</span></div></div>
+          <div><span style="color:var(--tx3);text-transform:uppercase;font-size:9px;font-weight:700;letter-spacing:.06em">Clusters</span><div style="color:var(--tx);margin-top:3px;display:flex;flex-wrap:wrap;gap:6px">${clusterStr||'—'}</div></div>
+          <div><span style="color:var(--tx3);text-transform:uppercase;font-size:9px;font-weight:700;letter-spacing:.06em">Semanas</span><div style="color:var(--tx);margin-top:3px">${semStr||'—'}</div></div>
+          <div><span style="color:var(--tx3);text-transform:uppercase;font-size:9px;font-weight:700;letter-spacing:.06em">Segmento</span><div style="color:var(--tx);margin-top:3px">${segStr}</div></div>
+        </div>
+        <div class="tw"><table><thead><tr><th>Protocolo</th><th>Semana</th><th>Cluster</th><th>Cidade</th><th>Causa Raiz</th><th>Tempo</th><th>SLA</th></tr></thead><tbody>${rows}</tbody></table></div>
+      </div>
+    </details>`;
+  }).join('')+(all.length>30?`<div style="text-align:center;padding:10px;font-size:11px;color:var(--tx3)">Exibindo top 30 de ${all.length} clientes. Use os filtros para refinar.</div>`:'');
+}
+function exportRepCSV(){
+  const all=buildRepMap(repScope());
+  const rows=all.flatMap(v=>v.records.map(r=>({...r,_display:v.display,_id:v.id||r.clienteId||r.numplan||'',_total:v.records.length})));
+  const hdr=['Cliente','ID/NumPlan','Total Ocorrências','Protocolo','Semana','Cluster','Cidade','UF','Causa Raiz','Tempo Total (h)','Faixa SLA','Dentro 8h','Outlier +24h','Segmento'];
+  const data=rows.map(r=>[r._display,r._id,r._total,r.protocolo,r.semana,r.cluster,r.cidade,r.uf,r.causaRaiz,r.tempoTotal.toFixed(2),r.faixa,r.dentro8h?'Sim':'Não',r.outlier24h?'Sim':'Não',r.segmento]);
+  const csv=[hdr,...data].map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='atrix_repetidos_'+(selWeek||'all')+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
 /* ─── NAV & THEME ─── */
 function switchTab(tab){
-  if(!['abertos','encerrados','rede','combustivel'].includes(tab))tab='abertos';
-  const isAb=tab==='abertos';
-  const isEnc=tab==='encerrados';
-  const isRede=tab==='rede';
-  const isFuel=tab==='combustivel';
+  if(!['abertos','encerrados','rede','combustivel','repetidos'].includes(tab))tab='abertos';
+  const isAb=tab==='abertos',isEnc=tab==='encerrados',isRede=tab==='rede',isFuel=tab==='combustivel',isRep=tab==='repetidos';
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('ntab-'+(isAb?'ab':isRede?'rede':isFuel?'fuel':'enc')).classList.add('active');
+  const tabId='ntab-'+(isAb?'ab':isEnc?'enc':isRede?'rede':isFuel?'fuel':'rep');
+  const tabEl=document.getElementById(tabId);if(tabEl)tabEl.classList.add('active');
   document.getElementById('panel-abertos').classList.toggle('active',isAb);
   document.getElementById('panel-encerrados').classList.toggle('active',isEnc);
   document.getElementById('panel-rede').classList.toggle('active',isRede);
   document.getElementById('panel-combustivel').classList.toggle('active',isFuel);
+  document.getElementById('panel-repetidos').classList.toggle('active',isRep);
   const showEncControls=isEnc&&dEnc.length>0;
   document.getElementById('week-wrap').style.display=showEncControls?'flex':'none';
   document.getElementById('cluster-wrap').style.display=showEncControls?'flex':'none';
-  if(isFuel)renderFuel();
+  if(isFuel){renderFuel();setTimeout(initFuelSplit,80);}
+  if(isRep)renderPanelRepetidos();
 }
 function toggleTheme(){
   const dk=document.body.dataset.theme==='dark';
@@ -2121,6 +2425,86 @@ function toggleTheme(){
   document.getElementById('ti-icon').className=dk?'ti ti-moon':'ti ti-sun';
   setTimeout(()=>{if(chAb)rChAb();if(chEnc&&dEnc.length)rChEnc(encScope());if(chSem&&dEnc.length)rChSem();if(chFuel||chFuelProj||chFuelTop)renderFuelChart();},60);
 }
+/* ─── FUEL SPLIT PANE ─── */
+let fuelSplitInited=false;
+function initFuelSplit(){
+  if(fuelSplitInited)return;
+  const handle=document.getElementById('fuel-split-handle');
+  const left=document.getElementById('fuel-split-left');
+  const right=document.getElementById('fuel-split-right');
+  const cont=document.getElementById('fuel-split');
+  if(!handle||!left||!right||!cont)return;
+  fuelSplitInited=true;
+  // Restore saved width
+  try{const s=JSON.parse(localStorage.getItem('atrix:fuel-split:v1')||'{}');if(s.lp>10&&s.lp<90){left.style.flex=`0 0 ${s.lp}%`;right.style.flex=`0 0 ${100-s.lp}%`}}catch{}
+  let drag=false,x0=0,w0=0;
+  handle.addEventListener('mousedown',e=>{drag=true;x0=e.clientX;w0=left.getBoundingClientRect().width;handle.classList.add('dragging');document.body.style.userSelect='none';document.body.style.cursor='col-resize';e.preventDefault()});
+  // Touch support
+  handle.addEventListener('touchstart',e=>{drag=true;x0=e.touches[0].clientX;w0=left.getBoundingClientRect().width;handle.classList.add('dragging');e.preventDefault()},{passive:false});
+  function onMove(cx){
+    if(!drag)return;
+    const tw=cont.getBoundingClientRect().width-14;
+    const nw=Math.max(200,Math.min(tw-200,w0+(cx-x0)));
+    const lp=nw/tw*100;
+    left.style.flex=`0 0 ${lp}%`;right.style.flex=`0 0 ${100-lp}%`;
+  }
+  function onUp(){
+    if(!drag)return;
+    drag=false;handle.classList.remove('dragging');document.body.style.userSelect='';document.body.style.cursor='';
+    const tw=cont.getBoundingClientRect().width-14;
+    const lp=left.getBoundingClientRect().width/tw*100;
+    localStorage.setItem('atrix:fuel-split:v1',JSON.stringify({lp:+lp.toFixed(2)}));
+  }
+  document.addEventListener('mousemove',e=>onMove(e.clientX));
+  document.addEventListener('mouseup',onUp);
+  document.addEventListener('touchmove',e=>onMove(e.touches[0].clientX),{passive:false});
+  document.addEventListener('touchend',onUp);
+}
+
+/* ─── GOOGLE SHEETS ─── */
+const SHEETS_URL_KEY='atrix:sheets-url:v1';
+const SHEETS_AUTO_KEY='atrix:sheets-auto:v1';
+function getSheetsUrl(){return localStorage.getItem(SHEETS_URL_KEY)||''}
+function openSheetsSettings(){
+  if(!canEdit())return;
+  const inp=document.getElementById('sheets-url');if(inp)inp.value=getSheetsUrl();
+  const cb=document.getElementById('sheets-auto');if(cb)cb.checked=localStorage.getItem(SHEETS_AUTO_KEY)==='1';
+  const st=document.getElementById('sheets-status');if(st)st.textContent='';
+  document.getElementById('sheets-panel').style.display='flex';
+}
+function closeSheetsSettings(){document.getElementById('sheets-panel').style.display='none'}
+function saveSheetsUrl(){
+  const url=(document.getElementById('sheets-url').value||'').trim();
+  localStorage.setItem(SHEETS_URL_KEY,url);
+  const el=document.getElementById('sheets-status');
+  if(el){el.textContent=url?'URL salva. Clique em "Enviar agora" para testar.':'URL removida.';el.style.color=url?'var(--green-dk)':'var(--tx3)'}
+}
+function toggleSheetsAuto(on){localStorage.setItem(SHEETS_AUTO_KEY,on?'1':'0')}
+function copyScriptCode(){
+  const el=document.getElementById('sheets-script-code');if(!el)return;
+  navigator.clipboard&&navigator.clipboard.writeText(el.textContent).then(()=>{const st=document.getElementById('sheets-status');if(st){st.textContent='Código copiado!';st.style.color='var(--green-dk)'}}).catch(()=>{});
+}
+async function saveToGoogleSheets(manual=false){
+  const url=getSheetsUrl();
+  if(!url){if(manual)alert('Configure primeiro a URL do Google Apps Script na opção Google Sheets (ícone G na barra superior).');return}
+  const st=document.getElementById('sheets-status');
+  if(st){st.textContent='Enviando para o Google Sheets…';st.style.color='var(--blue)'}
+  const btn=document.getElementById('sheets-nav-btn');
+  if(btn)btn.style.color='var(--orange)';
+  try{
+    await fetch(url,{method:'POST',body:JSON.stringify({dFuelVehicles,dFuelRequests:fuelValidRequests(),dFuelWithdrawals,fuelBalanceTotal,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}),mode:'no-cors'});
+    const msg='Enviado ao Google Sheets em '+now2();
+    if(st){st.textContent=msg;st.style.color='var(--green-dk)'}
+    if(btn)btn.style.color='var(--green-dk)';setTimeout(()=>{if(btn)btn.style.color=''},3000);
+    if(manual)alert(msg);
+  }catch(e){
+    const msg='Erro ao enviar: '+e.message;
+    if(st){st.textContent=msg;st.style.color='var(--red)'}
+    if(btn)btn.style.color='var(--red)';setTimeout(()=>{if(btn)btn.style.color=''},4000);
+    if(manual)alert(msg);
+  }
+}
+
 initAuth();renderFuel();
 </script>
 </body>
