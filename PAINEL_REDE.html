@@ -325,7 +325,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
   </div>
   <div class="detail-table-wrap">
     <table class="detail-table">
-      <thead><tr><th>Chamado</th><th>Tipo</th><th>Cluster</th><th>Período</th><th>Status</th><th>Tempo</th><th>Cliente / Impacto</th><th>Motivo</th></tr></thead>
+      <thead><tr><th>OS</th><th>Cidade</th><th>UF</th><th>Clientes afetados</th><th>TME</th><th>Causa</th><th>Data abertura</th><th>Data fechamento</th></tr></thead>
       <tbody id="detail-body"></tbody>
     </table>
   </div>
@@ -359,14 +359,29 @@ function monthIndex(v){if(v instanceof Date&&!isNaN(v))return ensureLabel(M.mes,
 function weekIndex(v){if(v instanceof Date&&!isNaN(v)){const w=isoWeek(v);return ensureLabel(M.sem,`${v.getFullYear()}-W${String(w).padStart(2,'0')}`,`S${String(w).padStart(2,'0')}`)}const raw=String(v||'').trim();if(!raw)return 0;const d=parseDateBR(raw);if(d)return weekIndex(d);const n=Number((raw.match(/\d+/)||[])[0]||0);if(n>0)return ensureLabel(M.sem,`2026-W${String(n).padStart(2,'0')}`,`S${String(n).padStart(2,'0')}`);const i=M.sl.findIndex(x=>nk(x)===nk(raw));return i>=0?i:ensureLabel(M.sem,raw,raw)}
 function labelIndex(arr,v){const raw=String(v||'Não informado').trim()||'Não informado';let i=arr.findIndex(x=>nk(x)===nk(raw));if(i<0){arr.push(raw);i=arr.length-1}return i}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function fmtDateDetail(v){
+  const d=parseDateBR(v);
+  if(d){
+    const hasTime=d.getHours()||d.getMinutes()||d.getSeconds();
+    return hasTime
+      ? d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+      : d.toLocaleDateString('pt-BR');
+  }
+  return String(v||'').trim()||'-';
+}
 function compactDetail(r,kind,cl,mi,wi,prazo,out,tempo,label,impacto){
+  const abertura=gv(r,['DATA_ABERTURA','Data Abertura','Data de Abertura','data abertura','abertura','ABERTURA','data']);
+  const fechamento=gv(r,['DATA_FECHAMENTO','Data Fechamento','Data de Fechamento','data fechamento','fechamento','ENCERRAMENTO','Data Encerramento','data encerramento','data fim']);
   return {
     id:String(gv(r,['protocolo','ticket_id','ID Ticket','id ticket','id','chamado','numero'])||'').trim(),
+    os:String(gv(r,['OS','os','ordem servico','ordem de servico','ordem serviço','protocolo','ticket_id','ID Ticket','id ticket','id','chamado','numero'])||'').trim(),
     cliente:String(gv(r,['cliente','CLIENTE','nome cliente','razao social','CLIENTE FINAL'])||'').trim(),
     cidade:String(gv(r,['cidade','CIDADE','CIDADE_SIMPLES','cidadeservico','localidade'])||'').trim(),
     uf:String(gv(r,['uf','UF','estado'])||'').trim(),
     titulo:String(gv(r,['titulo','assunto','descricao','resumo'])||'').trim(),
     motivo:String(label||gv(r,['motivo','causa','causa raiz','CAUSA_SIMPLES','ORIGEM','FALHA'])||'').trim(),
+    dataAbertura:fmtDateDetail(abertura),
+    dataFechamento:fmtDateDetail(fechamento),
     kind,cluster:cl,mes:mi,semana:wi,prazo,out,tempo,impacto
   };
 }
@@ -502,17 +517,16 @@ function rowImpact(row,scope){
 function rowDetail(row,scope,idx){
   const source=scope==='all'?row[8]:(scope==='ac'?row[8]:row[7]);
   const base=source&&typeof source==='object'?source:{};
+  const clientes=base.impacto!==undefined&&base.impacto!==null&&base.impacto!==''?base.impacto:(scope==='ac'||scope==='all'?row[6]:0);
   return {
-    id:base.id||`#${idx+1}`,
-    cliente:base.cliente||base.titulo||'Nao informado',
-    local:[base.cidade,base.uf].filter(Boolean).join('/')||'',
-    kind:rowKind(row,scope),
-    cluster:CL_NM[row[0]]||row[0]||'-',
-    periodo:[M.ml[row[1]],M.sl[row[2]]].filter(Boolean).join(' / '),
-    status:row[4]?'Outlier':(row[3]?'No prazo':'Fora do prazo'),
-    tempo:Number(row[5]||0).toLocaleString('pt-BR',{maximumFractionDigits:2})+'h',
-    impacto:base.impacto?`${Number(base.impacto||0).toLocaleString('pt-BR')} clientes`:rowImpact(row,scope),
-    motivo:base.motivo||rowReason(row,scope)
+    os:base.os||base.id||`#${idx+1}`,
+    cidade:base.cidade||'-',
+    uf:base.uf||'-',
+    clientesAfetados:Number(clientes||0).toLocaleString('pt-BR'),
+    tme:Number(row[5]||0).toLocaleString('pt-BR',{maximumFractionDigits:2})+'h',
+    causa:base.motivo||rowReason(row,scope),
+    dataAbertura:base.dataAbertura||'-',
+    dataFechamento:base.dataFechamento||'-'
   };
 }
 function showDetailReport(title,sub,rows,scope){
@@ -521,7 +535,7 @@ function showDetailReport(title,sub,rows,scope){
   document.getElementById('detail-title').textContent=title;
   document.getElementById('detail-sub').textContent=sub;
   document.getElementById('detail-count').textContent=`${rows.length} chamado${rows.length===1?'':'s'}`;
-  body.innerHTML=rows.map((r,i)=>{const d=rowDetail(r,scope,i);return `<tr><td><span class="detail-id">${esc(d.id)}</span></td><td>${esc(d.kind)}</td><td>${esc(d.cluster)}</td><td>${esc(d.periodo)}</td><td>${esc(d.status)}</td><td>${esc(d.tempo)}</td><td>${esc(d.cliente)}${d.local?`<div class="detail-muted">${esc(d.local)}</div>`:''}${d.impacto?`<div class="detail-muted">${esc(d.impacto)}</div>`:''}</td><td>${esc(d.motivo)}</td></tr>`}).join('')||'<tr><td colspan="8" class="detail-muted">Nenhum chamado encontrado para este indicador.</td></tr>';
+  body.innerHTML=rows.map((r,i)=>{const d=rowDetail(r,scope,i);return `<tr><td><span class="detail-id">${esc(d.os)}</span></td><td>${esc(d.cidade)}</td><td>${esc(d.uf)}</td><td>${esc(d.clientesAfetados)}</td><td>${esc(d.tme)}</td><td>${esc(d.causa)}</td><td>${esc(d.dataAbertura)}</td><td>${esc(d.dataFechamento)}</td></tr>`}).join('')||'<tr><td colspan="8" class="detail-muted">Nenhum chamado encontrado para este indicador.</td></tr>';
   box.classList.add('on');
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
