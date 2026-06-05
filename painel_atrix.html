@@ -1364,6 +1364,7 @@ function encRuleStats(d){
   return{total,prazo,intermediario,outlier,fora8,pPrazo,pInter,pOut,pFora8,gapPrazo:Math.max(0,85-pPrazo),excessoOutlier:Math.max(0,pOut-1.98)};
 }
 function parseOpeningDate(v){if(v===undefined||v===null||v==='')return null;if(v instanceof Date&&!isNaN(v))return v;if(typeof v==='number'&&isFinite(v)){const d=new Date(Math.round((v-25569)*86400*1000));return isNaN(d)?null:d}const raw=String(v).trim();if(!raw)return null;const iso=new Date(raw);if(!isNaN(iso))return iso;const m=raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);if(!m)return null;const y=Number(m[3].length===2?'20'+m[3]:m[3]);const d=new Date(y,Number(m[2])-1,Number(m[1]),Number(m[4]||0),Number(m[5]||0),Number(m[6]||0));return isNaN(d)?null:d}
+function fmtReportDate(v){const d=parseOpeningDate(v);if(!d)return String(v||'').trim()||'-';const hasTime=d.getHours()||d.getMinutes()||d.getSeconds();return hasTime?d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString('pt-BR')}
 function hoursSince(d){return d?Math.max(0,(Date.now()-d.getTime())/3600000):0}
 const PAUSE_SUBSTATUS=['Pendente Cliente','Pendente Agendamento','Pendente Valida\u00e7\u00e3o','Cancelado','Fechado','Aguardando Libera\u00e7\u00e3o De Acesso','Agudando Libera\u00e7\u00e3o De Acesso'];
 const OPERATOR_CLIENTS=['OPERADORA','OPERADORAS','TIM','CLARO','VIVO','ONLINE'];
@@ -1599,15 +1600,19 @@ function procEnc(raw,fname){
     const causaRaiz=fmtCausaRaiz(repairPtBR(String(r['Tipo_Encerramento']||r['Causa_Raiz']||'')));
     const semana=String(r['semana']||'').trim();
     const segmento=repairPtBR(String(r['segmento_cliente']||'').trim());
+    const os=String(gv(r,['ult_OS','ult os','última OS','ultima OS','os_agrupada','os concluida agrupada','os_concluida_agrupada','OS','os','protocolo','ticket_id'])||protocolo).trim();
+    const dataAbertura=gv(r,['data_abertura','Data Abertura','Data de Abertura','abertura']);
+    const dataFechamento=gv(r,['data_fechamento','Data Fechamento','Data de Fechamento','fechamento','encerramento']);
     const numplan=String(gv(r,['numplan','NUMPLAN','Num Plan','num_plan','NumPlan','num plan'])||'').trim();
     const clienteId=String(gv(r,['cliente_id','CLIENTE_ID','cliente id','ID Cliente','clienteid','ClienteId'])||'').trim();
     const titulo=String(colVal(r,2,['titulo','TITULO','Título','nome_cliente','NOME_CLIENTE','Nome Cliente','razao_social','Razao Social','plano','PLANO','nome_plano','Nome Plano','nome_titulo','Nome Titulo'])||'').trim();
+    const clientesAfetados=String(gv(r,['CLIENTES AFETADOS','clientes afetados','clientes','afetados'])||cliente||titulo||'').trim();
     const agingRaw=String(r['aging_ccs']||'').trim();
     const faixa=AGING_MAP[agingRaw]||cf(ph(r['tempo_b2b']||0));
     const tempoTotal=typeof r['tempo_total']==='number'?r['tempo_total']:ph(r['tempo_total']);
     const dentro8h=encBucket(tempoTotal)==='prazo';
     const outlier24h=encBucket(tempoTotal)==='outlier';
-    return{protocolo,cliente,uf,cidade,cluster,clusterCalc,clusterNome,causaRaiz,semana,segmento,faixa,tempoTotal,dentro8h,outlier24h,numplan,clienteId,titulo};
+    return{protocolo,os,cliente,uf,cidade,cluster,clusterCalc,clusterNome,causaRaiz,semana,segmento,faixa,tempoTotal,dentro8h,outlier24h,numplan,clienteId,titulo,clientesAfetados,dataAbertura:fmtReportDate(dataAbertura),dataFechamento:fmtReportDate(dataFechamento),periodoAtendimento:`${fmtReportDate(dataAbertura)} - ${fmtReportDate(dataFechamento)}`};
   });
   document.getElementById('nb-enc').textContent=dEnc.length;
   document.getElementById('ft-enc').textContent='Atualizado em '+now2();
@@ -2537,16 +2542,14 @@ function renderRepAccordion(all){
     const segStr=Object.keys(v.segmentos).filter(Boolean).join(', ')||'—';
     const badgeClr=i===0?'var(--red)':i<3?'var(--orange)':i<7?'var(--purple)':'var(--teal-dk)';
     const rows=v.records.slice().sort((a,b)=>String(a.semana).localeCompare(String(b.semana),undefined,{numeric:true})).map(r=>{
-      const sc=r.tempoTotal>24?'color:var(--red);font-weight:600':r.tempoTotal>8?'color:var(--orange);font-weight:600':'color:var(--green-dk)';
-      const d8=r.dentro8h?'<span class="badge b-in" style="font-size:9px">≤8h</span>':'<span class="badge b-out" style="font-size:9px">&gt;8h</span>';
-      const ol=r.outlier24h?'<span class="badge b-red" style="font-size:9px;margin-left:3px">+24h</span>':'';
       return`<tr>
-        <td><span class="badge b-teal" style="font-size:9px">${eh(r.semana||'—')}</span></td>
-        <td><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:5px;height:5px;border-radius:50%;background:${(CLUSTER_INFO[r.cluster]||{}).clr||'#8e8e93'};flex-shrink:0"></span>${eh(r.cluster||'—')}</span></td>
-        <td>${eh(r.cidade||'—')} / ${eh(r.uf)}</td>
-        <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(r.causaRaiz)}">${eh(r.causaRaiz||'—')}</td>
-        <td style="${sc};white-space:nowrap">${fh(r.tempoTotal)}</td>
-        <td>${d8}${ol}</td>
+        <td><span class="badge b-blue" style="font-size:9px">${eh(r.os||r.protocolo||'—')}</span></td>
+        <td>${eh(r.cidade||'—')}</td>
+        <td>${eh(r.uf||'—')}</td>
+        <td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(r.clientesAfetados||r.cliente||'—')}">${eh(r.clientesAfetados||r.cliente||'—')}</td>
+        <td style="white-space:nowrap;color:var(--tx);font-weight:600">${fh(r.tempoTotal)}</td>
+        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(r.causaRaiz)}">${eh(r.causaRaiz||'—')}</td>
+        <td style="white-space:nowrap">${eh(r.periodoAtendimento||'—')}</td>
       </tr>`;
     }).join('');
     return`<details class="tsec rep-details" data-rep-key="${eh(v.repKey)}" style="margin-bottom:8px;overflow:hidden">
@@ -2583,7 +2586,7 @@ function renderRepAccordion(all){
         </div>
         <!-- Chamados do cliente -->
         <div class="tw"><table>
-          <thead><tr><th>Semana</th><th>Cluster</th><th>Cidade/UF</th><th>Causa Raiz</th><th>Tempo</th><th>SLA</th></tr></thead>
+          <thead><tr><th>OS</th><th>CIDADE</th><th>UF</th><th>CLIENTES AFETADOS</th><th>TME</th><th>CAUSA</th><th>DATA ABERTURA - DATA FECHAMENTO</th></tr></thead>
           <tbody>${rows}</tbody>
         </table></div>
       </div>

@@ -325,7 +325,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
   </div>
   <div class="detail-table-wrap">
     <table class="detail-table">
-      <thead><tr><th>OS</th><th>Cidade</th><th>UF</th><th>Clientes afetados</th><th>TME</th><th>Causa</th><th>Data abertura</th><th>Data fechamento</th></tr></thead>
+      <thead><tr><th>OS</th><th>CIDADE</th><th>UF</th><th>CLIENTES AFETADOS</th><th>TME</th><th>CAUSA</th><th>DATA ABERTURA - DATA FECHAMENTO</th></tr></thead>
       <tbody id="detail-body"></tbody>
     </table>
   </div>
@@ -374,14 +374,13 @@ function compactDetail(r,kind,cl,mi,wi,prazo,out,tempo,label,impacto){
   const fechamento=gv(r,['DATA_FECHAMENTO','Data Fechamento','Data de Fechamento','data fechamento','fechamento','ENCERRAMENTO','Data Encerramento','data encerramento','data fim']);
   return {
     id:String(gv(r,['protocolo','ticket_id','ID Ticket','id ticket','id','chamado','numero'])||'').trim(),
-    os:String(gv(r,['OS','os','ordem servico','ordem de servico','ordem serviço','protocolo','ticket_id','ID Ticket','id ticket','id','chamado','numero'])||'').trim(),
+    os:String(gv(r,['OS','os','ult_OS','ult os','ultima OS','última OS','os_agrupada','os concluida agrupada','os_concluida_agrupada','ordem servico','ordem de servico','ordem serviço','protocolo','ticket_id','ID Ticket','id ticket','id','chamado','numero'])||'').trim(),
     cliente:String(gv(r,['cliente','CLIENTE','nome cliente','razao social','CLIENTE FINAL'])||'').trim(),
     cidade:String(gv(r,['cidade','CIDADE','CIDADE_SIMPLES','cidadeservico','localidade'])||'').trim(),
     uf:String(gv(r,['uf','UF','estado'])||'').trim(),
     titulo:String(gv(r,['titulo','assunto','descricao','resumo'])||'').trim(),
     motivo:String(label||gv(r,['motivo','causa','causa raiz','CAUSA_SIMPLES','ORIGEM','FALHA'])||'').trim(),
-    dataAbertura:fmtDateDetail(abertura),
-    dataFechamento:fmtDateDetail(fechamento),
+    periodoAtendimento:`${fmtDateDetail(abertura)} - ${fmtDateDetail(fechamento)}`,
     kind,cluster:cl,mes:mi,semana:wi,prazo,out,tempo,impacto
   };
 }
@@ -525,8 +524,7 @@ function rowDetail(row,scope,idx){
     clientesAfetados:Number(clientes||0).toLocaleString('pt-BR'),
     tme:Number(row[5]||0).toLocaleString('pt-BR',{maximumFractionDigits:2})+'h',
     causa:base.motivo||rowReason(row,scope),
-    dataAbertura:base.dataAbertura||'-',
-    dataFechamento:base.dataFechamento||'-'
+    periodoAtendimento:base.periodoAtendimento||`${base.dataAbertura||'-'} - ${base.dataFechamento||'-'}`
   };
 }
 function showDetailReport(title,sub,rows,scope){
@@ -535,7 +533,7 @@ function showDetailReport(title,sub,rows,scope){
   document.getElementById('detail-title').textContent=title;
   document.getElementById('detail-sub').textContent=sub;
   document.getElementById('detail-count').textContent=`${rows.length} chamado${rows.length===1?'':'s'}`;
-  body.innerHTML=rows.map((r,i)=>{const d=rowDetail(r,scope,i);return `<tr><td><span class="detail-id">${esc(d.os)}</span></td><td>${esc(d.cidade)}</td><td>${esc(d.uf)}</td><td>${esc(d.clientesAfetados)}</td><td>${esc(d.tme)}</td><td>${esc(d.causa)}</td><td>${esc(d.dataAbertura)}</td><td>${esc(d.dataFechamento)}</td></tr>`}).join('')||'<tr><td colspan="8" class="detail-muted">Nenhum chamado encontrado para este indicador.</td></tr>';
+  body.innerHTML=rows.map((r,i)=>{const d=rowDetail(r,scope,i);return `<tr><td><span class="detail-id">${esc(d.os)}</span></td><td>${esc(d.cidade)}</td><td>${esc(d.uf)}</td><td>${esc(d.clientesAfetados)}</td><td>${esc(d.tme)}</td><td>${esc(d.causa)}</td><td>${esc(d.periodoAtendimento)}</td></tr>`}).join('')||'<tr><td colspan="7" class="detail-muted">Nenhum chamado encontrado para este indicador.</td></tr>';
   box.classList.add('on');
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
