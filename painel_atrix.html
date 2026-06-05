@@ -2402,6 +2402,7 @@ function buildRepMap(data){
       const nome=tituloNome&&clienteNome&&nk(tituloNome)!==nk(clienteNome)?`${tituloNome} / ${clienteNome}`:(tituloNome||clienteNome||x.cliente||x.titulo||'—');
       map.set(key,{
         nome,                          // título visual: Título / Cliente
+        repKey:key,
         numplan:np,                    // coluna F
         clienteId:ci,                  // coluna J
         titulo:x.titulo||'',           // título do plano (se existir)
@@ -2507,7 +2508,15 @@ function renderRepClientsChart(all,dk){
   if(chRepClients){chRepClients.destroy();chRepClients=null;}
   const top=all.slice(0,15);
   const palette=['#af52de','#ff3b30','#ff9500','#007aff','#34c759','#5ac8fa','#ff6b35','#ffcc00','#bf5af2','#ff9f0a','#30d158','#64d2ff','#ff453a','#ffd60a','#32d74b'];
-  chRepClients=new Chart(ctx,{type:'bar',data:{labels:top.map(v=>v.nome.length>22?v.nome.slice(0,21)+'…':v.nome),datasets:[{label:'Chamados repetidos',data:top.map(v=>v.records.length),backgroundColor:top.map((_,i)=>palette[i]||'#8e8e93'),borderRadius:8,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.x} chamados`},backgroundColor:dk?'#1c1c1e':'#ffffff',titleColor:dk?'#f2f2f7':'#1c1c1e',bodyColor:dk?'#ebebf0':'#3a3a3c',borderColor:dk?'rgba(255,255,255,.12)':'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',stepSize:1}},y:{grid:{display:false},ticks:{font:{size:10},color:dk?'#ebebf0':'#3a3a3c'}}}}});
+  chRepClients=new Chart(ctx,{type:'bar',data:{labels:top.map(v=>v.nome.length>22?v.nome.slice(0,21)+'…':v.nome),datasets:[{label:'Chamados repetidos',data:top.map(v=>v.records.length),backgroundColor:top.map((_,i)=>palette[i]||'#8e8e93'),borderRadius:8,borderSkipped:false,repKeys:top.map(v=>v.repKey)}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onHover:(ev,els)=>{if(ev.native&&ev.native.target)ev.native.target.style.cursor=els.length?'pointer':'default'},onClick:(ev,els,chart)=>{const idx=els&&els[0]&&els[0].index;if(idx===undefined)return;openRepDetail(chart.data.datasets[0].repKeys[idx])},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.x} chamados`},backgroundColor:dk?'#1c1c1e':'#ffffff',titleColor:dk?'#f2f2f7':'#1c1c1e',bodyColor:dk?'#ebebf0':'#3a3a3c',borderColor:dk?'rgba(255,255,255,.12)':'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',stepSize:1}},y:{grid:{display:false},ticks:{font:{size:10},color:dk?'#ebebf0':'#3a3a3c'}}}}});
+}
+function openRepDetail(repKey){
+  const key=String(repKey||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+  const el=document.querySelector(`.rep-details[data-rep-key="${key}"]`);
+  if(!el)return;
+  el.open=true;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  el.animate([{boxShadow:'0 0 0 0 rgba(175,82,222,.35)'},{boxShadow:'0 0 0 6px rgba(175,82,222,.18)'},{boxShadow:'0 0 0 0 rgba(175,82,222,0)'}],{duration:950,easing:'ease-out'});
 }
 function renderRepCausasChart(causas,dk){
   const ctx=document.getElementById('ch-rep-causas');if(!ctx)return;
@@ -2540,7 +2549,7 @@ function renderRepAccordion(all){
         <td>${d8}${ol}</td>
       </tr>`;
     }).join('');
-    return`<details class="tsec rep-details" style="margin-bottom:8px;overflow:hidden">
+    return`<details class="tsec rep-details" data-rep-key="${eh(v.repKey)}" style="margin-bottom:8px;overflow:hidden">
       <summary style="display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;list-style:none;background:var(--surface2)">
         <span style="font-size:22px;font-weight:800;color:${badgeClr};min-width:36px;text-align:center;flex-shrink:0">${v.records.length}</span>
         <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
