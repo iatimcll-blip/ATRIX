@@ -1080,7 +1080,8 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         <div class="tw"><table>
           <thead><tr>
             <th>Protocolo</th>
-            <th>Cliente</th>
+            <th>Título / Cliente</th>
+            <th>Repetições</th>
             <th>NumPlan (F)</th>
             <th>Cliente ID (J)</th>
             <th>Semana</th><th>Cluster</th><th>Cidade/UF</th>
@@ -2270,7 +2271,7 @@ function buildRepMap(data){
       const isCode=s=>!s||/^\d{4,}$/.test(s.trim())||s.trim().length<3;
       const nome=!isCode(x.cliente)?x.cliente:(!isCode(x.titulo)?x.titulo:x.cliente||x.titulo||'—');
       map.set(key,{
-        nome,                          // título visual: Cliente
+        nome,                          // título visual: Título / Cliente
         numplan:np,                    // coluna F
         clienteId:ci,                  // coluna J
         titulo:x.titulo||'',           // título do plano (se existir)
@@ -2355,7 +2356,8 @@ function renderPanelRepetidos(){
     const sc=r.tempoTotal>24?'color:var(--red);font-weight:600':r.tempoTotal>8?'color:var(--orange);font-weight:600':'color:var(--green-dk)';
     return`<tr>
       <td class="tid">${eh(r.protocolo)}</td>
-      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx);font-weight:600" title="${eh(r._nome)}">${eh(r._nome||'—')}</td>
+      <td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx);font-weight:600" title="${eh(r._nome)}">${eh(r._nome||'—')}</td>
+      <td><span class="badge b-purple">${eh(r._count)}x</span></td>
       <td><code style="background:var(--blue-bg);color:var(--blue);padding:1px 5px;border-radius:4px;font-size:10px;white-space:nowrap">${eh(r._numplan||'—')}</code></td>
       <td><code style="background:var(--purple-bg);color:var(--purple);padding:1px 5px;border-radius:4px;font-size:10px;white-space:nowrap">${eh(r._clienteId||'—')}</code></td>
       <td><span class="badge b-teal">${eh(r.semana||'—')}</span></td>
@@ -2366,7 +2368,7 @@ function renderPanelRepetidos(){
       <td><span class="badge ${bc}">${eh(r.faixa)}</span></td>
       <td>${d8}</td><td>${ol}</td>
     </tr>`;
-  }).join('')||'<tr><td colspan="12" class="nores"><i class="ti ti-search-off"></i>Nenhum chamado repetido encontrado</td></tr>';
+  }).join('')||'<tr><td colspan="13" class="nores"><i class="ti ti-search-off"></i>Nenhum chamado repetido encontrado</td></tr>';
   document.getElementById('ft-rep').textContent='Atualizado em '+now2();
 }
 function renderRepClientsChart(all,dk){
@@ -2413,7 +2415,8 @@ function renderRepAccordion(all){
         <span style="font-size:22px;font-weight:800;color:${badgeClr};min-width:36px;text-align:center;flex-shrink:0">${v.records.length}</span>
         <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
           <!-- Cliente em destaque -->
-          <div style="font-size:13px;font-weight:700;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(v.nome)}">${eh(v.nome||'—')}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(v.nome)}">Título / Cliente: ${eh(v.nome||'—')}</div>
+          <div style="font-size:10px;color:var(--purple);font-weight:800;text-transform:uppercase;letter-spacing:.05em">${v.records.length}x repetido</div>
           <!-- NumPlan (col F) + Cliente_ID (col J) lado a lado -->
           <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
             ${v.numplan?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--tx3)"><span style="font-size:8px;font-weight:800;text-transform:uppercase;color:var(--blue);letter-spacing:.05em">NumPlan</span><code style="background:var(--blue-bg);color:var(--blue);padding:1px 5px;border-radius:4px;font-size:10px">${eh(v.numplan)}</code></span>`:''}
@@ -2428,7 +2431,8 @@ function renderRepAccordion(all){
       <div style="padding:12px 16px;border-top:.5px solid var(--bd)">
         <!-- Identificação completa -->
         <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;padding:10px;background:var(--surface2);border-radius:var(--r);font-size:11px">
-          <div style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--tx3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Cliente</span><b style="color:var(--tx)">${eh(v.nome||'—')}</b></div>
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--tx3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Título / Cliente</span><b style="color:var(--tx)">${eh(v.nome||'—')}</b></div>
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--tx3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Repetições</span><b style="color:var(--purple)">${v.records.length}x</b></div>
           ${v.numplan?`<div style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--tx3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">NumPlan (col F)</span><code style="background:var(--blue-bg);color:var(--blue);padding:2px 7px;border-radius:5px;font-size:11px">${eh(v.numplan)}</code></div>`:''}
           ${v.clienteId?`<div style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--tx3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Cliente ID (col J)</span><code style="background:var(--purple-bg);color:var(--purple);padding:2px 7px;border-radius:5px;font-size:11px">${eh(v.clienteId)}</code></div>`:''}
           ${v.titulo&&v.titulo!==v.nome?`<div style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--tx3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Título</span><span style="color:var(--tx)">${eh(v.titulo)}</span></div>`:''}
@@ -2452,8 +2456,8 @@ function renderRepAccordion(all){
 function exportRepCSV(){
   const all=buildRepMap(repScope());
   const rows=all.flatMap(v=>v.records.map(r=>({...r,_nome:v.nome,_numplan:v.numplan,_clienteId:v.clienteId,_titulo:v.titulo,_total:v.records.length})));
-  const hdr=['Cliente','NumPlan (col F)','Cliente ID (col J)','Título Plano','Total Ocorrências','Protocolo','Semana','Cluster','Cidade','UF','Causa Raiz','Tempo Total (h)','Faixa SLA','Dentro 8h','Outlier +24h','Segmento'];
-  const data=rows.map(r=>[r._nome,r._numplan||'',r._clienteId||'',r._titulo||'',r._total,r.protocolo,r.semana,r.cluster,r.cidade,r.uf,r.causaRaiz,r.tempoTotal.toFixed(2),r.faixa,r.dentro8h?'Sim':'Não',r.outlier24h?'Sim':'Não',r.segmento]);
+  const hdr=['Título / Cliente','Repetições','NumPlan (col F)','Cliente ID (col J)','Título Plano','Total Ocorrências','Protocolo','Semana','Cluster','Cidade','UF','Causa Raiz','Tempo Total (h)','Faixa SLA','Dentro 8h','Outlier +24h','Segmento'];
+  const data=rows.map(r=>[r._nome,r._total,r._numplan||'',r._clienteId||'',r._titulo||'',r._total,r.protocolo,r.semana,r.cluster,r.cidade,r.uf,r.causaRaiz,r.tempoTotal.toFixed(2),r.faixa,r.dentro8h?'Sim':'Não',r.outlier24h?'Sim':'Não',r.segmento]);
   const csv=[hdr,...data].map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
