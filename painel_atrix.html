@@ -1549,9 +1549,11 @@ const AB_CLIENTE_COLC_ALIASES=new Set([
 ].map(nk));
 function clienteAbertoNome(r){
   const vals=Object.values(r);
-  const clienteK=String(vals[10]??gv(r,['Cliente','CLIENTE'])??'').trim();
+  const clienteHeader=String(gv(r,['Cliente','CLIENTE'])||'').trim();
+  const clienteK=String(vals[10]??'').trim();
   const clienteC=String(vals[2]??colVal(r,2,['Cliente Final','CLIENTE FINAL','Unidade','UNIDADE','Titulo','TITULO','Título','Nome','NOME','Razao Social','RAZAO SOCIAL'])??'').trim();
-  return AB_CLIENTE_COLC_ALIASES.has(nk(clienteK))&&clienteC?clienteC:clienteK;
+  const usarColunaC=[clienteHeader,clienteK].some(v=>AB_CLIENTE_COLC_ALIASES.has(nk(v)));
+  return usarColunaC&&clienteC?clienteC:(clienteHeader||clienteK);
 }
 function procAb(raw,fname){
   dAb=raw.filter(r=>gv(r,['ID Ticket','ID_TICKET'])!=='').map((r,rowKey)=>{
