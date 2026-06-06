@@ -1840,8 +1840,10 @@ function procEnc(raw,fname){
   dEnc=raw.filter(r=>r['ticket_id']||r['protocolo']).map(r=>{
     const protocolo=String(r['protocolo']||r['ticket_id']||'').trim();
     const cliente=String(colVal(r,10,['Cliente','cliente'])||'').trim();
-    const uf=String(gv(r,['ufservico','uf_servico','UF','uf','estado','Uf Serviço','Uf Servico','ufatendimento','estadoservico'])||'').trim().toUpperCase();
-    const cidade=repairPtBR(String(gv(r,['cidadeservico','cidade_servico','cidade','municipio_servico','municipio','Município','Cidade Serviço','Cidade Servico','localservico','local_servico','local','localidade','cidadeatendimento','municipioatendimento','municipioinstalacao'])||'').trim());
+    let uf=String(gv(r,['ufservico','uf_servico','UF','uf','estado','Uf Serviço','Uf Servico','ufatendimento','estadoservico'])||'').trim().toUpperCase();
+    if(!uf){for(const k of Object.keys(r)){const nk_=nk(k);if((nk_.includes('UF')||nk_.includes('ESTADO'))&&!nk_.includes('CLIENTES')){const v=String(r[k]||'').trim().toUpperCase();if(v.length===2&&/^[A-Z]{2}$/.test(v)){uf=v;break}}}}
+    let cidade=repairPtBR(String(gv(r,['cidadeservico','cidade_servico','cidade','municipio_servico','municipio','Município','Cidade Serviço','Cidade Servico','localservico','local_servico','local','localidade','cidadeatendimento','municipioatendimento','municipioinstalacao'])||'').trim());
+    if(!cidade){for(const k of Object.keys(r)){const nk_=nk(k);if(nk_.includes('CIDADE')||nk_.includes('MUNICIPIO')||nk_.includes('LOCALIDAD')){const v=String(r[k]||'').trim();if(v.length>2){cidade=repairPtBR(v);break}}}}
     const clusterCalc=String(r['cluster_calc']||'').trim();
     const cluster=normCluster(clusterCalc);
     const clusterNome=String(r['cluster']||'').trim();
