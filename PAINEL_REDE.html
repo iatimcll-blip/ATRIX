@@ -108,6 +108,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
 
 /* CHARTS */
 .c2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.c3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
 .cbx{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:14px}
 .cbx h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);margin-bottom:8px}
 .leg{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px;font-size:10px;color:var(--text2)}
@@ -148,8 +149,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
 .detail-muted{color:var(--text3)}
 
 /* RESPONSIVE */
-@media(max-width:900px){.krow{grid-template-columns:repeat(2,1fr)}.sgrid{grid-template-columns:repeat(2,1fr)}.c2{grid-template-columns:1fr}.meta-info{grid-template-columns:1fr 1fr}.meta-card.main{grid-column:1/-1}}
-@media(max-width:600px){.krow{grid-template-columns:1fr}.sgrid{grid-template-columns:1fr}.main{padding:12px}.topbar{padding:12px 16px;align-items:flex-start;gap:10px;flex-direction:column}.topbar-right{flex-wrap:wrap}.toolbar{align-items:stretch}.toolbar-group{width:100%;justify-content:space-between}.period-select{flex:1;min-width:0}.detail-head{align-items:flex-start;flex-direction:column}.detail-actions{justify-content:flex-start}.meta-info{grid-template-columns:1fr}.meta-card.main{grid-column:auto}}
+@media(max-width:900px){.krow{grid-template-columns:repeat(2,1fr)}.sgrid{grid-template-columns:repeat(2,1fr)}.c2{grid-template-columns:1fr}.c3{grid-template-columns:1fr 1fr}.meta-info{grid-template-columns:1fr 1fr}.meta-card.main{grid-column:1/-1}}
+@media(max-width:600px){.krow{grid-template-columns:1fr}.sgrid{grid-template-columns:1fr}.c3{grid-template-columns:1fr}.main{padding:12px}.topbar{padding:12px 16px;align-items:flex-start;gap:10px;flex-direction:column}.topbar-right{flex-wrap:wrap}.toolbar{align-items:stretch}.toolbar-group{width:100%;justify-content:space-between}.period-select{flex:1;min-width:0}.detail-head{align-items:flex-start;flex-direction:column}.detail-actions{justify-content:flex-start}.meta-info{grid-template-columns:1fr}.meta-card.main{grid-column:auto}}
 </style>
 </head>
 <body>
@@ -237,10 +238,14 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
   <div id="sec-C-bb" class="sec">
     <div class="shead"><h2>MA CAP</h2><span class="stag stag-bb">Backbone</span></div>
     <div class="krow" id="k-C-b"></div>
-    <div class="c2">
-      <div class="cbx"><h4>Evolução</h4>
-        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span><span style="font-size:10px;color:var(--text3)">— meta 89%</span></div>
-        <div style="position:relative;height:160px"><canvas id="ch-C-b" role="img" aria-label="MA CAP backbone evolução"></canvas></div>
+    <div class="c3">
+      <div class="cbx"><h4>No Prazo %</h4>
+        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo</span><span style="font-size:10px;color:var(--text3)">— meta 89%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-C-b-p" role="img" aria-label="MA CAP backbone prazo"></canvas></div>
+      </div>
+      <div class="cbx"><h4>Outlier %</h4>
+        <div class="leg"><span><span class="ld" style="background:#e05c5c"></span>Outlier</span><span style="font-size:10px;color:var(--text3)">— limite 4,9%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-C-b-o" role="img" aria-label="MA CAP backbone outlier"></canvas></div>
       </div>
       <div class="cbx"><h4>Top Motivos de Falha</h4><div class="blist" id="bl-C-b"></div></div>
     </div>
@@ -248,10 +253,14 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
   <div id="sec-C-ac" class="sec">
     <div class="shead"><h2>MA CAP</h2><span class="stag stag-ac">Acesso</span></div>
     <div class="krow" id="k-C-a"></div>
-    <div class="c2">
-      <div class="cbx"><h4>Evolução</h4>
-        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span></div>
-        <div style="position:relative;height:160px"><canvas id="ch-C-a" role="img" aria-label="MA CAP acesso evolução"></canvas></div>
+    <div class="c3">
+      <div class="cbx"><h4>No Prazo %</h4>
+        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo</span><span style="font-size:10px;color:var(--text3)">— meta 89%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-C-a-p" role="img" aria-label="MA CAP acesso prazo"></canvas></div>
+      </div>
+      <div class="cbx"><h4>Outlier %</h4>
+        <div class="leg"><span><span class="ld" style="background:#e05c5c"></span>Outlier</span><span style="font-size:10px;color:var(--text3)">— limite 4,9%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-C-a-o" role="img" aria-label="MA CAP acesso outlier"></canvas></div>
       </div>
       <div class="cbx"><h4>TME por Período (horas)</h4>
         <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>TME</span><span><span class="ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div>
@@ -267,10 +276,14 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
   <div id="sec-I-bb" class="sec">
     <div class="shead"><h2>MA INT</h2><span class="stag stag-bb">Backbone</span></div>
     <div class="krow" id="k-I-b"></div>
-    <div class="c2">
-      <div class="cbx"><h4>Evolução</h4>
-        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span></div>
-        <div style="position:relative;height:160px"><canvas id="ch-I-b" role="img" aria-label="MA INT backbone"></canvas></div>
+    <div class="c3">
+      <div class="cbx"><h4>No Prazo %</h4>
+        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo</span><span style="font-size:10px;color:var(--text3)">— meta 89%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-I-b-p" role="img" aria-label="MA INT backbone prazo"></canvas></div>
+      </div>
+      <div class="cbx"><h4>Outlier %</h4>
+        <div class="leg"><span><span class="ld" style="background:#e05c5c"></span>Outlier</span><span style="font-size:10px;color:var(--text3)">— limite 4,9%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-I-b-o" role="img" aria-label="MA INT backbone outlier"></canvas></div>
       </div>
       <div class="cbx"><h4>Top Motivos de Falha</h4><div class="blist" id="bl-I-b"></div></div>
     </div>
@@ -278,10 +291,14 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
   <div id="sec-I-ac" class="sec">
     <div class="shead"><h2>MA INT</h2><span class="stag stag-ac">Acesso</span></div>
     <div class="krow" id="k-I-a"></div>
-    <div class="c2">
-      <div class="cbx"><h4>Evolução</h4>
-        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span></div>
-        <div style="position:relative;height:160px"><canvas id="ch-I-a" role="img" aria-label="MA INT acesso"></canvas></div>
+    <div class="c3">
+      <div class="cbx"><h4>No Prazo %</h4>
+        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo</span><span style="font-size:10px;color:var(--text3)">— meta 89%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-I-a-p" role="img" aria-label="MA INT acesso prazo"></canvas></div>
+      </div>
+      <div class="cbx"><h4>Outlier %</h4>
+        <div class="leg"><span><span class="ld" style="background:#e05c5c"></span>Outlier</span><span style="font-size:10px;color:var(--text3)">— limite 4,9%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-I-a-o" role="img" aria-label="MA INT acesso outlier"></canvas></div>
       </div>
       <div class="cbx"><h4>TME por Período (horas)</h4>
         <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>TME</span><span><span class="ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div>
@@ -297,10 +314,14 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
   <div id="sec-P-bb" class="sec">
     <div class="shead"><h2>PI</h2><span class="stag stag-bb">Backbone</span></div>
     <div class="krow" id="k-P-b"></div>
-    <div class="c2">
-      <div class="cbx"><h4>Evolução</h4>
-        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span></div>
-        <div style="position:relative;height:160px"><canvas id="ch-P-b" role="img" aria-label="PI backbone"></canvas></div>
+    <div class="c3">
+      <div class="cbx"><h4>No Prazo %</h4>
+        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo</span><span style="font-size:10px;color:var(--text3)">— meta 89%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-P-b-p" role="img" aria-label="PI backbone prazo"></canvas></div>
+      </div>
+      <div class="cbx"><h4>Outlier %</h4>
+        <div class="leg"><span><span class="ld" style="background:#e05c5c"></span>Outlier</span><span style="font-size:10px;color:var(--text3)">— limite 4,9%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-P-b-o" role="img" aria-label="PI backbone outlier"></canvas></div>
       </div>
       <div class="cbx"><h4>Top Motivos de Falha</h4><div class="blist" id="bl-P-b"></div></div>
     </div>
@@ -308,10 +329,14 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
   <div id="sec-P-ac" class="sec">
     <div class="shead"><h2>PI</h2><span class="stag stag-ac">Acesso</span></div>
     <div class="krow" id="k-P-a"></div>
-    <div class="c2">
-      <div class="cbx"><h4>Evolução</h4>
-        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span></div>
-        <div style="position:relative;height:160px"><canvas id="ch-P-a" role="img" aria-label="PI acesso"></canvas></div>
+    <div class="c3">
+      <div class="cbx"><h4>No Prazo %</h4>
+        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo</span><span style="font-size:10px;color:var(--text3)">— meta 89%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-P-a-p" role="img" aria-label="PI acesso prazo"></canvas></div>
+      </div>
+      <div class="cbx"><h4>Outlier %</h4>
+        <div class="leg"><span><span class="ld" style="background:#e05c5c"></span>Outlier</span><span style="font-size:10px;color:var(--text3)">— limite 4,9%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-P-a-o" role="img" aria-label="PI acesso outlier"></canvas></div>
       </div>
       <div class="cbx"><h4>TME por Período (horas)</h4>
         <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>TME</span><span><span class="ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div>
@@ -327,10 +352,14 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
   <div id="sec-N-bb" class="sec">
     <div class="shead"><h2>NORTE</h2><span class="stag stag-bb">Backbone</span></div>
     <div class="krow" id="k-N-b"></div>
-    <div class="c2">
-      <div class="cbx"><h4>Evolução</h4>
-        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span></div>
-        <div style="position:relative;height:160px"><canvas id="ch-N-b" role="img" aria-label="NORTE backbone"></canvas></div>
+    <div class="c3">
+      <div class="cbx"><h4>No Prazo %</h4>
+        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo</span><span style="font-size:10px;color:var(--text3)">— meta 89%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-N-b-p" role="img" aria-label="NORTE backbone prazo"></canvas></div>
+      </div>
+      <div class="cbx"><h4>Outlier %</h4>
+        <div class="leg"><span><span class="ld" style="background:#e05c5c"></span>Outlier</span><span style="font-size:10px;color:var(--text3)">— limite 4,9%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-N-b-o" role="img" aria-label="NORTE backbone outlier"></canvas></div>
       </div>
       <div class="cbx"><h4>Top Motivos de Falha</h4><div class="blist" id="bl-N-b"></div></div>
     </div>
@@ -338,10 +367,14 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Bl
   <div id="sec-N-ac" class="sec">
     <div class="shead"><h2>NORTE</h2><span class="stag stag-ac">Acesso</span></div>
     <div class="krow" id="k-N-a"></div>
-    <div class="c2">
-      <div class="cbx"><h4>Evolução</h4>
-        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo %</span><span><span class="ld" style="background:#e05c5c"></span>Outlier %</span></div>
-        <div style="position:relative;height:160px"><canvas id="ch-N-a" role="img" aria-label="NORTE acesso"></canvas></div>
+    <div class="c3">
+      <div class="cbx"><h4>No Prazo %</h4>
+        <div class="leg"><span><span class="ld" style="background:#4d8ef0"></span>Prazo</span><span style="font-size:10px;color:var(--text3)">— meta 89%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-N-a-p" role="img" aria-label="NORTE acesso prazo"></canvas></div>
+      </div>
+      <div class="cbx"><h4>Outlier %</h4>
+        <div class="leg"><span><span class="ld" style="background:#e05c5c"></span>Outlier</span><span style="font-size:10px;color:var(--text3)">— limite 4,9%</span></div>
+        <div style="position:relative;height:160px"><canvas id="ch-N-a-o" role="img" aria-label="NORTE acesso outlier"></canvas></div>
       </div>
       <div class="cbx"><h4>Top Causas — Acesso</h4><div class="blist" id="bl-N-a"></div></div>
     </div>
@@ -686,19 +719,21 @@ function mkCh(id,lbs,ds,opts={}){
 }
 
 function barEv(id,ts,ctx={}){
-  const ds=[
-    {label:'Prazo %',data:ts.pp,backgroundColor:'rgba(77,142,240,.8)',borderRadius:3,order:1,hoverBackgroundColor:'#4d8ef0'},
-    {label:'Outlier %',data:ts.op,backgroundColor:'rgba(224,92,92,.75)',borderRadius:3,order:1,hoverBackgroundColor:'#e05c5c'},
-    {label:'Meta',lineLabel:'Meta',data:ts.lbs.map(()=>M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}
-  ];
-  if(ts.op.some(v=>v>MOUT))ds.push({label:'Outlier',lineLabel:'Outlier',data:ts.lbs.map(()=>MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0});
-  mkCh(id,ts.lbs,ds,{max:100,percent:true,onBarClick:(hit,chart)=>{
-    const label=chart.data.datasets[hit.datasetIndex].label;
-    const metric=metricFromDataset(label);
+  mkCh(id+'-p',ts.lbs,[
+    {label:'No Prazo %',data:ts.pp,backgroundColor:'rgba(77,142,240,.8)',borderRadius:3,order:1,hoverBackgroundColor:'#4d8ef0'},
+    {label:'Meta 89%',lineLabel:'Meta 89%',data:ts.lbs.map(()=>M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}
+  ],{max:100,percent:true,onBarClick:(hit)=>{
     const periodRows=ts.rowsByPeriod[hit.index]||[];
-    const rows=detailRowsByMetric(periodRows,metric);
-    const metricLabel=metric==='outlier'?'Outlier':metric==='prazo'?'No prazo':'Todos';
-    showDetailReport(`Chamados - ${ctx.title||'Indicador'}`,`${metricLabel} em ${ts.lbs[hit.index]||'periodo'}${ctx.sub?` - ${ctx.sub}`:''}`,rows,ctx.scope||'bb');
+    const rows=detailRowsByMetric(periodRows,'prazo');
+    showDetailReport(`Chamados - ${ctx.title||'Indicador'}`,`No Prazo em ${ts.lbs[hit.index]||'periodo'}${ctx.sub?` - ${ctx.sub}`:''}`,rows,ctx.scope||'bb');
+  }});
+  mkCh(id+'-o',ts.lbs,[
+    {label:'Outlier %',data:ts.op,backgroundColor:'rgba(224,92,92,.75)',borderRadius:3,order:1,hoverBackgroundColor:'#e05c5c'},
+    {label:'Limite 4,9%',lineLabel:'Limite 4,9%',data:ts.lbs.map(()=>MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0}
+  ],{max:100,percent:true,onBarClick:(hit)=>{
+    const periodRows=ts.rowsByPeriod[hit.index]||[];
+    const rows=detailRowsByMetric(periodRows,'outlier');
+    showDetailReport(`Chamados - ${ctx.title||'Indicador'}`,`Outlier em ${ts.lbs[hit.index]||'periodo'}${ctx.sub?` - ${ctx.sub}`:''}`,rows,ctx.scope||'bb');
   }});
 }
 

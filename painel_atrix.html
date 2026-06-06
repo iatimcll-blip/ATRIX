@@ -640,6 +640,28 @@ tbody tr.row-pending-client:hover td { background: rgba(255,149,0,.18); }
 .admin-only { display: none; }
 body.is-admin .admin-only { display: flex; }
 
+/* ─── MODAL ─── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-box{background:var(--surface);border:.5px solid var(--bd);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.18);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:0}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:.5px solid var(--bd)}
+.modal-title{font-size:14px;font-weight:700;color:var(--tx);letter-spacing:-.01em}
+.modal-close{width:28px;height:28px;border:none;background:var(--surface2);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:15px;flex-shrink:0}
+.modal-close:hover{background:var(--bd);color:var(--tx)}
+.modal-body{padding:16px 20px}
+.mform-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.mform-full{grid-column:1/-1}
+.mform-label{font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:4px;display:block}
+.mform-input{width:100%;padding:7px 10px;background:var(--surface2);border:.5px solid var(--bd);border-radius:8px;font-size:12px;color:var(--tx);outline:none;box-sizing:border-box;transition:border-color .13s}
+.mform-input:focus{border-color:var(--blue)}
+.mform-hint{font-size:10px;color:var(--tx3);margin-top:3px}
+.mform-mop{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 10px;background:var(--surface2);border:.5px solid var(--bd);border-radius:8px;min-height:32px}
+.modal-ft{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 20px 16px;border-top:.5px solid var(--bd)}
+.modal-btn{padding:7px 18px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none}
+.modal-btn-cancel{background:var(--surface2);color:var(--tx2)}
+.modal-btn-cancel:hover{background:var(--bd)}
+.modal-btn-submit{background:var(--blue);color:#fff}
+.modal-btn-submit:hover{background:#005ecb}
+
 /* ─── CHART WRAP ─── */
 .cw { position: relative; width: 100%; height: clamp(176px,24vh,260px); flex: 1; min-height: 176px; }
 #panel-combustivel .cw { height: clamp(300px,40vh,500px); min-height: 300px; }
@@ -798,6 +820,74 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
   </div>
 </div>
 
+<!-- ═══ MODAL ADICIONAR CHAMADO ═══ -->
+<div class="modal-backdrop" id="modal-ab" style="display:none" onclick="if(event.target===this)closeModalAb()">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <span class="modal-title"><i class="ti ti-plus-circle" style="margin-right:6px;color:var(--blue)"></i>Adicionar chamado manualmente</span>
+      <button class="modal-close" onclick="closeModalAb()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="mform-grid">
+        <div>
+          <label class="mform-label">ID do Ticket <span style="color:var(--red)">*</span></label>
+          <input class="mform-input" id="mab-id" placeholder="ex: TT-00123" autocomplete="off">
+        </div>
+        <div>
+          <label class="mform-label">Link do ticket</label>
+          <input class="mform-input" id="mab-link" placeholder="https://…" type="url" autocomplete="off">
+        </div>
+        <div class="mform-full">
+          <label class="mform-label">Cliente <span style="color:var(--red)">*</span></label>
+          <input class="mform-input" id="mab-cliente" placeholder="Nome do cliente" autocomplete="off">
+        </div>
+        <div class="mform-full">
+          <label class="mform-label">Complemento / Assunto</label>
+          <input class="mform-input" id="mab-assunto" placeholder="Informação adicional do cliente ou assunto" autocomplete="off">
+        </div>
+        <div>
+          <label class="mform-label">Cidade <span style="color:var(--red)">*</span></label>
+          <input class="mform-input" id="mab-cidade" placeholder="ex: São Luís" oninput="mabAutoMop()" autocomplete="off">
+        </div>
+        <div>
+          <label class="mform-label">UF <span style="color:var(--red)">*</span></label>
+          <select class="mform-input" id="mab-uf" onchange="mabAutoMop()">
+            <option value="">Selecione…</option>
+            <option>MA</option><option>PI</option><option>PA</option><option>AM</option><option>AP</option>
+          </select>
+        </div>
+        <div>
+          <label class="mform-label">MOP/EPS (automático)</label>
+          <div class="mform-mop" id="mab-mop-display" style="color:var(--tx3)">—</div>
+          <div class="mform-hint">Calculado pela cidade/UF</div>
+        </div>
+        <div>
+          <label class="mform-label">SLA Base (h)</label>
+          <input class="mform-input" id="mab-sla" type="number" min="0" step="0.5" placeholder="ex: 8" autocomplete="off">
+        </div>
+        <div class="mform-full">
+          <label class="mform-label">Substatus</label>
+          <select class="mform-input" id="mab-substatus">
+            <option value="">Em andamento</option>
+            <option>Pendente Validação</option>
+            <option>Pendente Cliente</option>
+            <option>Pendente Agendamento</option>
+            <option>Encaminhado Ao Técnico</option>
+            <option>Aguardando Liberação De Acesso</option>
+            <option>Fechado</option>
+            <option>Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <div id="mab-err" style="display:none;color:var(--red);font-size:11px;margin-top:8px"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="modal-btn modal-btn-cancel" onclick="closeModalAb()">Cancelar</button>
+      <button class="modal-btn modal-btn-submit" onclick="submitModalAb()"><i class="ti ti-check" style="margin-right:4px"></i>Adicionar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ GOOGLE SHEETS MODAL ═══ -->
 <div class="user-panel" id="sheets-panel">
   <div class="user-card" style="width:min(560px,100%);max-height:90vh;overflow:auto">
@@ -937,6 +1027,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <span class="tsec-title">Chamados em aberto</span>
           <div class="tsec-meta">
             <span id="cnt-ab" style="color:var(--tx3)"></span>
+            <span class="card-action admin-only" onclick="openModalAb()" style="color:var(--blue);display:none"><i class="ti ti-plus" style="font-size:11px;vertical-align:-1px"></i> Adicionar chamado</span>
             <span class="card-action" onclick="exportCSV('ab')"><i class="ti ti-download" style="font-size:11px;vertical-align:-1px"></i> Exportar CSV</span>
           </div>
         </div>
@@ -1262,6 +1353,9 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <div class="cw" style="flex:1;height:clamp(280px,38vh,460px)"><canvas id="ch-rep-causas" role="img" aria-label="Causas dos chamados repetidos">Gráfico.</canvas></div>
         </div>
       </div>
+      <!-- Indicativo de Ofensor -->
+      <div class="section-hd">Indicativo de Ofensores <span class="sh-line"></span></div>
+      <div id="rep-ofensor" style="margin-bottom:16px"></div>
       <!-- Detalhamento por cliente (accordion) -->
       <div class="section-hd">Detalhamento por cliente <span class="sh-line"></span></div>
       <div id="rep-accordion" style="margin-bottom:16px"></div>
@@ -1278,6 +1372,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <thead><tr>
             <th>Título / Cliente</th>
             <th>Repetições</th>
+            <th>OS (col B)</th>
             <th>NumPlan (F)</th>
             <th>Cliente ID (J)</th>
             <th>Semana</th><th>Cluster</th><th>Cidade/UF</th>
@@ -1549,7 +1644,7 @@ function startRefresh(){
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
 function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,selMes,activeTab,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
-function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>{const mop=normMopByCity(d.uf,d.cidade)||fmtMop(d.mop);return{...d,rowKey:d.rowKey??i,mop,substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}})}
+function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>{const mop=normMopByCity(d.uf,d.cidade)||fmtMop(d.mop);return{...d,rowKey:d.rowKey??i,mop,assunto:d.assunto||'',substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}})}
 function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>{let mes=d.mes||'';if(!mes&&d.dataFechamento){const m=String(d.dataFechamento).match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)mes=`${m[3]}-${m[2]}`}const mop=normMopByCity(d.uf,d.cidade)||d.mop||'';return{...d,mes,mop,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}})}
 function repairPtBR(s){
   if(!s)return s;
@@ -1721,9 +1816,10 @@ function procAb(raw,fname){
     const slaLimitH=slaBaseLimit(r);
     const slaRaw=gv(r,['SLA (h)','SLA(h)','SLA_H','SLA','SLA Formatado','Tempo','Tempo SLA','Tempo Decorrido']);
     const originalSlaH=typeof slaRaw==='number'?slaRaw:ph(slaRaw);
+    const assunto=repairPtBR(String(gv(r,['Assunto','ASSUNTO','Complemento','Complement','COMPLEMENTO'])||Object.values(r)[4]||'').trim());
     let mop=normMopByCity(uf,cidade);
     if(!mop)mop=fmtMop(gv(r,['MOP/EPS (Regra)','MOP/EPS','MOP_EPS']))||iMop(uf,regiao);
-    const item={rowKey,id,cliente,uf,cidade,regiao,substatus,link,openedAt,originalSlaH,slaLimitH,pausedBusinessH:0,pauseStart:null,mop};
+    const item={rowKey,id,cliente,assunto,uf,cidade,regiao,substatus,link,openedAt,originalSlaH,slaLimitH,pausedBusinessH:0,pauseStart:null,mop};
     if(!isOperatorClient(item)&&isPausedSubstatus(substatus))item.pauseStart=new Date();
     item.slaH=computeSlaHours(item);
     const faixaRaw=String(gv(r,['Faixa SLA','Faixa_SLA','FAIXA SLA'])||'').trim();
@@ -1744,15 +1840,16 @@ function procEnc(raw,fname){
   dEnc=raw.filter(r=>r['ticket_id']||r['protocolo']).map(r=>{
     const protocolo=String(r['protocolo']||r['ticket_id']||'').trim();
     const cliente=String(colVal(r,10,['Cliente','cliente'])||'').trim();
-    const uf=String(r['ufservico']||r['UF']||'').trim();
-    const cidade=String(r['cidadeservico']||r['cidade']||'').trim();
+    const uf=String(gv(r,['ufservico','UF','uf','Uf Serviço','Uf Servico'])||'').trim().toUpperCase();
+    const cidade=repairPtBR(String(gv(r,['cidadeservico','cidade','municipio','Município','Cidade Serviço','Cidade Servico'])||'').trim());
     const clusterCalc=String(r['cluster_calc']||'').trim();
     const cluster=normCluster(clusterCalc);
     const clusterNome=String(r['cluster']||'').trim();
     const causaRaiz=fmtCausaRaiz(repairPtBR(String(r['Tipo_Encerramento']||r['Causa_Raiz']||'')));
     const semana=String(r['semana']||'').trim();
     const segmento=repairPtBR(String(r['segmento_cliente']||'').trim());
-    const os=String(gv(r,['ult_OS','ult os','última OS','ultima OS','os_agrupada','os concluida agrupada','os_concluida_agrupada','OS','os','protocolo','ticket_id'])||protocolo).trim();
+    const osColB=String(Object.values(r)[1]||'').trim();
+    const os=String(gv(r,['ult_OS','ult os','última OS','ultima OS','os_agrupada','os concluida agrupada','os_concluida_agrupada','OS','os'])||osColB||protocolo).trim();
     const dataAbertura=gv(r,['data_abertura','Data Abertura','Data de Abertura','abertura']);
     const dataFechamento=gv(r,['data_fechamento','Data Fechamento','Data de Fechamento','fechamento','encerramento']);
     const numplan=String(gv(r,['numplan','NUMPLAN','Num Plan','num_plan','NumPlan','num plan'])||'').trim();
@@ -1940,7 +2037,8 @@ function renderTAb(){
     const idHtml=cleanLink?`<a href="${eh(cleanLink)}" target="_blank" rel="noopener noreferrer" title="Abrir ticket">${eh(d.id)}</a>`:eh(d.id);
     const subHtml=canEdit()?`<select class="substatus-select" title="Alterar substatus" onclick="event.stopPropagation()" onchange="updateSubstatus(${d.rowKey},this.value)">${getSubstatusOptions(d.substatus)}</select>`:`<span class="substatus-readonly">${eh(fmtSubstatus(d.substatus)||'Sem substatus')}</span>`;
     const _sk=nk(d.substatus);const rowCls=(isValidationSubstatus(d.substatus)||_sk.includes('FECHADO')||_sk.includes('CANCELADO'))?'row-validation':(_sk.includes('PENDENTE')&&_sk.includes('CLIENTE'))?'row-pending-client':'';
-    return`<tr class="${rowCls}"><td class="tid">${idHtml}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)" title="${eh(d.cliente)}">${eh(d.cliente)}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${MOP_CLR[d.mop]||'#8e8e93'};flex-shrink:0"></span>${eh(d.mop)}</span></td><td>${eh(d.cidade||'\u2014')}/${eh(d.uf)}</td><td style="${sc}"><span class="sla-clock">${fd(d.slaH)}</span></td><td><span class="badge ${bc}">${eh(d.faixa)}</span></td><td><span class="badge ${ss}">${eh(d.statusSla)}</span></td><td><span class="substatus-cell">${substatusLamp(d)}${subHtml}</span></td><td>${lk}</td></tr>`;
+    const clienteDisplay=d.assunto?`${eh(d.cliente)} <span style="color:var(--tx3);font-size:10px">/ ${eh(d.assunto)}</span>`:eh(d.cliente);
+    return`<tr class="${rowCls}"><td class="tid">${idHtml}</td><td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)" title="${eh(d.cliente+(d.assunto?' / '+d.assunto:''))}">${clienteDisplay}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${MOP_CLR[d.mop]||'#8e8e93'};flex-shrink:0"></span>${eh(d.mop)}</span></td><td>${eh(d.cidade||'\u2014')}/${eh(d.uf)}</td><td style="${sc}"><span class="sla-clock">${fd(d.slaH)}</span></td><td><span class="badge ${bc}">${eh(d.faixa)}</span></td><td><span class="badge ${ss}">${eh(d.statusSla)}</span></td><td><span class="substatus-cell">${substatusLamp(d)}${subHtml}</span></td><td>${lk}</td></tr>`;
   }).join('')||'<tr><td colspan="9" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
 }
 function sAb(c){scAb===c?sdAb*=-1:(scAb=c,sdAb=-1);renderTAb()}
@@ -2068,10 +2166,13 @@ function rChSem(){
   const labels=Object.keys(semD).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
   const vals=labels.map(k=>semD[k]);
   const bgColors=labels.map(k=>selWeek?( k===selWeek?'#007aff':'rgba(0,122,255,.2)' ):'#007aff');
+  const n=vals.length;
+  let trendDs=[];
+  if(n>1){const xm=(n-1)/2,ym=vals.reduce((a,b)=>a+b,0)/n,num=vals.reduce((s,v,i)=>s+(i-xm)*(v-ym),0),den=vals.reduce((s,_,i)=>s+(i-xm)**2,0)||1,sl=num/den,ic=ym-sl*xm;const tr=vals.map((_,i)=>parseFloat((ic+sl*i).toFixed(2)));trendDs=[{type:'line',label:'Tendência',data:tr,borderColor:'#ff6b35',borderWidth:2.5,pointRadius:0,fill:false,tension:0.3,order:0}]}
   if(chSem){chSem.destroy();chSem=null}
   const ctx=document.getElementById('ch-sem');if(!ctx)return;
   const dk=document.body.dataset.theme==='dark';
-  chSem=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>'Semana '+c2.label+': '+c2.parsed.y+' chamados'}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:dk?'#636366':'#8e8e93',maxRotation:45,autoSkip:false}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:10}}}}});
+  chSem=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:8,borderSkipped:false,order:1},...trendDs]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:trendDs.length>0,labels:{font:{size:9},boxWidth:16}},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>c2.dataset.label==='Tendência'?'Tendência: '+c2.parsed.y:'Semana '+c2.label+': '+c2.parsed.y+' chamados'}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:dk?'#636366':'#8e8e93',maxRotation:45,autoSkip:false}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:10}}}}});
 }
 
 function rSegEnc(d){
@@ -2626,6 +2727,8 @@ function renderPanelRepetidos(){
   /* ─ Gráficos ─ */
   renderRepClientsChart(all,dk);
   renderRepCausasChart(allCausas,dk);
+  /* ─ Ofensor ─ */
+  renderOfensor(all,data);
   /* ─ Accordion ─ */
   renderRepAccordion(all);
   /* ─ Tabela completa ─ */
@@ -2640,6 +2743,7 @@ function renderPanelRepetidos(){
     return`<tr>
       <td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx);font-weight:600" title="${eh(r._nome)}">${eh(r._nome||'—')}</td>
       <td><span class="badge b-purple">${eh(r._count)}x</span></td>
+      <td><code style="background:var(--surface2);color:var(--tx2);padding:1px 5px;border-radius:4px;font-size:10px;white-space:nowrap">${eh(r.os||'—')}</code></td>
       <td><code style="background:var(--blue-bg);color:var(--blue);padding:1px 5px;border-radius:4px;font-size:10px;white-space:nowrap">${eh(r._numplan||'—')}</code></td>
       <td><code style="background:var(--purple-bg);color:var(--purple);padding:1px 5px;border-radius:4px;font-size:10px;white-space:nowrap">${eh(r._clienteId||'—')}</code></td>
       <td><span class="badge b-teal">${eh(r.semana||'—')}</span></td>
@@ -2650,14 +2754,14 @@ function renderPanelRepetidos(){
       <td><span class="badge ${bc}">${eh(r.faixa)}</span></td>
       <td>${d8}</td><td>${ol}</td>
     </tr>`;
-  }).join('')||'<tr><td colspan="12" class="nores"><i class="ti ti-search-off"></i>Nenhum chamado repetido encontrado</td></tr>';
+  }).join('')||'<tr><td colspan="13" class="nores"><i class="ti ti-search-off"></i>Nenhum chamado repetido encontrado</td></tr>';
   document.getElementById('ft-rep').textContent='Atualizado em '+now2();
 }
 function renderRepClientsChart(all,dk){
   const ctx=document.getElementById('ch-rep-clients');if(!ctx)return;
   if(chRepClients){chRepClients.destroy();chRepClients=null;}
   const top=all.slice(0,15);
-  const palette=['#007aff','#ff3b30','#34c759','#ff9500','#af52de','#007aff','#ff3b30','#34c759','#ff9500','#af52de','#007aff','#ff3b30','#34c759','#ff9500','#af52de'];
+  const palette=Array(15).fill('#5ac8fa');
   chRepClients=new Chart(ctx,{type:'bar',data:{labels:top.map(v=>v.nome.length>22?v.nome.slice(0,21)+'…':v.nome),datasets:[{label:'Chamados repetidos',data:top.map(v=>v.records.length),backgroundColor:top.map((_,i)=>palette[i]||'#8e8e93'),borderRadius:8,borderSkipped:false,repKeys:top.map(v=>v.repKey)}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onHover:(ev,els)=>{if(ev.native&&ev.native.target)ev.native.target.style.cursor=els.length?'pointer':'default'},onClick:(ev,els,chart)=>{const idx=els&&els[0]&&els[0].index;if(idx===undefined)return;openRepDetail(chart.data.datasets[0].repKeys[idx])},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.x} chamados`},backgroundColor:dk?'#1c1c1e':'#ffffff',titleColor:dk?'#f2f2f7':'#1c1c1e',bodyColor:dk?'#ebebf0':'#3a3a3c',borderColor:dk?'rgba(255,255,255,.12)':'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',stepSize:1}},y:{grid:{display:false},ticks:{font:{size:10},color:dk?'#ebebf0':'#3a3a3c'}}}}});
 }
 function openRepDetail(repKey){
@@ -2674,6 +2778,31 @@ function renderRepCausasChart(causas,dk){
   const CCLR={'Rompimento de Fibra':'#ff3b30','Normalizado Sem Intervenção':'#34c759','Ajuste de Atenuação':'#ffcc00','Configuração':'#007aff','Falha Elétrica Cliente':'#ff9500','Ação Cliente':'#af52de','Falha Elétrica no POP':'#ff6b35','Demais Causas de Rompimento':'#ff6b35','Sem Ação':'#8e8e93'};
   const sorted=se(causas);
   chRepCausas=new Chart(ctx,{type:'bar',data:{labels:sorted.map(([k])=>k.length>24?k.slice(0,23)+'…':k),datasets:[{label:'Ocorrências',data:sorted.map(([,n])=>n),backgroundColor:sorted.map(([k])=>CCLR[k]||'#af52de'),borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.y} ocorrências`},backgroundColor:dk?'#1c1c1e':'#ffffff',titleColor:dk?'#f2f2f7':'#1c1c1e',bodyColor:dk?'#ebebf0':'#3a3a3c',borderColor:dk?'rgba(255,255,255,.12)':'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',maxRotation:35}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',stepSize:1}}}}});
+}
+function renderOfensor(all,data){
+  const el=document.getElementById('rep-ofensor');if(!el)return;
+  if(!all.length){el.innerHTML='';return}
+  const pp=v=>v.toFixed(1);
+  // Top clientes ofensores
+  const topClientes=all.slice(0,5);
+  // Top causas por frequência nos repetidos
+  const causaMap={};all.forEach(v=>Object.entries(v.causas).forEach(([c,n])=>{causaMap[c]=(causaMap[c]||0)+n}));
+  const topCausas=Object.entries(causaMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const totalCausas=Object.values(causaMap).reduce((a,b)=>a+b,0)||1;
+  // Top clusters
+  const clMap={};all.forEach(v=>Object.entries(v.clusters).forEach(([c,n])=>{clMap[c]=(clMap[c]||0)+n}));
+  const topClusters=Object.entries(clMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const totalClusters=Object.values(clMap).reduce((a,b)=>a+b,0)||1;
+  const mxC=topClientes[0]?topClientes[0].records.length:1;
+  const mxCa=topCausas[0]?topCausas[0][1]:1;
+  const mxCl=topClusters[0]?topClusters[0][1]:1;
+  const ofCard=(title,icon,clr,rows)=>`<div class="card" style="flex:1;min-width:220px"><div class="card-hd"><span class="card-title"><i class="ti ${icon}" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:${clr}"></i>${title}</span></div><div style="padding:8px 14px 12px">${rows}</div></div>`;
+  const bRow=(label,val,mx,clr,pct)=>`<div class="brow" style="margin-bottom:6px"><div class="blbl" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(label)}">${eh(label.length>22?label.slice(0,21)+'…':label)}</div><div class="btrk"><div class="bfil" style="width:${Math.round(val/mx*100)}%;background:${clr}"></div></div><div class="bn">${val} <span style="font-size:9px;color:var(--tx3)">${pp(pct)}%</span></div></div>`;
+  const totalRep=all.reduce((s,v)=>s+v.records.length,0)||1;
+  const clienteRows=topClientes.map(v=>{const pct8=v.records.length?v.dentro8h/v.records.length*100:0;return bRow(v.nome,v.records.length,mxC,'#5ac8fa',v.records.length/totalRep*100)+`<div style="font-size:9px;color:var(--tx3);padding:0 0 2px 0">≤8h: ${v.dentro8h} (${pp(pct8)}%) · Outlier: ${v.outlier}</div>`}).join('');
+  const causaRows=topCausas.map(([c,n])=>bRow(c,n,mxCa,'#ff6b35',n/totalCausas*100)).join('');
+  const clusterRows=topClusters.map(([c,n])=>bRow(c,n,mxCl,(CLUSTER_INFO[c]||{}).clr||'#8e8e93',n/totalClusters*100)).join('');
+  el.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap">${ofCard('Top Clientes Ofensores','ti-user-exclamation','var(--blue)',clienteRows||'<span style="font-size:11px;color:var(--tx3)">Sem dados</span>')}${ofCard('Top Causas de Reincidência','ti-tool','#ff6b35',causaRows||'<span style="font-size:11px;color:var(--tx3)">Sem dados</span>')}${ofCard('Clusters mais Afetados','ti-map-pin','var(--purple)',clusterRows||'<span style="font-size:11px;color:var(--tx3)">Sem dados</span>')}</div>`;
 }
 function renderRepAccordion(all){
   const el=document.getElementById('rep-accordion');if(!el)return;
@@ -2786,6 +2915,50 @@ window.addEventListener('message',function(e){
     }else{wppInitialized=true;}
   }
 });
+/* ─── MODAL ADICIONAR CHAMADO ─── */
+function openModalAb(){
+  if(!canEdit())return;
+  ['mab-id','mab-link','mab-cliente','mab-assunto','mab-cidade','mab-sla'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const uf=document.getElementById('mab-uf');if(uf)uf.value='';
+  const mop=document.getElementById('mab-mop-display');if(mop){mop.textContent='—';mop.style.color='var(--tx3)'}
+  const err=document.getElementById('mab-err');if(err)err.style.display='none';
+  document.getElementById('modal-ab').style.display='flex';
+  setTimeout(()=>document.getElementById('mab-id')?.focus(),80);
+}
+function closeModalAb(){document.getElementById('modal-ab').style.display='none'}
+function mabAutoMop(){
+  const cidade=document.getElementById('mab-cidade')?.value||'';
+  const uf=document.getElementById('mab-uf')?.value||'';
+  const mop=normMopByCity(uf,cidade);
+  const el=document.getElementById('mab-mop-display');
+  if(el){el.textContent=mop||'—';el.style.color=mop?(MOP_CLR[mop]||'var(--tx)'):'var(--tx3)'}
+}
+function submitModalAb(){
+  if(!canEdit())return;
+  const id=(document.getElementById('mab-id')?.value||'').trim();
+  const cliente=(document.getElementById('mab-cliente')?.value||'').trim();
+  const assunto=repairPtBR((document.getElementById('mab-assunto')?.value||'').trim());
+  const cidade=repairPtBR((document.getElementById('mab-cidade')?.value||'').trim());
+  const uf=(document.getElementById('mab-uf')?.value||'').trim().toUpperCase();
+  const link=(document.getElementById('mab-link')?.value||'').trim();
+  const slaLimitH=parseFloat(document.getElementById('mab-sla')?.value||'0')||0;
+  const substatus=fmtSubstatus(document.getElementById('mab-substatus')?.value||'');
+  const err=document.getElementById('mab-err');
+  if(!id){err.textContent='ID do Ticket é obrigatório.';err.style.display='block';return}
+  if(!cliente){err.textContent='Nome do cliente é obrigatório.';err.style.display='block';return}
+  if(!cidade||!uf){err.textContent='Cidade e UF são obrigatórios para calcular o MOP/EPS.';err.style.display='block';return}
+  if(dAb.some(d=>nk(d.id)===nk(id))){err.textContent='Já existe um chamado com esse ID.';err.style.display='block';return}
+  const rowKey=dAb.length;
+  let mop=normMopByCity(uf,cidade);
+  const openedAt=new Date();
+  const item={rowKey,id,cliente,assunto,uf,cidade,regiao:'',substatus,link:safeUrl(link)||'',openedAt,originalSlaH:0,slaLimitH,pausedBusinessH:0,pauseStart:null,mop,_manual:true};
+  if(!isOperatorClient(item)&&isPausedSubstatus(substatus))item.pauseStart=new Date();
+  item.slaH=computeSlaHours(item);item.faixa=cf(item.slaH);item.statusSla=statusSla(item.slaH,mop,slaLimitH);
+  dAb.push(item);
+  document.getElementById('nb-ab').textContent=dAb.length;
+  fillFiltersAb();renderAllAb();saveState();
+  closeModalAb();
+}
 /* ─── NAV & THEME ─── */
 function switchTab(tab,persist=true){
   if(!['abertos','encerrados','rede','combustivel','repetidos','whatsapp'].includes(tab))tab='abertos';
