@@ -1101,7 +1101,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         </div>
         <div class="card">
           <div class="card-hd"><span class="card-title">Evolução por Semana</span></div>
-          <div class="cw"><canvas id="ch-sem" role="img" aria-label="Evolução por Semana">Gráfico.</canvas></div>
+          <div class="cw"><canvas id="ch-sem" role="img" aria-label="Evolução por Semana" style="cursor:pointer">Gráfico.</canvas></div>
         </div>
       </div>
       <div class="g2">
@@ -2165,14 +2165,11 @@ function rChSem(){
   const semD=cnt(base,'semana');
   const labels=Object.keys(semD).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
   const vals=labels.map(k=>semD[k]);
-  const bgColors=labels.map(k=>selWeek?( k===selWeek?'#007aff':'rgba(0,122,255,.2)' ):'#007aff');
-  const n=vals.length;
-  let trendDs=[];
-  if(n>1){const xm=(n-1)/2,ym=vals.reduce((a,b)=>a+b,0)/n,num=vals.reduce((s,v,i)=>s+(i-xm)*(v-ym),0),den=vals.reduce((s,_,i)=>s+(i-xm)**2,0)||1,sl=num/den,ic=ym-sl*xm;const tr=vals.map((_,i)=>parseFloat((ic+sl*i).toFixed(2)));trendDs=[{type:'line',label:'Tendência',data:tr,borderColor:'#ff6b35',borderWidth:2.5,pointRadius:0,fill:false,tension:0.3,order:0}]}
+  const bgColors=labels.map(k=>selWeek?(k===selWeek?'#007aff':'rgba(0,122,255,.2)'):'#007aff');
   if(chSem){chSem.destroy();chSem=null}
   const ctx=document.getElementById('ch-sem');if(!ctx)return;
   const dk=document.body.dataset.theme==='dark';
-  chSem=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:8,borderSkipped:false,order:1},...trendDs]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:trendDs.length>0,labels:{font:{size:9},boxWidth:16}},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>c2.dataset.label==='Tendência'?'Tendência: '+c2.parsed.y:'Semana '+c2.label+': '+c2.parsed.y+' chamados'}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:dk?'#636366':'#8e8e93',maxRotation:45,autoSkip:false}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:10}}}}});
+  chSem=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>'Semana '+c2.label+': '+c2.parsed.y+' chamados'}}},onClick:(ev,els)=>{if(!els||!els.length)return;const week=labels[els[0].index];selWeek=(selWeek===week?'':week);const sel=document.getElementById('week-selector');if(sel)sel.value=selWeek;renderAllEnc();},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:dk?'#636366':'#8e8e93',maxRotation:45,autoSkip:false}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:10}}}}});
 }
 
 function rSegEnc(d){
@@ -2215,12 +2212,13 @@ function gFEnc(){
 function renderExecReport(d){
   const el=document.getElementById('exec-report');if(!el)return;
   if(!d||!d.length){el.innerHTML='';return}
-  const S=selWeek||'(todas as semanas)';
   const s=encRuleStats(d);
   const total=s.total||1;
-  /* B2B Reparo 8h */
   const fora8=s.fora8,pFora8=pp(s.pFora8);
-  /* Recorte por cluster */
+  const outlier=s.outlier,pOut=pp(s.pOut);
+  /* label do período */
+  const periodoLabel=selMes?(fmtMesLabel(selMes)+(selWeek?' — Semana '+selWeek:'')):(selWeek?'Semana '+selWeek:'Período completo');
+  /* recorte por cluster */
   const clusterMap={};
   d.forEach(x=>{
     const k=x.cluster;if(!k)return;
@@ -2230,22 +2228,39 @@ function renderExecReport(d){
     if(encBucket(x.tempoTotal)==='outlier')clusterMap[k].outlier++;
   });
   const clusterLines=CLUSTER_ORDER.filter(k=>clusterMap[k]&&clusterMap[k].total>0).map(k=>{
-    const g=clusterMap[k];
-    return`${k} ${pp(g.fora8/g.total*100)}% (${g.fora8}/${g.total})`;
-  }).join('; ');
-  /* Causa dominante */
+    const g=clusterMap[k];return`${k}: ${g.fora8}/${g.total} (${pp(g.fora8/g.total*100)}%)`;
+  }).join(', ')||'N/A';
+  const clusterLinesOut=CLUSTER_ORDER.filter(k=>clusterMap[k]&&clusterMap[k].outlier>0).map(k=>{
+    const g=clusterMap[k];return`${k}: ${g.outlier}/${g.total} (${pp(g.outlier/g.total*100)}%)`;
+  }).join(', ')||null;
+  /* causa dominante */
   const causaCnt={};d.forEach(x=>{const c=fmtCausaRaiz(x.causaRaiz)||'Não informada';causaCnt[c]=(causaCnt[c]||0)+1});
   const dominante=se(causaCnt)[0]||['Não informada',0];
-  /* B2B Outlier >24h */
-  const outlier=s.outlier,pOut=pp(s.pOut);
-  const clusterLinesOut=CLUSTER_ORDER.filter(k=>clusterMap[k]&&clusterMap[k].outlier>0).map(k=>{
-    const g=clusterMap[k];
-    return`${k} ${pp(g.outlier/g.total*100)}% (${g.outlier}/${g.total})`;
-  }).join('; ');
-  /* Cidades que mais impactaram nos outliers */
+  const pCausa=pp(dominante[1]/total*100);
+  /* top cidades — volume geral */
+  const cidadeAll={};d.forEach(x=>{if(x.cidade)cidadeAll[x.cidade]=(cidadeAll[x.cidade]||0)+1});
+  const topCidadesVol=se(cidadeAll).slice(0,5).map(([c,n])=>`${c} (${n}/${total} — ${pp(n/total*100)}%)`).join(', ')||'N/A';
+  /* top cidades — outliers */
   const cidadeOut={};d.filter(x=>x.outlier24h).forEach(x=>{if(x.cidade)cidadeOut[x.cidade]=(cidadeOut[x.cidade]||0)+1});
-  const topCidades=se(cidadeOut).slice(0,5).map(([c,n])=>`${c} (${n})`).join(', ');
-  const texto=`B2B Reparo 8h — Semana ${S} apresentou ${pFora8}% do indicador fora da meta (${fora8}/${total}).\nRecorte regional: ${clusterLines||'N/A'}.\nCausa dominante: ${dominante[0]}.\n\nB2B Outlier >24h — Semana ${S} apresentou ${pOut}% de impacto (${outlier}/${total}).\nRecorte regional: ${clusterLinesOut||'N/A'}.\nCidades que mais impactaram: ${topCidades||'N/A'}.`;
+  const topCidadesOut=se(cidadeOut).slice(0,5).map(([c,n])=>`${c} (${n}/${outlier||1} — ${pp(n/(outlier||1)*100)}%)`).join(', ')||'N/A';
+  const linhasOut=outlier>0
+    ?`${outlier} chamado(s) excederam 24h de atendimento, representando ${pOut}% do volume total.\nClusters com registro de outlier: ${clusterLinesOut||'N/A'}.\nPrincipais cidades com outlier: ${topCidadesOut}.`
+    :`Nenhum chamado outlier (>24h) registrado no período.`;
+  const texto=[
+    `RELATÓRIO EXECUTIVO — ${periodoLabel}`,
+    `Gerado em: ${now2()}`,
+    '',
+    `▸ REPARO EM 8 HORAS`,
+    `Foram encerrados ${total} chamado(s) no período. Destes, ${fora8} não atingiram a meta de 8 horas, representando ${pFora8}% de não conformidade.`,
+    `Distribuição por cluster: ${clusterLines}.`,
+    `Causa raiz mais frequente: ${dominante[0]} — ${dominante[1]} ocorrência(s) (${pCausa}% do total).`,
+    '',
+    `▸ OUTLIER (>24 HORAS)`,
+    linhasOut,
+    '',
+    `▸ CIDADES COM MAIOR VOLUME DE CHAMADOS`,
+    topCidadesVol,
+  ].join('\n');
   el.innerHTML=`<div class="tsec" style="margin-bottom:16px">
     <div class="tsec-hd">
       <span class="tsec-title"><i class="ti ti-report" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Relatório Executivo Automático</span>
