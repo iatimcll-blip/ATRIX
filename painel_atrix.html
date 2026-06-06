@@ -987,7 +987,6 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       <div class="prow" id="prow-enc"></div>
       <div class="section-hd">Performance por cluster <span class="sh-line"></span></div>
       <div class="cluster-grid" id="cluster-cards"></div>
-      <div id="rank-rep-enc"></div>
       <div class="g3">
         <div class="card">
           <div class="card-hd"><span class="card-title">Faixa de SLA (aging CCS)</span></div>
@@ -1587,6 +1586,7 @@ function applyState(st,label){
     if(st.selWeek&&dEnc.some(d=>d.semana===st.selWeek)){selWeek=st.selWeek;document.getElementById('week-selector').value=selWeek}else if(!st.selWeek){selWeek=''}
     if(st.selCluster&&dEnc.some(d=>d.cluster===st.selCluster)){selCluster=st.selCluster;document.getElementById('cluster-selector').value=selCluster}else if(!st.selCluster){selCluster=''}
     renderAllEnc();
+    renderPanelRepetidos();
     document.getElementById('empty-enc').style.display=dEnc.length?'none':'block';
     document.getElementById('dash-enc').style.display=dEnc.length?'block':'none';
     changed=true;
@@ -1931,7 +1931,7 @@ function sAb(c){scAb===c?sdAb*=-1:(scAb=c,sdAb=-1);renderTAb()}
 /* ─── RENDER ENCERRADOS ─── */
 function renderAllEnc(){
   const d=encScope();
-  rBanner(d);rMetEnc(d);rPillEnc(d);rClusterCards(d);renderRankRepEnc(d);
+  rBanner(d);rMetEnc(d);rPillEnc(d);rClusterCards(d);
   rSlaEnc(d);rCausaEnc(d);rMeta8(d);rChEnc(d);rChSem();
   rSegEnc(d);rUfEnc(d);renderExecReport(d);renderTEnc();
 }
@@ -1956,8 +1956,7 @@ function rMetEnc(d){
     <div class="mc c-green"><div class="mc-label">Prazo ≤8h</div><div class="mc-val" style="color:var(--green-dk)"><b>${s.prazo}</b></div><div class="mc-sub"><span class="tag tag-green">${pp(s.pPrazo)}%</span> ${s.gapPrazo?pp(s.gapPrazo)+' p.p. fora da meta':'meta atingida'}</div></div>
     <div class="mc c-orange"><div class="mc-label">8h a 24h</div><div class="mc-val" style="color:var(--orange)"><b>${s.intermediario}</b></div><div class="mc-sub"><span class="tag tag-orange">${pp(s.pInter)}%</span> fora da meta 8h</div></div>
     <div class="mc c-red"><div class="mc-label">Outlier &gt;24h</div><div class="mc-val" style="color:var(--red)"><b>${s.outlier}</b></div><div class="mc-sub"><span class="tag tag-red">${pp(s.pOut)}%</span> ${s.excessoOutlier?pp(s.excessoOutlier)+' p.p. acima do máx. 1,98%':'dentro do máx. 1,98%'}</div></div>
-    <div class="mc c-orange"><div class="mc-label">Tempo médio</div><div class="mc-val" style="color:var(--orange)">${fh(avg)}</div><div class="mc-sub">tempo total médio</div></div>
-    <div class="mc c-purple" style="--purple:#af52de;--purple-bg:rgba(175,82,222,.1)"><div class="mc-label">Clientes repetidos</div><div class="mc-val" style="color:var(--purple)" id="cnt-rep-enc">—</div><div class="mc-sub">com ≥2 chamados</div></div>`;
+    <div class="mc c-orange"><div class="mc-label">Tempo médio</div><div class="mc-val" style="color:var(--orange)">${fh(avg)}</div><div class="mc-sub">tempo total médio</div></div>`;
 }
 
 function rPillEnc(d){
@@ -2145,51 +2144,6 @@ function bestClientName(nome,clienteId,numplan){
   if(!isGeneric(clienteId))return{display:clienteId,id:numplan||nome||''};
   if(!isGeneric(numplan))return{display:numplan,id:nome||''};
   return{display:nome||clienteId||numplan||'—',id:''};
-}
-function renderRankRepEnc(d){
-  const map=new Map();
-  d.forEach(x=>{
-    // Chave primária: clienteId (col J) > numplan (col F) > nome normalizado
-    const key=x.clienteId||x.numplan||nk(x.cliente);
-    if(!key)return;
-    if(!map.has(key)){
-      const best=bestClientName(x.cliente,x.clienteId,x.numplan);
-      map.set(key,{display:best.display,id:best.id,nomes:new Set(),count:0});
-    }
-    const entry=map.get(key);
-    entry.count++;
-    if(x.cliente)entry.nomes.add(x.cliente);
-    // Atualizar para nome mais longo e mais descritivo
-    if(x.cliente&&x.cliente.length>(entry.display||'').length&&!/^\d+$/.test(x.cliente))entry.display=x.cliente;
-  });
-  const repeated=[...map.values()].filter(v=>v.count>=2).sort((a,b)=>b.count-a.count);
-  const repCount=repeated.length;
-  const cntEl=document.getElementById('cnt-rep-enc');
-  if(cntEl)cntEl.textContent=repCount;
-  const el=document.getElementById('rank-rep-enc');if(!el)return;
-  if(!repCount){el.innerHTML='';return}
-  const top15=repeated.slice(0,15);
-  const maxC=top15[0].count||1;
-  el.innerHTML=`<div class="tsec" style="margin-bottom:16px">
-    <div class="tsec-hd" style="background:linear-gradient(90deg,rgba(175,82,222,.06),transparent)">
-      <span class="tsec-title"><i class="ti ti-repeat" style="font-size:13px;vertical-align:-2px;margin-right:5px;color:var(--purple)"></i>Clientes com chamados repetidos</span>
-      <span style="color:var(--tx3);font-size:11px">${repCount} clientes · ≥2 ocorrências na semana selecionada</span>
-    </div>
-    <div style="padding:10px 16px 14px">
-      ${top15.map((v,i)=>{
-        const barClr=i===0?'var(--red)':i<3?'var(--orange)':i<6?'var(--purple)':'var(--teal-dk)';
-        const rankBadge=i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="color:var(--tx3);font-weight:700;font-size:10px">${i+1}.</span>`;
-        const nm=v.display||'—';
-        return`<div class="brow" style="padding:7px 0;gap:10px">
-          <div style="width:22px;text-align:center;flex-shrink:0;font-size:14px">${rankBadge}</div>
-          <div class="blbl" style="flex:1;max-width:220px;font-size:11px;font-weight:500" title="${eh(nm)}">${eh(nm.length>28?nm.slice(0,27)+'…':nm)}</div>
-          <div class="btrk" style="flex:1"><div class="bfil" style="width:${Math.round(v.count/maxC*100)}%;background:${barClr}"></div></div>
-          <div class="bn" style="font-size:13px;min-width:28px;color:${barClr}">${v.count}</div>
-          ${v.id?`<div style="font-size:9px;color:var(--tx3);min-width:50px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(v.id)}">${eh(v.id)}</div>`:''}
-        </div>`;
-      }).join('')}
-    </div>
-  </div>`;
 }
 function renderTEnc(){
   const f=gFEnc();
