@@ -128,7 +128,11 @@ body {
 .nb-blue { background: var(--blue-bg); color: var(--blue); }
 .nb-green { background: var(--green-bg); color: var(--green-dk); }
 .nb-purple { background: var(--purple-bg); color: var(--purple); }
-.wpp-iframe { width: 100%; border: none; display: block; height: calc(100vh - 260px); min-height: 480px; border-radius: 0 0 var(--rxl) var(--rxl); }
+#panel-whatsapp { padding: 0; }
+#panel-whatsapp.active { display: flex; flex-direction: column; }
+.wpp-topbar { display: flex; align-items: center; justify-content: flex-end; padding: 5px 12px; background: var(--surface); border-bottom: .5px solid var(--bd); flex-shrink: 0; gap: 8px; font-size: 11px; color: var(--tx3); }
+.wpp-topbar i { color: #25d366; font-size: 14px; }
+.wpp-iframe { flex: 1; width: 100%; border: none; display: block; min-height: calc(100vh - 80px); background: var(--surface2); }
 .mc.c-purple::before { background: var(--purple); }
 .rep-details summary::-webkit-details-marker { display:none; }
 .rep-details[open] .rep-chevron { transform: rotate(180deg); }
@@ -1144,15 +1148,13 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
 
   <!-- ── PAINEL MONITORAMENTO WHATSAPP ── -->
   <div class="panel" id="panel-whatsapp">
-    <div class="section-hd">Monitoramento WhatsApp <span class="sh-line"></span></div>
-    <div class="tsec">
-      <div class="tsec-hd">
-        <span class="tsec-title"><i class="ti ti-brand-whatsapp" style="color:#25d366;margin-right:5px"></i>Painel de Acionamentos — MCLL</span>
-        <span class="card-action" onclick="window.open('https://mcll-painel-acionamentos-production.up.railway.app/','_blank','noopener,noreferrer')"><i class="ti ti-external-link"></i> Abrir em nova aba</span>
-      </div>
-      <iframe class="wpp-iframe" id="wpp-frame" src="about:blank" title="Monitoramento WhatsApp" allow="fullscreen"></iframe>
+    <div class="wpp-topbar">
+      <i class="ti ti-brand-whatsapp"></i>
+      <span>Monitoramento WhatsApp — MCLL</span>
+      <span style="flex:1"></span>
+      <span class="card-action" onclick="window.open('https://mcll-painel-acionamentos-production.up.railway.app/painel','_blank','noopener,noreferrer')"><i class="ti ti-external-link"></i> Abrir em nova aba</span>
     </div>
-    <div class="pfooter">ATRIX · Monitoramento WhatsApp · MCLL</div>
+    <iframe class="wpp-iframe" id="wpp-frame" src="about:blank" title="Monitoramento WhatsApp" allow="fullscreen; clipboard-read; clipboard-write; microphone; camera; notifications"></iframe>
   </div>
 
   <!-- ── PAINEL B2B REPETIDOS ── -->
@@ -2720,7 +2722,7 @@ function switchTab(tab,persist=true){
   document.getElementById('cluster-wrap').style.display=showEncControls?'flex':'none';
   if(isFuel){renderFuel();setTimeout(initFuelSplit,80);}
   if(isRep)renderPanelRepetidos();
-  if(isWpp){const f=document.getElementById('wpp-frame');if(f&&f.src==='about:blank')f.src='https://mcll-painel-acionamentos-production.up.railway.app/';}
+  if(isWpp){const f=document.getElementById('wpp-frame');if(f&&f.src==='about:blank')f.src='https://mcll-painel-acionamentos-production.up.railway.app/painel';}
 }
 function toggleTheme(){
   const dk=document.body.dataset.theme==='dark';
