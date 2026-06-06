@@ -103,16 +103,24 @@ body {
 .nav-tabs::-webkit-scrollbar { display: none; }
 .ntab {
   display: flex; align-items: center; gap: 6px;
-  padding: 6px 8px; border-radius: var(--r);
+  padding: 7px 10px; border-radius: var(--r);
   font-size: 12px; font-weight: 500; color: var(--tx3);
   cursor: pointer; background: none; border: none;
-  font-family: inherit; transition: all .15s; user-select: none; white-space: nowrap;
-  flex: 1 1 0; min-width: 0; justify-content: center;
+  font-family: inherit; transition: color .15s, background .15s; user-select: none; white-space: nowrap;
+  flex: 1 1 0; min-width: 0; justify-content: center; position: relative;
 }
-.ntab:hover { background: var(--surface2); color: var(--tx2); }
-.ntab.active { background: var(--surface); color: var(--blue); box-shadow: var(--shadow-sm); }
+.ntab:hover { background: var(--surface2); }
+.ntab.active { background: var(--surface); box-shadow: var(--shadow-sm); }
+.ntab.active::after { content:''; position:absolute; bottom:3px; left:10px; right:10px; height:2px; border-radius:2px; background:currentColor; }
 [data-theme=dark] .ntab.active { background: var(--surface2); }
-.ntab i { font-size: 14px; }
+.ntab i { font-size: 15px; flex-shrink: 0; }
+/* Acento por tab — hover e ativo */
+#ntab-ab:hover,#ntab-ab.active     { color: var(--blue); }
+#ntab-enc:hover,#ntab-enc.active   { color: var(--green-dk); }
+#ntab-rep:hover,#ntab-rep.active   { color: var(--purple); }
+#ntab-rede:hover,#ntab-rede.active { color: var(--teal-dk); }
+#ntab-fuel:hover,#ntab-fuel.active { color: var(--orange); }
+#ntab-wpp:hover,#ntab-wpp.active   { color: #25d366; }
 .ntab-badge {
   font-size: 9px; font-weight: 700; padding: 1px 5px;
   border-radius: 6px; min-width: 18px; text-align: center; line-height: 1.4;
@@ -612,6 +620,14 @@ body.is-admin .admin-only { display: flex; }
 .fuel-driver-summary div { min-width: 0; }
 .fuel-driver-summary b { display: block; font-size: 16px; color: var(--tx); overflow-wrap: anywhere; }
 .fuel-driver-summary span { display: block; font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+.alelo-note { font-size: 12px; color: var(--tx3); margin: 4px 16px 12px; line-height: 1.6; }
+.alelo-note b { color: var(--tx2); }
+.fuel-admin-divider { display: none; }
+body.is-admin .fuel-admin-divider { display: flex; align-items: center; gap: 12px; margin: 8px 0 4px; color: var(--tx3); font-size: 10px; text-transform: uppercase; letter-spacing: .12em; font-weight: 600; }
+.fuel-admin-divider::before,.fuel-admin-divider::after { content:''; flex:1; height:.5px; background:var(--bd2); }
+.fuel-forms-admin { display: none; }
+body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; margin-bottom: 16px; }
+@media (max-width: 860px) { body.is-admin .fuel-forms-admin { grid-template-columns: 1fr; } }
 
 /* ─── WEEK INDICATOR ─── */
 .week-banner {
@@ -988,6 +1004,8 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
   </div>
 
   <div class="panel" id="panel-combustivel">
+
+    <!-- 1. Hero: Gauge + Resumo de Saldo -->
     <div class="fuel-gauge">
       <div class="fuel-pump-wrap">
         <div class="fuel-scale"><span class="fuel-full">FULL</span><span class="fuel-empty">E</span></div>
@@ -995,11 +1013,16 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       </div>
       <div id="fuel-balance-summary"></div>
     </div>
+
+    <!-- 2. KPIs e métricas -->
     <div class="section-hd">Consumo de Combustíveis <span class="sh-line"></span></div>
     <div class="mrow" id="mrow-fuel"></div>
     <div class="prow" id="prow-fuel"></div>
+
+    <!-- 3. Detalhe do condutor (expansível) -->
     <div id="fuel-driver-detail" class="fuel-driver-detail" style="display:none"></div>
-    <div id="fuel-projection-detail"></div>
+
+    <!-- 4. Gráficos de análise -->
     <div class="g2-charts">
       <div class="card">
         <div class="card-hd"><span class="card-title">Consumo por condutor — mês atual vs. projeção e tendência</span></div>
@@ -1020,47 +1043,78 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         <div id="fuel-status"></div>
       </div>
     </div>
+
+    <!-- 5. Tabela de projeção por placa -->
+    <div id="fuel-projection-detail"></div>
+
+    <!-- Divisor zona admin -->
+    <div class="fuel-admin-divider"><span>Gestão e Operações</span></div>
+
+    <!-- 6. Aporte do ciclo (admin) -->
     <div class="tsec admin-only">
-      <div class="tsec-hd"><span class="tsec-title">Saldo de combustível</span></div>
+      <div class="tsec-hd"><span class="tsec-title">Aporte do ciclo</span></div>
       <div class="fbar">
         <input class="finput" id="fuel-balance-total" type="number" step="0.01" min="0" placeholder="Saldo geral solicitado do ciclo R$">
         <span class="card-action" onclick="setFuelBalance()">Atualizar aporte</span>
-        <input class="finput" id="fuel-card-balance" type="number" step="0.01" min="0" placeholder="Saldo combustível / cartão R$">
-        <span class="card-action" onclick="setFuelCardBalance()">Atualizar Saldo</span>
+        <input class="finput" id="fuel-card-balance" type="number" step="0.01" min="0" placeholder="Saldo disponível / cartão R$">
+        <span class="card-action" onclick="setFuelCardBalance()">Atualizar saldo cartão</span>
+      </div>
+    </div>
+
+    <!-- 7. Retirada do saldo (admin) -->
+    <div class="tsec admin-only">
+      <div class="tsec-hd"><span class="tsec-title">Registrar retirada do saldo</span></div>
+      <div class="fbar">
         <input class="finput" id="fuel-withdraw-date" type="date">
-        <input class="finput" id="fuel-withdraw-value" type="number" step="0.01" min="0" placeholder="Valor retirada R$">
+        <input class="finput" id="fuel-withdraw-value" type="number" step="0.01" min="0" placeholder="Valor R$">
         <input class="finput" id="fuel-withdraw-reason" placeholder="Motivo / destino">
         <span class="card-action" onclick="addFuelWithdrawal()">Registrar retirada</span>
       </div>
     </div>
-    <div class="tsec admin-only">
-      <div class="tsec-hd"><span class="tsec-title">Cadastrar veículo e condutor</span></div>
-      <div class="fbar">
-        <input class="finput" id="fuel-placa" placeholder="Placa">
-        <input class="finput" id="fuel-modelo" placeholder="Modelo">
-        <input class="finput" id="fuel-ano" placeholder="Ano">
-        <input class="finput" id="fuel-condutor" placeholder="Colaborador / condutor">
-        <input class="finput" id="fuel-setor" placeholder="Setor">
-        <input class="finput" id="fuel-superior" placeholder="Superior imediato">
-        <select class="fsel" id="fuel-tipo"><option>Gasolina</option><option>Diesel</option><option>Etanol</option><option>Flex</option></select>
-        <select class="fsel" id="fuel-tipo-cartao"><option>Próprio</option><option>Coringa</option></select>
-        <select class="fsel" id="fuel-status-new"><option>Ativo</option><option>Inativo</option><option>Oficina</option><option>Bloqueado</option></select>
-        <span class="card-action" id="fuel-vehicle-action" onclick="addFuelVehicle()">Adicionar</span>
-        <span class="card-action" id="fuel-delete-action" onclick="deleteFuelVehicle()" style="display:none;color:var(--red)">Excluir placa</span>
-        <span class="card-action" onclick="clearFuelVehicleForm()">Limpar</span>
+
+    <!-- 8. Portal Alelo — Remanejamento (admin) -->
+    <div class="tsec admin-only" id="tsec-alelo-portal">
+      <div class="tsec-hd">
+        <span class="tsec-title"><i class="ti ti-external-link" style="margin-right:5px"></i>Portal Alelo — Remanejamento de Saldo</span>
+        <span class="card-action" onclick="window.open('https://portal.aleloauto.com.br/login','_blank','noopener,noreferrer')"><i class="ti ti-external-link"></i> Abrir portal Alelo</span>
+      </div>
+      <div id="alelo-remanejo-panel"></div>
+    </div>
+
+    <!-- 9. Cadastro lado a lado (admin) -->
+    <div class="fuel-forms-admin">
+      <div class="tsec">
+        <div class="tsec-hd"><span class="tsec-title">Cadastrar veículo e condutor</span></div>
+        <div class="fbar">
+          <input class="finput" id="fuel-placa" placeholder="Placa">
+          <input class="finput" id="fuel-modelo" placeholder="Modelo">
+          <input class="finput" id="fuel-ano" placeholder="Ano">
+          <input class="finput" id="fuel-condutor" placeholder="Colaborador / condutor">
+          <input class="finput" id="fuel-setor" placeholder="Setor">
+          <input class="finput" id="fuel-superior" placeholder="Superior imediato">
+          <select class="fsel" id="fuel-tipo"><option>Gasolina</option><option>Diesel</option><option>Etanol</option><option>Flex</option></select>
+          <select class="fsel" id="fuel-tipo-cartao"><option>Próprio</option><option>Coringa</option></select>
+          <select class="fsel" id="fuel-status-new"><option>Ativo</option><option>Inativo</option><option>Oficina</option><option>Bloqueado</option></select>
+          <span class="card-action" id="fuel-vehicle-action" onclick="addFuelVehicle()">Adicionar</span>
+          <span class="card-action" id="fuel-delete-action" onclick="deleteFuelVehicle()" style="display:none;color:var(--red)">Excluir placa</span>
+          <span class="card-action" onclick="clearFuelVehicleForm()">Limpar</span>
+        </div>
+      </div>
+      <div class="tsec">
+        <div class="tsec-hd"><span class="tsec-title">Registrar solicitação</span></div>
+        <div class="fbar">
+          <select class="fsel" id="fuel-req-placa"></select>
+          <input class="finput" id="fuel-req-data" type="date">
+          <input class="finput" id="fuel-req-valor" type="number" step="0.01" min="0" placeholder="Valor R$">
+          <input class="finput" id="fuel-req-obs" placeholder="Observação">
+          <span class="card-action" id="fuel-request-action" onclick="addFuelRequest()">Registrar</span>
+          <span class="card-action" onclick="clearFuelRequestForm()">Limpar</span>
+        </div>
       </div>
     </div>
-    <div class="tsec admin-only">
-      <div class="tsec-hd"><span class="tsec-title">Registrar solicitação</span></div>
-      <div class="fbar">
-        <select class="fsel" id="fuel-req-placa"></select>
-        <input class="finput" id="fuel-req-data" type="date">
-        <input class="finput" id="fuel-req-valor" type="number" step="0.01" min="0" placeholder="Valor R$">
-        <input class="finput" id="fuel-req-obs" placeholder="Observação">
-        <span class="card-action" id="fuel-request-action" onclick="addFuelRequest()">Registrar</span>
-        <span class="card-action" onclick="clearFuelRequestForm()">Limpar</span>
-      </div>
-    </div>
+
+    <!-- 10. Tabelas de dados -->
+    <div class="section-hd">Dados da Frota <span class="sh-line"></span></div>
     <div class="fuel-split" id="fuel-split">
       <div class="fuel-split-pane" id="fuel-split-left">
         <div class="tsec-hd" style="padding:12px 16px;border-bottom:.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between"><span class="tsec-title">Veículos e condutores</span><span id="cnt-fuel-v" style="color:var(--tx3);font-size:11px"></span></div>
@@ -1078,10 +1132,13 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         <div class="tw"><table><thead><tr><th>Data</th><th>Placa</th><th>Condutor</th><th>Valor</th><th>Observação</th><th class="admin-only">Ações</th></tr></thead><tbody id="tb-fuel-r"></tbody></table></div>
       </div>
     </div>
+
+    <!-- 11. Histórico de retiradas -->
     <div class="tsec">
-      <div class="tsec-hd"><span class="tsec-title">Retiradas do saldo</span><span id="cnt-fuel-w" style="color:var(--tx3)"></span></div>
+      <div class="tsec-hd"><span class="tsec-title">Histórico de retiradas do saldo</span><span id="cnt-fuel-w" style="color:var(--tx3)"></span></div>
       <div class="tw"><table><thead><tr><th>Data</th><th>Valor</th><th>Motivo / destino</th></tr></thead><tbody id="tb-fuel-w"></tbody></table></div>
     </div>
+
     <div class="pfooter">ATRIX · Consumo de Combustíveis · dados compartilhados</div>
   </div>
 
@@ -2310,6 +2367,29 @@ function trendValues(values){
   const den=n*sx2-sx*sx,a=den?(n*sxy-sx*sy)/den:0,b=(sy-a*sx)/n;
   return values.map((_,i)=>Math.max(0,a*i+b));
 }
+function renderAleloPanel(){
+  const el=document.getElementById('alelo-remanejo-panel');if(!el)return;
+  const bal=fuelBalance();
+  const active=dFuelVehicles.filter(v=>v.status==='Ativo');
+  const projection=fuelMonthProjection();
+  const sugg=active.length>0?bal.available/active.length:0;
+  const cards=active.length?`<div class="mc c-blue"><div class="mc-label">Saldo disponível</div><div class="mc-val">${brl(bal.available)}</div><div class="mc-sub">base para rateio</div></div><div class="mc c-green"><div class="mc-label">Veículos ativos</div><div class="mc-val">${active.length}</div><div class="mc-sub">participam do rateio</div></div><div class="mc c-orange"><div class="mc-label">Rateio sugerido</div><div class="mc-val">${brl(sugg)}</div><div class="mc-sub">por veículo ativo</div></div>`:'';
+  const rows=active.map(v=>{
+    const p=projection.find(x=>x.placa===v.placa)||{atual:0};
+    const diff=sugg-p.atual;
+    const dc=diff>=0?'var(--green)':'var(--red)';
+    const diffFmt=(diff>=0?'+ ':'- ')+brl(Math.abs(diff));
+    return `<tr><td class="tid">${eh(v.placa)}</td><td>${eh(v.condutor||'-')}</td><td>${brl(p.atual)}</td><td>${brl(sugg)}</td><td style="color:${dc};font-weight:600">${diffFmt}</td><td><span class="card-action" onclick="copyAleloRemanejo('${eh(v.placa)}','${eh(v.condutor||'')}',${sugg},${diff})"><i class="ti ti-clipboard"></i> Copiar</span></td></tr>`;
+  }).join('');
+  el.innerHTML=`<div class="mrow" style="padding:12px 16px 0">${cards}</div><p class="alelo-note">Tabela de orientação para <b>inclusão de saldo</b> e <b>remanejamento</b> no portal Alelo. Diferença <b style="color:var(--green)">positiva</b> = veículo pode receber saldo adicional; <b style="color:var(--red)">negativa</b> = consumo já superou o rateio. Clique em <b>Copiar</b> para levar os dados ao portal.</p><div class="tw"><table><thead><tr><th>Placa</th><th>Condutor</th><th>Consumido no ciclo</th><th>Rateio sugerido</th><th>Diferença</th><th>Ação</th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="nores">Nenhum veículo ativo cadastrado</td></tr>'}</tbody></table></div>`;
+}
+function copyAleloRemanejo(placa,condutor,sugg,diff){
+  const acao=diff>=0?'INCLUIR SALDO':'VERIFICAR CONSUMO';
+  const fmtBRL=v=>'R$ '+Math.abs(Number(v)).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const diffFmt=(diff>=0?'+ ':'- ')+fmtBRL(diff);
+  const text=`Placa: ${placa}\nCondutor: ${condutor}\nRateio sugerido: ${fmtBRL(sugg)}\nAção sugerida: ${acao} ${fmtBRL(diff)}\nDiferença: ${diffFmt}`;
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(()=>{alert('Dados copiados!\n\n'+text);}).catch(()=>{prompt('Copie os dados:',text)});}else{prompt('Copie os dados:',text);}
+}
 function renderFuel(){
   ensureFuelData();
   const validRequests=fuelValidRequests();
@@ -2326,6 +2406,7 @@ function renderFuel(){
   const driverOptions=fuelDriverOptions();if(selectedFuelDriver&&!driverOptions.includes(selectedFuelDriver))selectedFuelDriver='';
   document.getElementById('prow-fuel').innerHTML=`<div class="pc"><div class="pico pi-b"><i class="ti ti-gas-station"></i></div><div><div class="pv">${brl(bal.available)}</div><div class="ps">saldo disponível</div></div></div><div class="pc"><div class="pico pi-o"><i class="ti ti-user-dollar"></i></div><div><div class="pv" style="font-size:14px">${eh(top[0])}</div><div class="ps">maior consumo ${brl(top[1].valor)}</div></div></div><div class="pc"><div class="pico pi-g"><i class="ti ti-chart-line"></i></div><div><div class="pv">${brl(nextSuggestion)}</div><div class="ps">sugestão para próximo mês</div></div></div><div class="pc"><div class="pico pi-t"><i class="ti ti-user-search"></i></div><div style="min-width:0;flex:1"><div class="pv" style="font-size:14px">Condutor</div><div class="ps">transações e datas</div><select class="pc-select" onchange="onFuelDriverChange(this.value)"><option value="">Selecionar condutor</option>${driverOptions.map(n=>`<option value="${eh(n)}"${n===selectedFuelDriver?' selected':''}>${eh(n)}</option>`).join('')}</select></div></div>`;
   renderFuelDriverDetail();
+  renderAleloPanel();
   renderFuelProjectionDetail();
   document.getElementById('fuel-status').innerHTML=listRows(se(cnt(dFuelVehicles,'status')),k=>({Ativo:'var(--green)',Inativo:'var(--tx3)',Oficina:'var(--orange)',Bloqueado:'var(--red)'}[k]||'var(--blue)'));
   const sel=document.getElementById('fuel-req-placa');if(sel){const cur=sel.value;sel.innerHTML='<option value="">Selecionar placa</option>'+dFuelVehicles.filter(v=>v.status==='Ativo').map(v=>`<option value="${eh(v.placa)}">${eh(v.placa)} - ${eh(v.condutor)}</option>`).join('');sel.value=[...sel.options].some(o=>o.value===cur)?cur:''}
