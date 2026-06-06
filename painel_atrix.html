@@ -1594,6 +1594,7 @@ function se(obj){return Object.entries(obj).sort((a,b)=>b[1]-a[1])}
 function now2(){const n=new Date();return n.toLocaleDateString('pt-BR')+' '+n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
 function normCluster(c){return(c==='AM INT'||c==='AP')?'AM/AP':c}
 function encBucket(h){if(h>24)return'outlier';if(h>8)return'intermediario';return'prazo'}
+function titleCasePT(s){if(!s)return s;const sm=new Set(['DE','DA','DO','DAS','DOS','E','A','O','AS','OS','EM','NO','NA','NOS','NAS']);return String(s).toLowerCase().split(' ').map((w,i)=>(!w?w:(i===0||!sm.has(w.toUpperCase()))?w.charAt(0).toUpperCase()+w.slice(1):w)).join(' ')}
 function fmtMesLabel(mes){if(!mes)return'';const[y,m]=mes.split('-');return new Date(Number(y),Number(m)-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}
 function pp(v){return v.toFixed(1).replace('.',',')}
 function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2})}
@@ -1645,7 +1646,7 @@ function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
 function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,selMes,activeTab,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>{const mop=normMopByCity(d.uf,d.cidade)||fmtMop(d.mop);return{...d,rowKey:d.rowKey??i,mop,assunto:d.assunto||'',substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}})}
-function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>{let mes=d.mes||'';if(!mes&&d.dataFechamento){const m=String(d.dataFechamento).match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)mes=`${m[3]}-${m[2]}`}const mop=normMopByCity(d.uf,d.cidade)||d.mop||'';return{...d,mes,mop,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}})}
+function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>{let mes=d.mes||'';if(!mes&&d.dataFechamento){const m=String(d.dataFechamento).match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)mes=`${m[3]}-${m[2]}`}const cidade=titleCasePT(repairPtBR(d.cidade||''));const mop=normMopByCity(d.uf,cidade)||d.mop||'';return{...d,cidade,mes,mop,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}})}
 function repairPtBR(s){
   if(!s)return s;
   s=String(s);
@@ -1840,10 +1841,9 @@ function procEnc(raw,fname){
   dEnc=raw.filter(r=>r['ticket_id']||r['protocolo']).map(r=>{
     const protocolo=String(r['protocolo']||r['ticket_id']||'').trim();
     const cliente=String(colVal(r,10,['Cliente','cliente'])||'').trim();
-    let uf=String(gv(r,['ufservico','uf_servico','UF','uf','estado','Uf Serviço','Uf Servico','ufatendimento','estadoservico'])||'').trim().toUpperCase();
-    if(!uf){for(const k of Object.keys(r)){const nk_=nk(k);if((nk_.includes('UF')||nk_.includes('ESTADO'))&&!nk_.includes('CLIENTES')){const v=String(r[k]||'').trim().toUpperCase();if(v.length===2&&/^[A-Z]{2}$/.test(v)){uf=v;break}}}}
-    let cidade=repairPtBR(String(gv(r,['cidadeservico','cidade_servico','cidade','municipio_servico','municipio','Município','Cidade Serviço','Cidade Servico','localservico','local_servico','local','localidade','cidadeatendimento','municipioatendimento','municipioinstalacao'])||'').trim());
-    if(!cidade){for(const k of Object.keys(r)){const nk_=nk(k);if(nk_.includes('CIDADE')||nk_.includes('MUNICIPIO')||nk_.includes('LOCALIDAD')){const v=String(r[k]||'').trim();if(v.length>2){cidade=repairPtBR(v);break}}}}
+    const uf=String(r['ufservico']||r['UF']||r['uf']||gv(r,['uf_servico','estado','Uf Serviço','Uf Servico','ufatendimento','estadoservico'])||'').trim().toUpperCase();
+    const cidadeRaw=String(r['cidadeservico']||r['cidade']||r['municipio']||r['Cidade']||gv(r,['cidade_servico','municipio_servico','Município','Cidade Serviço','Cidade Servico','localservico','local_servico','local','localidade'])||'').trim();
+    const cidade=titleCasePT(repairPtBR(cidadeRaw));
     const clusterCalc=String(r['cluster_calc']||'').trim();
     const cluster=normCluster(clusterCalc);
     const clusterNome=String(r['cluster']||'').trim();
