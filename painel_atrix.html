@@ -133,7 +133,30 @@ body {
 #panel-whatsapp.active { display: flex; flex-direction: column; }
 .wpp-topbar { display: flex; align-items: center; justify-content: flex-end; padding: 5px 12px; background: var(--surface); border-bottom: .5px solid var(--bd); flex-shrink: 0; gap: 8px; font-size: 11px; color: var(--tx3); }
 .wpp-topbar i { color: #25d366; font-size: 14px; }
-.wpp-iframe { flex: 1; width: 100%; border: none; display: block; background: var(--surface2); }
+.wpp-iframe-wrap { flex: 1; overflow: hidden; position: relative; }
+.wpp-iframe { position: absolute; top: 0; left: 0; width: calc(100% / 0.82); height: calc(100% / 0.82); border: none; display: block; background: var(--surface2); transform: scale(0.82); transform-origin: 0 0; }
+/* MOP/EPS Reference Card */
+.mop-ref-card { background: var(--surface); border: .5px solid var(--bd); border-radius: var(--rl); margin-bottom: 14px; box-shadow: var(--shadow-sm); overflow: hidden; }
+.mop-ref-card > summary { display: flex; align-items: center; gap: 7px; padding: 8px 14px; cursor: pointer; user-select: none; font-size: 11px; font-weight: 600; color: var(--tx2); border-bottom: .5px solid transparent; transition: border-color .15s; list-style: none; }
+.mop-ref-card > summary::-webkit-details-marker { display: none; }
+.mop-ref-card[open] > summary { border-bottom-color: var(--bd); }
+.mop-ref-card > summary i:first-child { font-size: 13px; color: var(--teal-dk); }
+.mop-ref-card > summary > span { flex: 1; }
+.mop-ref-chev { transition: transform .2s; font-size: 12px !important; color: var(--tx3) !important; }
+.mop-ref-card[open] .mop-ref-chev { transform: rotate(180deg); }
+.mop-ref-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 5px; padding: 10px; }
+.mop-ref-row { display: flex; align-items: baseline; gap: 6px; font-size: 11px; padding: 5px 8px; border-radius: 6px; background: var(--surface2); border: .5px solid var(--bd); }
+.mop-ref-row strong { font-weight: 700; color: var(--tx); min-width: 42px; white-space: nowrap; }
+.mop-ref-row > span:last-child { color: var(--tx3); flex: 1; }
+.mop-ref-tag { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; text-transform: uppercase; letter-spacing: .03em; }
+.t-eps-sln { background: #dbeafe; color: #1d4ed8; }
+.t-mop-ma  { background: #ede9fe; color: #6d28d9; }
+.t-mop-pi  { background: #fef3c7; color: #92400e; }
+.t-eps-adx { background: #d1fae5; color: #065f46; }
+[data-theme=dark] .t-eps-sln { background: rgba(29,78,216,.18); color: #93c5fd; }
+[data-theme=dark] .t-mop-ma  { background: rgba(109,40,217,.18); color: #c4b5fd; }
+[data-theme=dark] .t-mop-pi  { background: rgba(146,64,14,.18); color: #fcd34d; }
+[data-theme=dark] .t-eps-adx { background: rgba(6,95,70,.18); color: #6ee7b7; }
 .mc.c-purple::before { background: var(--purple); }
 .rep-details summary::-webkit-details-marker { display:none; }
 .rep-details[open] .rep-chevron { transform: rotate(180deg); }
@@ -856,6 +879,18 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       <label class="empty-btn eb-ab" for="file-ab"><i class="ti ti-upload" style="font-size:14px"></i> Carregar Base Abertos</label>
     </div>
     <div id="dash-ab" style="display:none">
+      <details class="mop-ref-card">
+        <summary><i class="ti ti-map-2"></i><span>Referência MOP/EPS — Cobertura por Região</span><i class="ti ti-chevron-down mop-ref-chev"></i></summary>
+        <div class="mop-ref-body">
+          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>MA CAP</strong><span>São Luís · Paço do Lumiar · São José de Ribamar</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-ma">MOP GIGA+ MA</span><strong>MA INT</strong><span>Demais cidades do Maranhão</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI CAP</strong><span>Teresina</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI INT</strong><span>Demais cidades do Piauí</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>PA CAP</strong><span>Belém · Ananindeua</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>PA INT</strong><span>Demais cidades do Pará (exceto Almeirim e Santarém)</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-adx">EPS-ADX</span><strong>AP / AM</strong><span>Todas as cidades de AP e AM · Santarém-PA · Almeirim-PA</span></div>
+        </div>
+      </details>
       <div class="quick-mop" id="quick-mop-ab" aria-label="Filtros rápidos por MOP/EPS"></div>
       <div class="mrow" id="mrow-ab"></div>
       <div class="prow" id="prow-ab"></div>
@@ -923,6 +958,18 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       <label class="empty-btn eb-enc" for="file-enc"><i class="ti ti-upload" style="font-size:14px"></i> Carregar Encerrados</label>
     </div>
     <div id="dash-enc" style="display:none">
+      <details class="mop-ref-card">
+        <summary><i class="ti ti-map-2"></i><span>Referência MOP/EPS — Cobertura por Região</span><i class="ti ti-chevron-down mop-ref-chev"></i></summary>
+        <div class="mop-ref-body">
+          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>MA CAP</strong><span>São Luís · Paço do Lumiar · São José de Ribamar</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-ma">MOP GIGA+ MA</span><strong>MA INT</strong><span>Demais cidades do Maranhão</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI CAP</strong><span>Teresina</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI INT</strong><span>Demais cidades do Piauí</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>PA CAP</strong><span>Belém · Ananindeua</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>PA INT</strong><span>Demais cidades do Pará (exceto Almeirim e Santarém)</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-adx">EPS-ADX</span><strong>AP / AM</strong><span>Todas as cidades de AP e AM · Santarém-PA · Almeirim-PA</span></div>
+        </div>
+      </details>
       <div id="week-banner-enc"></div>
       <div class="mrow" id="mrow-enc"></div>
       <div class="prow" id="prow-enc"></div>
@@ -1150,7 +1197,9 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       <span style="flex:1"></span>
       <span class="card-action" onclick="window.open('https://mcll-painel-acionamentos-production.up.railway.app/painel','_blank','noopener,noreferrer')"><i class="ti ti-external-link"></i> Abrir em nova aba</span>
     </div>
-    <iframe class="wpp-iframe" id="wpp-frame" src="about:blank" title="Monitoramento WhatsApp" allow="fullscreen; clipboard-read; clipboard-write; microphone; camera; notifications"></iframe>
+    <div class="wpp-iframe-wrap">
+      <iframe class="wpp-iframe" id="wpp-frame" src="about:blank" title="Monitoramento WhatsApp" allow="fullscreen; clipboard-read; clipboard-write; microphone; camera; notifications"></iframe>
+    </div>
   </div>
 
   <!-- ── PAINEL B2B REPETIDOS ── -->
@@ -1162,6 +1211,18 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       <label class="empty-btn" for="file-enc" style="background:var(--purple);color:#fff;border-color:var(--purple)"><i class="ti ti-upload" style="font-size:14px"></i> Carregar Encerrados</label>
     </div>
     <div id="dash-rep" style="display:none">
+      <details class="mop-ref-card">
+        <summary><i class="ti ti-map-2"></i><span>Referência MOP/EPS — Cobertura por Região</span><i class="ti ti-chevron-down mop-ref-chev"></i></summary>
+        <div class="mop-ref-body">
+          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>MA CAP</strong><span>São Luís · Paço do Lumiar · São José de Ribamar</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-ma">MOP GIGA+ MA</span><strong>MA INT</strong><span>Demais cidades do Maranhão</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI CAP</strong><span>Teresina</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI INT</strong><span>Demais cidades do Piauí</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>PA CAP</strong><span>Belém · Ananindeua</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>PA INT</strong><span>Demais cidades do Pará (exceto Almeirim e Santarém)</span></div>
+          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-adx">EPS-ADX</span><strong>AP / AM</strong><span>Todas as cidades de AP e AM · Santarém-PA · Almeirim-PA</span></div>
+        </div>
+      </details>
       <!-- Filtros -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:var(--surface);border-radius:var(--rl);box-shadow:var(--shadow-sm);border:.5px solid var(--bd);margin-bottom:14px">
         <span style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-right:2px">Filtros</span>
