@@ -128,7 +128,7 @@ body {
 .nb-blue { background: var(--blue-bg); color: var(--blue); }
 .nb-green { background: var(--green-bg); color: var(--green-dk); }
 .nb-purple { background: var(--purple-bg); color: var(--purple); }
-.nb-wpp { background: rgba(37,211,102,.15); color: #25d366; }
+.nb-wpp { background: #e53935; color: #fff; font-weight: 700; }
 #panel-whatsapp { padding: 0; }
 #panel-whatsapp.active { display: flex; flex-direction: column; }
 .wpp-topbar { display: flex; align-items: center; justify-content: flex-end; padding: 5px 12px; background: var(--surface); border-bottom: .5px solid var(--bd); flex-shrink: 0; gap: 8px; font-size: 11px; color: var(--tx3); }
@@ -1267,7 +1267,7 @@ let chAb=null,chEnc=null,chSem=null,chFuel=null,chFuelProj=null,chFuelTop=null;
 let selWeek='';
 let selCluster='';
 let activeTab='abertos';
-let wppUnreadCount=0;
+let wppUnreadCount=0,wppInitialized=false;
 let refreshTimer=null;
 const STORAGE_KEY='atrix:painel:bases:v1';
 const ACTIVE_TAB_KEY='atrix:painel:aba:v1';
@@ -2710,13 +2710,35 @@ function updateWppBadge(){
   if(wppUnreadCount>0){badge.textContent=wppUnreadCount>99?'99+':wppUnreadCount;badge.style.display='';}
   else{badge.style.display='none';}
 }
+function playWppSound(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [[0,1318,0.12],[0.15,1047,0.14]].forEach(([t,freq,dur])=>{
+      const osc=ctx.createOscillator(),g=ctx.createGain();
+      osc.connect(g);g.connect(ctx.destination);
+      osc.type='sine';osc.frequency.setValueAtTime(freq,ctx.currentTime+t);
+      g.gain.setValueAtTime(0,ctx.currentTime+t);
+      g.gain.linearRampToValueAtTime(0.45,ctx.currentTime+t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t+dur);
+      osc.start(ctx.currentTime+t);osc.stop(ctx.currentTime+t+dur+0.02);
+    });
+    setTimeout(()=>{try{ctx.close();}catch(_){}},600);
+  }catch(_){}
+}
 window.addEventListener('message',function(e){
   if(e.origin!=='https://mcll-painel-acionamentos-production.up.railway.app')return;
   if(!e.data||typeof e.data!=='object')return;
   if(e.data.type==='wpp_new_message'){
-    if(activeTab!=='whatsapp'){wppUnreadCount++;updateWppBadge();}
+    if(activeTab!=='whatsapp'){wppUnreadCount++;updateWppBadge();playWppSound();}
   }else if(e.data.type==='wpp_message_count'){
-    if(activeTab!=='whatsapp'){wppUnreadCount=Math.max(0,Number(e.data.count)||0);updateWppBadge();}
+    const novo=Math.max(0,Number(e.data.count)||0);
+    if(activeTab!=='whatsapp'){
+      const cresceu=wppInitialized&&novo>wppUnreadCount;
+      wppUnreadCount=novo;
+      wppInitialized=true;
+      updateWppBadge();
+      if(cresceu)playWppSound();
+    }else{wppInitialized=true;}
   }
 });
 /* ─── NAV & THEME ─── */
