@@ -65,22 +65,22 @@ html { height: 100%; }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   background: var(--bg); color: var(--tx);
-  height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+  height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
   font-size: 13px; -webkit-font-smoothing: antialiased;
 }
 
 /* ─── NAVBAR ─── */
 .navbar {
-  min-height: 72px; flex-shrink: 0;
+  flex-shrink: 0;
   background: var(--glass); backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
   border-bottom: .5px solid var(--bd);
   display: flex; align-items: center;
-  padding: 8px 20px; gap: 0; position: relative; z-index: 100;
+  padding: clamp(5px, 0.8vh, 8px) clamp(10px, 1.5vw, 20px); gap: 0; position: relative; z-index: 100;
 }
 .nav-brand {
-  display: flex; align-items: center; gap: 8px; margin-right: 30px; flex-shrink: 0;
-  padding: 5px 12px; border-radius: 14px;
+  display: flex; align-items: center; gap: 8px; margin-right: clamp(8px, 2vw, 30px); flex-shrink: 0;
+  padding: clamp(3px, 0.5vh, 5px) clamp(6px, 0.8vw, 12px); border-radius: 14px;
   background: rgba(255,255,255,.66); border: .5px solid var(--bd);
   box-shadow: 0 8px 24px rgba(0,0,0,.08);
 }
@@ -91,7 +91,7 @@ body {
   font-size: 14px; color: #fff; font-weight: 600; flex-shrink: 0;
 }
 .nav-logo {
-  width: clamp(140px, 15vw, 260px); height: 58px; object-fit: contain; display: block;
+  width: clamp(110px, 13vw, 220px); height: clamp(40px, 5vh, 58px); object-fit: contain; display: block;
   filter: drop-shadow(0 6px 14px rgba(0,0,0,.18));
 }
 [data-theme=dark] .nav-brand { background: rgba(28,28,30,.72); }
@@ -102,9 +102,9 @@ body {
 .nav-tabs { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow: visible; scrollbar-width: none; flex-wrap: nowrap; }
 .nav-tabs::-webkit-scrollbar { display: none; }
 .ntab {
-  display: flex; align-items: center; gap: 6px;
-  padding: 7px 10px; border-radius: var(--r);
-  font-size: 12px; font-weight: 500; color: var(--tx3);
+  display: flex; align-items: center; gap: clamp(3px, 0.5vw, 6px);
+  padding: clamp(5px, 0.7vh, 7px) clamp(6px, 0.8vw, 10px); border-radius: var(--r);
+  font-size: clamp(10px, 1vw, 12px); font-weight: 500; color: var(--tx3);
   cursor: pointer; background: none; border: none;
   font-family: inherit; transition: color .15s, background .15s; user-select: none; white-space: nowrap;
   flex: 1 1 0; min-width: 0; justify-content: center; position: relative;
@@ -113,7 +113,7 @@ body {
 .ntab.active { background: var(--surface); box-shadow: var(--shadow-sm); }
 .ntab.active::after { content:''; position:absolute; bottom:3px; left:10px; right:10px; height:2px; border-radius:2px; background:currentColor; }
 [data-theme=dark] .ntab.active { background: var(--surface2); }
-.ntab i { font-size: 15px; flex-shrink: 0; }
+.ntab i { font-size: clamp(12px, 1.3vw, 15px); flex-shrink: 0; }
 /* Acento por tab — hover e ativo */
 #ntab-ab:hover,#ntab-ab.active     { color: var(--blue); }
 #ntab-enc:hover,#ntab-enc.active   { color: var(--green-dk); }
@@ -133,7 +133,7 @@ body {
 #panel-whatsapp.active { display: flex; flex-direction: column; }
 .wpp-topbar { display: flex; align-items: center; justify-content: flex-end; padding: 5px 12px; background: var(--surface); border-bottom: .5px solid var(--bd); flex-shrink: 0; gap: 8px; font-size: 11px; color: var(--tx3); }
 .wpp-topbar i { color: #25d366; font-size: 14px; }
-.wpp-iframe { flex: 1; width: 100%; border: none; display: block; min-height: calc(100vh - 80px); background: var(--surface2); }
+.wpp-iframe { flex: 1; width: 100%; border: none; display: block; background: var(--surface2); }
 .mc.c-purple::before { background: var(--purple); }
 .rep-details summary::-webkit-details-marker { display:none; }
 .rep-details[open] .rep-chevron { transform: rotate(180deg); }
@@ -159,11 +159,11 @@ body {
 [data-theme=dark] .week-select { background-color: var(--surface2); }
 
 /* NAV RIGHT */
-.nav-right { display: flex; align-items: center; gap: 6px; margin-left: 10px; flex-shrink: 0; }
+.nav-right { display: flex; align-items: center; gap: 6px; margin-left: clamp(6px, 1vw, 10px); flex-shrink: 0; }
 .nav-btn {
-  width: 30px; height: 30px; border-radius: 8px; border: .5px solid var(--bd);
+  width: clamp(24px, 2vw, 30px); height: clamp(24px, 2vw, 30px); border-radius: 8px; border: .5px solid var(--bd);
   background: var(--surface2); display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: var(--tx3); font-size: 15px; flex-shrink: 0; transition: all .13s;
+  cursor: pointer; color: var(--tx3); font-size: clamp(13px, 1.2vw, 15px); flex-shrink: 0; transition: all .13s;
 }
 .nav-btn:hover { background: var(--surface3); color: var(--tx); }
 .upload-pill {
@@ -664,11 +664,6 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
 .panel.active > *:nth-child(5) { animation-delay: .12s; }
 
 @media(max-width:1180px){
-  .navbar{padding:8px 12px}
-  .nav-brand{margin-right:8px;padding:4px 6px}
-  .nav-logo{width:clamp(110px,13vw,170px);height:50px}
-  .ntab{padding:6px 6px;font-size:11px;gap:4px}
-  .ntab i{font-size:13px}
   .ntab-badge{font-size:8px;padding:1px 4px;min-width:16px}
   .upload-pill{padding:5px 9px}
   .panel{padding:18px 16px 28px}
