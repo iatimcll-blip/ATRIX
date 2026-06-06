@@ -120,6 +120,7 @@ body {
 .nb-blue { background: var(--blue-bg); color: var(--blue); }
 .nb-green { background: var(--green-bg); color: var(--green-dk); }
 .nb-purple { background: var(--purple-bg); color: var(--purple); }
+.wpp-iframe { width: 100%; border: none; display: block; height: calc(100vh - 260px); min-height: 480px; border-radius: 0 0 var(--rxl) var(--rxl); }
 .mc.c-purple::before { background: var(--purple); }
 .rep-details summary::-webkit-details-marker { display:none; }
 .rep-details[open] .rep-chevron { transform: rotate(180deg); }
@@ -800,6 +801,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     </button>
     <button class="ntab" id="ntab-rede" onclick="switchTab('rede')"><i class="ti ti-router"></i> Rede</button>
     <button class="ntab" id="ntab-fuel" onclick="switchTab('combustivel')"><i class="ti ti-gas-station"></i> Combustíveis</button>
+    <button class="ntab" id="ntab-wpp" onclick="switchTab('whatsapp')"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button>
   </div>
 
   <div class="week-select-wrap" id="week-wrap" style="display:none">
@@ -1081,6 +1083,19 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       <div class="tw"><table><thead><tr><th>Data</th><th>Valor</th><th>Motivo / destino</th></tr></thead><tbody id="tb-fuel-w"></tbody></table></div>
     </div>
     <div class="pfooter">ATRIX · Consumo de Combustíveis · dados compartilhados</div>
+  </div>
+
+  <!-- ── PAINEL MONITORAMENTO WHATSAPP ── -->
+  <div class="panel" id="panel-whatsapp">
+    <div class="section-hd">Monitoramento WhatsApp <span class="sh-line"></span></div>
+    <div class="tsec">
+      <div class="tsec-hd">
+        <span class="tsec-title"><i class="ti ti-brand-whatsapp" style="color:#25d366;margin-right:5px"></i>Painel de Acionamentos — MCLL</span>
+        <span class="card-action" onclick="window.open('https://mcll-painel-acionamentos-production.up.railway.app/','_blank','noopener,noreferrer')"><i class="ti ti-external-link"></i> Abrir em nova aba</span>
+      </div>
+      <iframe class="wpp-iframe" id="wpp-frame" src="about:blank" title="Monitoramento WhatsApp" allow="fullscreen"></iframe>
+    </div>
+    <div class="pfooter">ATRIX · Monitoramento WhatsApp · MCLL</div>
   </div>
 
   <!-- ── PAINEL B2B REPETIDOS ── -->
@@ -2606,23 +2621,25 @@ function exportRepCSV(){
 
 /* ─── NAV & THEME ─── */
 function switchTab(tab,persist=true){
-  if(!['abertos','encerrados','rede','combustivel','repetidos'].includes(tab))tab='abertos';
+  if(!['abertos','encerrados','rede','combustivel','repetidos','whatsapp'].includes(tab))tab='abertos';
   activeTab=tab;
   if(persist)localStorage.setItem(ACTIVE_TAB_KEY,tab);
-  const isAb=tab==='abertos',isEnc=tab==='encerrados',isRede=tab==='rede',isFuel=tab==='combustivel',isRep=tab==='repetidos';
+  const isAb=tab==='abertos',isEnc=tab==='encerrados',isRede=tab==='rede',isFuel=tab==='combustivel',isRep=tab==='repetidos',isWpp=tab==='whatsapp';
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
-  const tabId='ntab-'+(isAb?'ab':isEnc?'enc':isRede?'rede':isFuel?'fuel':'rep');
+  const tabId='ntab-'+(isAb?'ab':isEnc?'enc':isRede?'rede':isFuel?'fuel':isWpp?'wpp':'rep');
   const tabEl=document.getElementById(tabId);if(tabEl)tabEl.classList.add('active');
   document.getElementById('panel-abertos').classList.toggle('active',isAb);
   document.getElementById('panel-encerrados').classList.toggle('active',isEnc);
   document.getElementById('panel-rede').classList.toggle('active',isRede);
   document.getElementById('panel-combustivel').classList.toggle('active',isFuel);
   document.getElementById('panel-repetidos').classList.toggle('active',isRep);
+  document.getElementById('panel-whatsapp').classList.toggle('active',isWpp);
   const showEncControls=isEnc&&dEnc.length>0;
   document.getElementById('week-wrap').style.display=showEncControls?'flex':'none';
   document.getElementById('cluster-wrap').style.display=showEncControls?'flex':'none';
   if(isFuel){renderFuel();setTimeout(initFuelSplit,80);}
   if(isRep)renderPanelRepetidos();
+  if(isWpp){const f=document.getElementById('wpp-frame');if(f&&f.src==='about:blank')f.src='https://mcll-painel-acionamentos-production.up.railway.app/';}
 }
 function toggleTheme(){
   const dk=document.body.dataset.theme==='dark';
