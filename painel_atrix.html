@@ -181,6 +181,18 @@ body {
 .week-select:focus { border-color: var(--blue); }
 [data-theme=dark] .week-select { background-color: var(--surface2); }
 
+/* ENC SUBBAR */
+.enc-subbar {
+  display: none; flex-shrink: 0; align-items: center; gap: 10px;
+  padding: 6px clamp(10px, 1.5vw, 20px);
+  background: var(--surface); border-bottom: .5px solid var(--bd);
+  position: relative; z-index: 98;
+}
+.enc-subbar.visible { display: flex; }
+.enc-subbar-label {
+  font-size: 10px; font-weight: 700; color: var(--tx3);
+  text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; margin-right: 2px;
+}
 /* NAV RIGHT */
 .nav-right { display: flex; align-items: center; gap: 6px; margin-left: clamp(6px, 1vw, 10px); flex-shrink: 0; }
 .nav-btn {
@@ -843,29 +855,29 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     <button class="ntab" id="ntab-wpp" onclick="switchTab('whatsapp')"><i class="ti ti-brand-whatsapp"></i> WhatsApp<span class="ntab-badge nb-wpp" id="nb-wpp" style="display:none">0</span></button>
   </div>
 
-  <div class="week-select-wrap" id="week-wrap" style="display:none">
-    <span class="week-label"><i class="ti ti-calendar" style="font-size:13px;vertical-align:-2px"></i> Semana</span>
-    <select class="week-select" id="week-selector" onchange="onWeekChange()">
-      <option value="">Todas as semanas</option>
-    </select>
-  </div>
-  <div class="week-select-wrap" id="cluster-wrap" style="display:none">
-    <span class="week-label"><i class="ti ti-map-pin" style="font-size:13px;vertical-align:-2px"></i> Cluster</span>
-    <select class="week-select" id="cluster-selector" onchange="onClusterChange()">
-      <option value="">Todos os clusters</option>
-    </select>
-  </div>
-
   <div class="nav-right">
-    <label class="upload-pill up-ab" for="file-ab"><i class="ti ti-upload"></i>Abertos</label>
-    <label class="upload-pill up-enc" for="file-enc"><i class="ti ti-upload"></i>Encerrados</label>
-    <label class="upload-pill admin-only" for="file-fuel"><i class="ti ti-upload"></i>Alelo</label>
+    <label class="upload-pill up-ab" id="up-ab" for="file-ab"><i class="ti ti-upload"></i>Abertos</label>
+    <label class="upload-pill up-enc" id="up-enc" for="file-enc" style="display:none"><i class="ti ti-upload"></i>Encerrados</label>
+    <label class="upload-pill admin-only" id="up-fuel" for="file-fuel" style="display:none"><i class="ti ti-upload"></i>Alelo</label>
     <div class="nav-btn admin-only" onclick="openUserPanel()" title="Usuários"><i class="ti ti-users"></i></div>
     <div class="nav-btn" onclick="toggleTheme()" title="Tema"><i class="ti ti-moon" id="ti-icon"></i></div>
     <div class="nav-btn" onclick="logoutUser()" title="Sair"><i class="ti ti-logout"></i></div>
     <div class="avatar-btn" id="avatar-label">--</div>
   </div>
 </nav>
+
+<!-- ── ENC SUBBAR (Semana / Cluster — só aparece na aba Encerrados) ── -->
+<div class="enc-subbar" id="enc-subbar">
+  <span class="enc-subbar-label"><i class="ti ti-circle-check" style="font-size:12px;vertical-align:-1px;color:var(--green-dk);margin-right:3px"></i>B2B Encerrados</span>
+  <span class="week-label"><i class="ti ti-calendar" style="font-size:13px;vertical-align:-2px"></i> Semana</span>
+  <select class="week-select" id="week-selector" onchange="onWeekChange()">
+    <option value="">Todas as semanas</option>
+  </select>
+  <span class="week-label" style="margin-left:6px"><i class="ti ti-map-pin" style="font-size:13px;vertical-align:-2px"></i> Cluster</span>
+  <select class="week-select" id="cluster-selector" onchange="onClusterChange()">
+    <option value="">Todos os clusters</option>
+  </select>
+</div>
 
 <!-- ═══ APP BODY ═══ -->
 <div class="app-body">
@@ -1756,8 +1768,8 @@ function procEnc(raw,fname){
   document.getElementById('empty-enc').style.display='none';
   document.getElementById('dash-enc').style.display='block';
   const showControls=document.getElementById('panel-encerrados').classList.contains('active');
-  document.getElementById('week-wrap').style.display=showControls?'flex':'none';
-  document.getElementById('cluster-wrap').style.display=showControls?'flex':'none';
+  const encSubbarEl=document.getElementById('enc-subbar');
+  if(encSubbarEl)encSubbarEl.classList.toggle('visible',showControls&&dEnc.length>0);
   saveState();
 }
 
@@ -2815,8 +2827,12 @@ function switchTab(tab,persist=true){
   document.getElementById('panel-repetidos').classList.toggle('active',isRep);
   document.getElementById('panel-whatsapp').classList.toggle('active',isWpp);
   const showEncControls=isEnc&&dEnc.length>0;
-  document.getElementById('week-wrap').style.display=showEncControls?'flex':'none';
-  document.getElementById('cluster-wrap').style.display=showEncControls?'flex':'none';
+  const encSubbar=document.getElementById('enc-subbar');
+  if(encSubbar)encSubbar.classList.toggle('visible',showEncControls);
+  const upAb=document.getElementById('up-ab'),upEnc=document.getElementById('up-enc'),upFuel=document.getElementById('up-fuel');
+  if(upAb)upAb.style.display=isAb?'':'none';
+  if(upEnc)upEnc.style.display=(isEnc||isRep)?'':'none';
+  if(upFuel)upFuel.style.display=isFuel?'':'none';
   if(isFuel){renderFuel();setTimeout(initFuelSplit,80);}
   if(isRep)renderPanelRepetidos();
   if(isWpp){wppUnreadCount=0;updateWppBadge();const f=document.getElementById('wpp-frame');if(f&&f.src==='about:blank')f.src='https://mcll-painel-acionamentos-production.up.railway.app/painel';}
