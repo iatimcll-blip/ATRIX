@@ -1043,7 +1043,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
             <th onclick="sAb('id')">ID Ticket</th>
             <th onclick="sAb('cliente')">Cliente</th>
             <th>MOP/EPS</th>
-            <th onclick="sAb('cidade')">Cidade/UF</th>
+            <th onclick="sAb('cidade')">UF/Cidade</th>
             <th onclick="sAb('slaH')">SLA ↕</th>
             <th>Faixa</th><th>Status SLA</th><th>Substatus</th><th></th>
           </tr></thead>
@@ -1136,7 +1136,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <thead><tr>
             <th onclick="sEnc('protocolo')">Protocolo</th>
             <th onclick="sEnc('cliente')">Cliente</th>
-            <th onclick="sEnc('cidade')">Cidade/UF</th>
+            <th onclick="sEnc('cidade')">UF/Cidade</th>
             <th onclick="sEnc('cluster')">Cluster</th>
             <th onclick="sEnc('tempoTotal')">Tempo Total ↕</th>
             <th>Faixa SLA</th><th>Dentro 8h</th><th>Outlier +24h</th>
@@ -1375,7 +1375,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
             <th>OS (col B)</th>
             <th>NumPlan (F)</th>
             <th>Cliente ID (J)</th>
-            <th>Semana</th><th>Cluster</th><th>Cidade/UF</th>
+            <th>Semana</th><th>Cluster</th><th>UF/Cidade</th>
             <th>Causa Raiz</th><th>Tempo Total</th><th>Faixa SLA</th>
             <th>≤8h</th><th>Outlier +24h</th>
           </tr></thead>
@@ -1849,8 +1849,10 @@ function procEnc(raw,fname){
   dEnc=raw.filter(r=>r['ticket_id']||r['protocolo']).map(r=>{
     const protocolo=String(r['protocolo']||r['ticket_id']||'').trim();
     const cliente=String(colVal(r,10,['Cliente','cliente'])||'').trim();
-    const uf=String(r['ufservico']||r['UF']||r['uf']||gv(r,['uf_servico','estado','Uf Serviço','Uf Servico','ufatendimento','estadoservico'])||'').trim().toUpperCase();
-    const cidadeRaw=String(r['cidadeservico']||r['cidade']||r['municipio']||r['Cidade']||gv(r,['cidade_servico','municipio_servico','Município','Cidade Serviço','Cidade Servico','localservico','local_servico','local','localidade'])||'').trim();
+    const _vals=Object.values(r);
+    const _ufPos=String(_vals[23]||'').trim();const _cidPos=String(_vals[24]||'').trim();
+    const uf=String(r['ufservico']||r['UF']||r['uf']||gv(r,['uf_servico','estado','Uf Serviço','Uf Servico'])||(_ufPos.length===2?_ufPos:'')||'').trim().toUpperCase();
+    const cidadeRaw=String(r['cidadeservico']||r['cidade']||r['municipio']||r['Cidade']||gv(r,['cidade_servico','municipio_servico','Município','Cidade Serviço','Cidade Servico'])||(_cidPos.length>2&&isNaN(_cidPos)?_cidPos:'')||'').trim();
     const cidade=titleCasePT(repairPtBR(cidadeRaw));
     const clusterCalc=String(r['cluster_calc']||'').trim();
     const cluster=normCluster(clusterCalc);
@@ -2298,7 +2300,7 @@ function renderTEnc(){
     const d8=d.dentro8h?'<span class="badge b-in">Sim</span>':'<span class="badge b-out">Não</span>';
     const ol=d.outlier24h?'<span class="badge b-red">Sim</span>':'<span style="color:var(--tx3)">—</span>';
     const causa=fmtCausaRaiz(d.causaRaiz);
-    const cidadeUf=d.cidade?`${d.cidade}/${d.uf}`:d.uf||'—';
+    const cidadeUf=d.cidade?`${d.uf}/${d.cidade}`:d.uf||'—';
     return`<tr><td class="tid">${d.protocolo}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)" title="${d.cliente}">${d.cliente}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${cidadeUf}">${cidadeUf}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${CCLR[d.cluster]||'#8e8e93'};flex-shrink:0"></span>${d.cluster}</span></td><td style="${sc}">${fh(d.tempoTotal)}</td><td><span class="badge ${bc}">${d.faixa}</span></td><td>${d8}</td><td>${ol}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${causa}">${causa||'—'}</td><td><span class="badge b-teal">${d.semana||'—'}</span></td></tr>`;
   }).join('')||'<tr><td colspan="10" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
 }
@@ -2773,7 +2775,7 @@ function renderPanelRepetidos(){
       <td><code style="background:var(--purple-bg);color:var(--purple);padding:1px 5px;border-radius:4px;font-size:10px;white-space:nowrap">${eh(r._clienteId||'—')}</code></td>
       <td><span class="badge b-teal">${eh(r.semana||'—')}</span></td>
       <td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${(CLUSTER_INFO[r.cluster]||{}).clr||'#8e8e93'};flex-shrink:0"></span>${eh(r.cluster||'—')}</span></td>
-      <td style="white-space:nowrap">${eh(r.cidade||'—')}/${eh(r.uf)}</td>
+      <td style="white-space:nowrap">${eh(r.uf)}/${eh(r.cidade||'—')}</td>
       <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(r.causaRaiz)}">${eh(r.causaRaiz||'—')}</td>
       <td style="${sc};white-space:nowrap">${fh(r.tempoTotal)}</td>
       <td><span class="badge ${bc}">${eh(r.faixa)}</span></td>
