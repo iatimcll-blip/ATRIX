@@ -1881,7 +1881,7 @@ function procEnc(raw,fname){
     const osColB=String(Object.values(r)[1]||'').trim();
     const os=String(gv(r,['ult_OS','ult os','última OS','ultima OS','os_agrupada','os concluida agrupada','os_concluida_agrupada','OS','os'])||osColB||protocolo).trim();
     const dataAbertura=gv(r,['data_abertura','Data Abertura','Data de Abertura','abertura']);
-    const dataFechamento=gv(r,['data_fechamento','Data Fechamento','Data de Fechamento','fechamento','encerramento']);
+    const dataFechamento=gv(r,['data_fechamento','Data Fechamento','Data de Fechamento','fechamento','encerramento','Data_Fechamento','DATA FECHAMENTO','data fechamento'])||String(_vals[13]||'');
     const dataFechamentoParsed=parseOpeningDate(dataFechamento);
     const semana=String(r['semana']||'').trim()||calcSemana(dataFechamentoParsed);
     const numplan=String(gv(r,['numplan','NUMPLAN','Num Plan','num_plan','NumPlan','num plan'])||'').trim();
