@@ -708,6 +708,22 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
 
 /* ─── FOOTER ─── */
 .pfooter { text-align: center; font-size: 10px; color: var(--tx3); padding: 10px 0 4px; }
+/* ─── MODAL ADD CHAMADO ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:var(--surface);border-radius:var(--rxl);box-shadow:var(--shadow-lg);border:.5px solid var(--bd);width:100%;max-width:580px;overflow:hidden;animation:fadeUp .2s ease}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:.5px solid var(--bd)}
+.modal-title{font-size:14px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:8px}
+.modal-title i{color:var(--blue)}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--tx3);font-size:16px;padding:4px 6px;border-radius:6px;display:flex;align-items:center;transition:color .15s;font-family:inherit}
+.modal-close:hover{color:var(--tx)}
+.modal-body{padding:16px 18px}
+.modal-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.mfg-field{display:flex;flex-direction:column;gap:5px}
+.mfg-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em}
+.mfg-disabled{color:var(--tx3)!important;background:var(--surface2)!important;cursor:default}
+.mfg-full{grid-column:span 2}
+.modal-ft{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:12px 18px;border-top:.5px solid var(--bd);background:var(--surface2)}
+@media(max-width:560px){.modal-form-grid{grid-template-columns:1fr}.mfg-full{grid-column:span 1}}
 
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -820,73 +836,6 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
   </div>
 </div>
 
-<!-- ═══ MODAL ADICIONAR CHAMADO ═══ -->
-<div class="modal-backdrop" id="modal-ab" style="display:none" onclick="if(event.target===this)closeModalAb()">
-  <div class="modal-box">
-    <div class="modal-hd">
-      <span class="modal-title"><i class="ti ti-plus-circle" style="margin-right:6px;color:var(--blue)"></i>Adicionar chamado manualmente</span>
-      <button class="modal-close" onclick="closeModalAb()"><i class="ti ti-x"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="mform-grid">
-        <div>
-          <label class="mform-label">ID do Ticket <span style="color:var(--red)">*</span></label>
-          <input class="mform-input" id="mab-id" placeholder="ex: TT-00123" autocomplete="off">
-        </div>
-        <div>
-          <label class="mform-label">Link do ticket</label>
-          <input class="mform-input" id="mab-link" placeholder="https://…" type="url" autocomplete="off">
-        </div>
-        <div class="mform-full">
-          <label class="mform-label">Cliente <span style="color:var(--red)">*</span></label>
-          <input class="mform-input" id="mab-cliente" placeholder="Nome do cliente" autocomplete="off">
-        </div>
-        <div class="mform-full">
-          <label class="mform-label">Complemento / Assunto</label>
-          <input class="mform-input" id="mab-assunto" placeholder="Informação adicional do cliente ou assunto" autocomplete="off">
-        </div>
-        <div>
-          <label class="mform-label">Cidade <span style="color:var(--red)">*</span></label>
-          <input class="mform-input" id="mab-cidade" placeholder="ex: São Luís" oninput="mabAutoMop()" autocomplete="off">
-        </div>
-        <div>
-          <label class="mform-label">UF <span style="color:var(--red)">*</span></label>
-          <select class="mform-input" id="mab-uf" onchange="mabAutoMop()">
-            <option value="">Selecione…</option>
-            <option>MA</option><option>PI</option><option>PA</option><option>AM</option><option>AP</option>
-          </select>
-        </div>
-        <div>
-          <label class="mform-label">MOP/EPS (automático)</label>
-          <div class="mform-mop" id="mab-mop-display" style="color:var(--tx3)">—</div>
-          <div class="mform-hint">Calculado pela cidade/UF</div>
-        </div>
-        <div>
-          <label class="mform-label">SLA Base (h)</label>
-          <input class="mform-input" id="mab-sla" type="number" min="0" step="0.5" placeholder="ex: 8" autocomplete="off">
-        </div>
-        <div class="mform-full">
-          <label class="mform-label">Substatus</label>
-          <select class="mform-input" id="mab-substatus">
-            <option value="">Em andamento</option>
-            <option>Pendente Validação</option>
-            <option>Pendente Cliente</option>
-            <option>Pendente Agendamento</option>
-            <option>Encaminhado Ao Técnico</option>
-            <option>Aguardando Liberação De Acesso</option>
-            <option>Fechado</option>
-            <option>Cancelado</option>
-          </select>
-        </div>
-      </div>
-      <div id="mab-err" style="display:none;color:var(--red);font-size:11px;margin-top:8px"></div>
-    </div>
-    <div class="modal-ft">
-      <button class="modal-btn modal-btn-cancel" onclick="closeModalAb()">Cancelar</button>
-      <button class="modal-btn modal-btn-submit" onclick="submitModalAb()"><i class="ti ti-check" style="margin-right:4px"></i>Adicionar</button>
-    </div>
-  </div>
-</div>
 
 <!-- ═══ GOOGLE SHEETS MODAL ═══ -->
 <div class="user-panel" id="sheets-panel">
@@ -951,6 +900,9 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     <label class="upload-pill up-ab" id="up-ab" for="file-ab"><i class="ti ti-upload"></i>Abertos</label>
     <label class="upload-pill up-enc" id="up-enc" for="file-enc" style="display:none"><i class="ti ti-upload"></i>Encerrados</label>
     <label class="upload-pill admin-only" id="up-fuel" for="file-fuel" style="display:none"><i class="ti ti-upload"></i>Alelo</label>
+    <div class="nav-btn" id="clear-ab-btn" onclick="clearAb()" title="Limpar base B2B Abertos" style="display:none;color:var(--red)"><i class="ti ti-trash"></i></div>
+    <div class="nav-btn" id="clear-enc-btn" onclick="clearEnc()" title="Limpar base B2B Encerrados" style="display:none;color:var(--red)"><i class="ti ti-trash"></i></div>
+    <div class="nav-btn" id="clear-rede-btn" onclick="clearRede()" title="Recarregar painel Rede" style="display:none;color:var(--orange)"><i class="ti ti-refresh"></i></div>
     <div class="nav-btn admin-only" onclick="openUserPanel()" title="Usuários"><i class="ti ti-users"></i></div>
     <div class="nav-btn" onclick="toggleTheme()" title="Tema"><i class="ti ti-moon" id="ti-icon"></i></div>
     <div class="nav-btn" onclick="logoutUser()" title="Sair"><i class="ti ti-logout"></i></div>
@@ -1027,7 +979,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <span class="tsec-title">Chamados em aberto</span>
           <div class="tsec-meta">
             <span id="cnt-ab" style="color:var(--tx3)"></span>
-            <span class="card-action admin-only" onclick="openModalAb()" style="color:var(--blue);display:none"><i class="ti ti-plus" style="font-size:11px;vertical-align:-1px"></i> Adicionar chamado</span>
+            <span class="card-action admin-only" onclick="openModalAb()" style="color:var(--blue)"><i class="ti ti-plus" style="font-size:11px;vertical-align:-1px"></i> Adicionar chamado</span>
             <span class="card-action" onclick="exportCSV('ab')"><i class="ti ti-download" style="font-size:11px;vertical-align:-1px"></i> Exportar CSV</span>
           </div>
         </div>
@@ -1380,14 +1332,16 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         </div>
         <div class="tw"><table>
           <thead><tr>
-            <th>Título / Cliente</th>
-            <th>Repetições</th>
-            <th>OS (col B)</th>
-            <th>NumPlan (F)</th>
-            <th>Cliente ID (J)</th>
-            <th>Semana</th><th>Cluster</th><th>UF/Cidade</th>
-            <th>Causa Raiz</th><th>Tempo SLA</th><th>Faixa SLA</th>
-            <th>≤8h</th><th>Outlier +24h</th>
+            <th>Protocolo</th>
+            <th>Cliente</th>
+            <th>UF/Cidade</th>
+            <th>Cluster</th>
+            <th>Tempo SLA</th>
+            <th>Faixa SLA</th>
+            <th>Dentro 8h</th>
+            <th>Outlier +24h</th>
+            <th>Causa Raiz</th>
+            <th>Semana</th>
           </tr></thead>
           <tbody id="tb-rep"></tbody>
         </table></div>
@@ -1396,6 +1350,63 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     </div>
   </div>
 
+</div>
+
+<!-- ── MODAL: ADICIONAR CHAMADO ABERTOS ── -->
+<div class="modal-overlay" id="modal-add-ab" style="display:none" onclick="if(event.target===this)closeModalAb()">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <span class="modal-title"><i class="ti ti-plus"></i> Adicionar Chamado Manualmente</span>
+      <button class="modal-close" onclick="closeModalAb()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-form-grid">
+        <div class="mfg-field">
+          <span class="mfg-label">ID Ticket *</span>
+          <input class="finput" id="mab-id" placeholder="Ex: 2025001234" autocomplete="off">
+        </div>
+        <div class="mfg-field">
+          <span class="mfg-label">Cliente *</span>
+          <input class="finput" id="mab-cliente" placeholder="Nome do cliente" autocomplete="off">
+        </div>
+        <div class="mfg-field">
+          <span class="mfg-label">UF *</span>
+          <select class="fsel" id="mab-uf" onchange="onMabLocChange()">
+            <option value="">Selecione</option>
+            <option>MA</option><option>PI</option><option>PA</option><option>AM</option><option>AP</option>
+          </select>
+        </div>
+        <div class="mfg-field">
+          <span class="mfg-label">Cidade *</span>
+          <input class="finput" id="mab-cidade" placeholder="Nome da cidade" oninput="onMabLocChange()" autocomplete="off">
+        </div>
+        <div class="mfg-field">
+          <span class="mfg-label">MOP/EPS (automático)</span>
+          <input class="finput mfg-disabled" id="mab-mop" placeholder="Preenchido a partir de UF + Cidade" disabled>
+        </div>
+        <div class="mfg-field">
+          <span class="mfg-label">SLA (horas) *</span>
+          <input class="finput" id="mab-sla" type="number" step="0.5" min="0" placeholder="Ex: 6.5" oninput="onMabSlaChange()">
+        </div>
+        <div class="mfg-field">
+          <span class="mfg-label">Faixa SLA (automático)</span>
+          <input class="finput mfg-disabled" id="mab-faixa" placeholder="Calculado pelo SLA" disabled>
+        </div>
+        <div class="mfg-field">
+          <span class="mfg-label">Status SLA (automático)</span>
+          <input class="finput mfg-disabled" id="mab-status-sla" placeholder="Calculado pelo SLA" disabled>
+        </div>
+        <div class="mfg-field mfg-full">
+          <span class="mfg-label">Substatus</span>
+          <select class="fsel" id="mab-substatus" style="width:100%"></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <span class="card-action" style="color:var(--tx3)" onclick="closeModalAb()">Cancelar</span>
+      <span class="card-action" style="color:var(--blue);font-weight:600" onclick="saveModalAb()"><i class="ti ti-check" style="font-size:11px;vertical-align:-1px"></i> Salvar chamado</span>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1831,6 +1842,90 @@ function clienteAbertoNome(r){
   const usarColunaC=[clienteHeader,clienteK].some(v=>AB_CLIENTE_COLC_ALIASES.has(nk(v)));
   return usarColunaC&&clienteC?clienteC:(clienteHeader||clienteK);
 }
+/* ─── LIMPAR BASES ─── */
+function clearAb(){
+  if(!canEdit()){alert('Apenas administradores podem limpar a base.');return;}
+  if(!confirm('Limpar toda a base de B2B Abertos? Essa ação não pode ser desfeita.'))return;
+  dAb=[];stopRefresh();
+  document.getElementById('nb-ab').textContent='0';
+  document.getElementById('empty-ab').style.display='';
+  document.getElementById('dash-ab').style.display='none';
+  const sr=document.getElementById('f-srch-ab');if(sr)sr.value='';
+  saveState();updateClearBtns();
+}
+function clearEnc(){
+  if(!canEdit()){alert('Apenas administradores podem limpar a base.');return;}
+  if(!confirm('Limpar toda a base de B2B Encerrados? Isso também limpará B2B Repetidos.'))return;
+  dEnc=[];
+  document.getElementById('nb-enc').textContent='0';
+  document.getElementById('nb-rep').textContent='0';
+  document.getElementById('empty-enc').style.display='';
+  document.getElementById('dash-enc').style.display='none';
+  const encSubbar=document.getElementById('enc-subbar');if(encSubbar)encSubbar.classList.remove('visible');
+  renderPanelRepetidos();
+  saveState();updateClearBtns();
+}
+function clearRede(){
+  if(!confirm('Recarregar o painel Rede?'))return;
+  const f=document.querySelector('#panel-rede iframe');
+  if(f){const src=f.src;f.src='about:blank';setTimeout(()=>{f.src=src;},100);}
+}
+function updateClearBtns(){
+  const isAb=activeTab==='abertos',isEnc=activeTab==='encerrados',isRep=activeTab==='repetidos',isRede=activeTab==='rede';
+  const bAb=document.getElementById('clear-ab-btn');
+  const bEnc=document.getElementById('clear-enc-btn');
+  const bRede=document.getElementById('clear-rede-btn');
+  if(bAb)bAb.style.display=isAb&&dAb.length?'flex':'none';
+  if(bEnc)bEnc.style.display=(isEnc||isRep)&&dEnc.length?'flex':'none';
+  if(bRede)bRede.style.display=isRede?'flex':'none';
+}
+/* ─── MODAL ADICIONAR CHAMADO ─── */
+function openModalAb(){
+  if(!canEdit())return;
+  const el=document.getElementById('modal-add-ab');if(!el)return;
+  ['mab-id','mab-cliente','mab-cidade','mab-sla','mab-mop','mab-faixa','mab-status-sla'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('mab-uf').value='';
+  const subs=document.getElementById('mab-substatus');
+  if(subs)subs.innerHTML='<option value="">Selecione o substatus</option>'+getSubstatusOptions('');
+  el.style.display='flex';
+  setTimeout(()=>{const e=document.getElementById('mab-id');if(e)e.focus();},80);
+}
+function closeModalAb(){const el=document.getElementById('modal-add-ab');if(el)el.style.display='none';}
+function onMabLocChange(){
+  const uf=document.getElementById('mab-uf').value;
+  const cidade=document.getElementById('mab-cidade').value;
+  const mop=normMopByCity(uf,cidade);
+  document.getElementById('mab-mop').value=mop||'';
+  onMabSlaChange();
+}
+function onMabSlaChange(){
+  const slaH=parseFloat(document.getElementById('mab-sla').value)||0;
+  const uf=document.getElementById('mab-uf').value;
+  const cidade=document.getElementById('mab-cidade').value;
+  const mop=normMopByCity(uf,cidade)||'';
+  document.getElementById('mab-faixa').value=slaH?cf(slaH):'';
+  document.getElementById('mab-status-sla').value=slaH?statusSla(slaH,mop,8):'';
+}
+function saveModalAb(){
+  if(!canEdit())return;
+  const id=document.getElementById('mab-id').value.trim();
+  const cliente=document.getElementById('mab-cliente').value.trim();
+  const uf=(document.getElementById('mab-uf').value||'').trim().toUpperCase();
+  const cidade=document.getElementById('mab-cidade').value.trim();
+  const slaH=parseFloat(document.getElementById('mab-sla').value)||0;
+  const substatus=document.getElementById('mab-substatus').value;
+  if(!id||!cliente||!uf||!cidade){alert('Preencha obrigatoriamente: ID Ticket, Cliente, UF e Cidade.');return;}
+  if(!slaH&&slaH!==0){alert('Informe o SLA em horas.');return;}
+  const mop=normMopByCity(uf,cidade)||'';
+  const faixa=cf(slaH);
+  const status=statusSla(slaH,mop,8);
+  const rowKey=Date.now();
+  const item={rowKey,id,cliente,assunto:'',uf,cidade,regiao:'',substatus:substatus||'',link:'',openedAt:new Date(),originalSlaH:slaH,slaLimitH:8,pausedBusinessH:0,pauseStart:null,mop,slaH,faixa,statusSla:status};
+  dAb.push(item);
+  document.getElementById('nb-ab').textContent=dAb.length;
+  fillFiltersAb();renderAllAb();saveState();
+  closeModalAb();
+}
 function procAb(raw,fname){
   dAb=raw.filter(r=>gv(r,['ID Ticket','ID_TICKET'])!=='').map((r,rowKey)=>{
     const id=String(gv(r,['ID Ticket','ID_TICKET'])||'').trim();
@@ -1860,7 +1955,7 @@ function procAb(raw,fname){
   fillFiltersAb();renderAllAb();startRefresh();
   document.getElementById('empty-ab').style.display='none';
   document.getElementById('dash-ab').style.display='block';
-  saveState();
+  saveState();updateClearBtns();
 }
 
 /* ─── PROCESS ENCERRADOS ─── */
@@ -1907,7 +2002,7 @@ function procEnc(raw,fname){
   const showControls=document.getElementById('panel-encerrados').classList.contains('active');
   const encSubbarEl=document.getElementById('enc-subbar');
   if(encSubbarEl)encSubbarEl.classList.toggle('visible',showControls&&dEnc.length>0);
-  saveState();
+  saveState();updateClearBtns();
 }
 
 /* ─── WEEK / CLUSTER SELECTORS ─── */
@@ -2786,21 +2881,20 @@ function renderPanelRepetidos(){
     const d8=r.dentro8h?'<span class="badge b-in">Sim</span>':'<span class="badge b-out">Não</span>';
     const ol=r.outlier24h?'<span class="badge b-red">Sim</span>':'<span style="color:var(--tx3)">—</span>';
     const sc=r.tempoTotal>24?'color:var(--red);font-weight:600':r.tempoTotal>8?'color:var(--orange);font-weight:600':'color:var(--green-dk)';
+    const clrDot=(CLUSTER_INFO[r.cluster]||{}).clr||'#8e8e93';
     return`<tr>
-      <td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx);font-weight:600" title="${eh(r._nome)}">${eh(r._nome||'—')}</td>
-      <td><span class="badge b-purple">${eh(r._count)}x</span></td>
-      <td><code style="background:var(--surface2);color:var(--tx2);padding:1px 5px;border-radius:4px;font-size:10px;white-space:nowrap">${eh(r.os||'—')}</code></td>
-      <td><code style="background:var(--blue-bg);color:var(--blue);padding:1px 5px;border-radius:4px;font-size:10px;white-space:nowrap">${eh(r._numplan||'—')}</code></td>
-      <td><code style="background:var(--purple-bg);color:var(--purple);padding:1px 5px;border-radius:4px;font-size:10px;white-space:nowrap">${eh(r._clienteId||'—')}</code></td>
-      <td><span class="badge b-teal">${eh(r.semana||'—')}</span></td>
-      <td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${(CLUSTER_INFO[r.cluster]||{}).clr||'#8e8e93'};flex-shrink:0"></span>${eh(r.cluster||'—')}</span></td>
-      <td style="white-space:nowrap">${eh(r.uf)}/${eh(r.cidade||'—')}</td>
-      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(r.causaRaiz)}">${eh(r.causaRaiz||'—')}</td>
+      <td><code style="background:var(--surface2);color:var(--tx2);padding:1px 5px;border-radius:4px;font-size:10px;white-space:nowrap">${eh(r.protocolo||'—')}</code></td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx);font-weight:600" title="${eh(r.cliente)}">${eh(r.cliente||'—')}</td>
+      <td style="white-space:nowrap">${eh(r.uf||'—')}/${eh(r.cidade||'—')}</td>
+      <td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${clrDot};flex-shrink:0"></span>${eh(r.cluster||'—')}</span></td>
       <td style="${sc};white-space:nowrap">${fh(r.tempoTotal)}</td>
       <td><span class="badge ${bc}">${eh(r.faixa)}</span></td>
-      <td>${d8}</td><td>${ol}</td>
+      <td>${d8}</td>
+      <td>${ol}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(r.causaRaiz)}">${eh(r.causaRaiz||'—')}</td>
+      <td><span class="badge b-teal">${eh(r.semana||'—')}</span></td>
     </tr>`;
-  }).join('')||'<tr><td colspan="13" class="nores"><i class="ti ti-search-off"></i>Nenhum chamado repetido encontrado</td></tr>';
+  }).join('')||'<tr><td colspan="10" class="nores"><i class="ti ti-search-off"></i>Nenhum chamado repetido encontrado</td></tr>';
   document.getElementById('ft-rep').textContent='Atualizado em '+now2();
 }
 function renderRepClientsChart(all,dk){
@@ -2984,50 +3078,6 @@ window.addEventListener('message',function(e){
     }else{wppInitialized=true;}
   }
 });
-/* ─── MODAL ADICIONAR CHAMADO ─── */
-function openModalAb(){
-  if(!canEdit())return;
-  ['mab-id','mab-link','mab-cliente','mab-assunto','mab-cidade','mab-sla'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  const uf=document.getElementById('mab-uf');if(uf)uf.value='';
-  const mop=document.getElementById('mab-mop-display');if(mop){mop.textContent='—';mop.style.color='var(--tx3)'}
-  const err=document.getElementById('mab-err');if(err)err.style.display='none';
-  document.getElementById('modal-ab').style.display='flex';
-  setTimeout(()=>document.getElementById('mab-id')?.focus(),80);
-}
-function closeModalAb(){document.getElementById('modal-ab').style.display='none'}
-function mabAutoMop(){
-  const cidade=document.getElementById('mab-cidade')?.value||'';
-  const uf=document.getElementById('mab-uf')?.value||'';
-  const mop=normMopByCity(uf,cidade);
-  const el=document.getElementById('mab-mop-display');
-  if(el){el.textContent=mop||'—';el.style.color=mop?(MOP_CLR[mop]||'var(--tx)'):'var(--tx3)'}
-}
-function submitModalAb(){
-  if(!canEdit())return;
-  const id=(document.getElementById('mab-id')?.value||'').trim();
-  const cliente=(document.getElementById('mab-cliente')?.value||'').trim();
-  const assunto=repairPtBR((document.getElementById('mab-assunto')?.value||'').trim());
-  const cidade=repairPtBR((document.getElementById('mab-cidade')?.value||'').trim());
-  const uf=(document.getElementById('mab-uf')?.value||'').trim().toUpperCase();
-  const link=(document.getElementById('mab-link')?.value||'').trim();
-  const slaLimitH=parseFloat(document.getElementById('mab-sla')?.value||'0')||0;
-  const substatus=fmtSubstatus(document.getElementById('mab-substatus')?.value||'');
-  const err=document.getElementById('mab-err');
-  if(!id){err.textContent='ID do Ticket é obrigatório.';err.style.display='block';return}
-  if(!cliente){err.textContent='Nome do cliente é obrigatório.';err.style.display='block';return}
-  if(!cidade||!uf){err.textContent='Cidade e UF são obrigatórios para calcular o MOP/EPS.';err.style.display='block';return}
-  if(dAb.some(d=>nk(d.id)===nk(id))){err.textContent='Já existe um chamado com esse ID.';err.style.display='block';return}
-  const rowKey=dAb.length;
-  let mop=normMopByCity(uf,cidade);
-  const openedAt=new Date();
-  const item={rowKey,id,cliente,assunto,uf,cidade,regiao:'',substatus,link:safeUrl(link)||'',openedAt,originalSlaH:0,slaLimitH,pausedBusinessH:0,pauseStart:null,mop,_manual:true};
-  if(!isOperatorClient(item)&&isPausedSubstatus(substatus))item.pauseStart=new Date();
-  item.slaH=computeSlaHours(item);item.faixa=cf(item.slaH);item.statusSla=statusSla(item.slaH,mop,slaLimitH);
-  dAb.push(item);
-  document.getElementById('nb-ab').textContent=dAb.length;
-  fillFiltersAb();renderAllAb();saveState();
-  closeModalAb();
-}
 /* ─── NAV & THEME ─── */
 function switchTab(tab,persist=true){
   if(!['abertos','encerrados','rede','combustivel','repetidos','whatsapp'].includes(tab))tab='abertos';
@@ -3053,6 +3103,7 @@ function switchTab(tab,persist=true){
   if(isFuel){renderFuel();setTimeout(initFuelSplit,80);}
   if(isRep)renderPanelRepetidos();
   if(isWpp){wppUnreadCount=0;updateWppBadge();const f=document.getElementById('wpp-frame');if(f&&f.src==='about:blank')f.src='https://mcll-painel-acionamentos-production.up.railway.app/painel';}
+  updateClearBtns();
 }
 function toggleTheme(){
   const dk=document.body.dataset.theme==='dark';
