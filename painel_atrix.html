@@ -1603,6 +1603,7 @@ function cnt(arr,key){const r={};arr.forEach(d=>{if(d[key])r[d[key]]=(r[d[key]]|
 function se(obj){return Object.entries(obj).sort((a,b)=>b[1]-a[1])}
 function now2(){const n=new Date();return n.toLocaleDateString('pt-BR')+' '+n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
 function normCluster(c){return(c==='AM INT'||c==='AP'||c==='AP / AM'||c==='AP/AM')?'AM/AP':c}
+function calcSemana(d){if(!d||isNaN(d))return'';const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));dt.setUTCDate(dt.getUTCDate()+4-(dt.getUTCDay()||7));const y0=new Date(Date.UTC(dt.getUTCFullYear(),0,1));return'S'+Math.ceil((((dt-y0)/86400000)+1)/7)}
 function normClusterByCity(uf,cidade){
   const u=String(uf||'').toUpperCase().trim(),c=nk(cidade);
   if(u==='MA'){return(c.includes('SAOLUIS')||c.includes('PACODOLUMIAR')||c.includes('RIBAMAR'))?'MA CAP':'MA INT'}
@@ -1664,7 +1665,7 @@ function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
 function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,selMes,activeTab,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>{const mop=normMopByCity(d.uf,d.cidade)||fmtMop(d.mop);return{...d,rowKey:d.rowKey??i,mop,assunto:d.assunto||'',substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}})}
-function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>{let mes=d.mes||'';if(!mes&&d.dataFechamento){const m=String(d.dataFechamento).match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)mes=`${m[3]}-${m[2]}`}const cidade=titleCasePT(repairPtBR(d.cidade||d.cidadeRaw||''));const mop=normMopByCity(d.uf,cidade)||d.mop||'';const cluster=d.cluster||normClusterByCity(d.uf,cidade)||'';const faixa=cf(d.tempoTotal||0);return{...d,cidade,mes,mop,cluster,faixa,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}})}
+function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>{let mes=d.mes||'';if(!mes&&d.dataFechamento){const m=String(d.dataFechamento).match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)mes=`${m[3]}-${m[2]}`}const cidade=titleCasePT(repairPtBR(d.cidade||d.cidadeRaw||''));const mop=normMopByCity(d.uf,cidade)||d.mop||'';const cluster=d.cluster||normClusterByCity(d.uf,cidade)||'';const faixa=cf(d.tempoTotal||0);const semana=d.semana||calcSemana(parseOpeningDate(d.dataFechamento))||'';return{...d,cidade,mes,mop,cluster,faixa,semana,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}})}
 function repairPtBR(s){
   if(!s)return s;
   s=String(s);
@@ -1876,12 +1877,13 @@ function procEnc(raw,fname){
     const cluster=normCluster(clusterCalc)||normClusterByCity(uf,cidade);
     const clusterNome=String(r['cluster']||'').trim();
     const causaRaiz=fmtCausaRaiz(repairPtBR(String(r['Tipo_Encerramento']||r['Causa_Raiz']||'')));
-    const semana=String(r['semana']||'').trim();
     const segmento=repairPtBR(String(r['segmento_cliente']||'').trim());
     const osColB=String(Object.values(r)[1]||'').trim();
     const os=String(gv(r,['ult_OS','ult os','última OS','ultima OS','os_agrupada','os concluida agrupada','os_concluida_agrupada','OS','os'])||osColB||protocolo).trim();
     const dataAbertura=gv(r,['data_abertura','Data Abertura','Data de Abertura','abertura']);
     const dataFechamento=gv(r,['data_fechamento','Data Fechamento','Data de Fechamento','fechamento','encerramento']);
+    const dataFechamentoParsed=parseOpeningDate(dataFechamento);
+    const semana=String(r['semana']||'').trim()||calcSemana(dataFechamentoParsed);
     const numplan=String(gv(r,['numplan','NUMPLAN','Num Plan','num_plan','NumPlan','num plan'])||'').trim();
     const clienteId=String(gv(r,['cliente_id','CLIENTE_ID','cliente id','ID Cliente','clienteid','ClienteId'])||'').trim();
     const titulo=String(colVal(r,2,['titulo','TITULO','Título','nome_cliente','NOME_CLIENTE','Nome Cliente','razao_social','Razao Social','plano','PLANO','nome_plano','Nome Plano','nome_titulo','Nome Titulo'])||'').trim();
@@ -1892,7 +1894,6 @@ function procEnc(raw,fname){
     const dentro8h=encBucket(tempoTotal)==='prazo';
     const outlier24h=encBucket(tempoTotal)==='outlier';
     const mop=normMopByCity(uf,cidade);
-    const dataFechamentoParsed=parseOpeningDate(dataFechamento);
     const mes=dataFechamentoParsed?`${dataFechamentoParsed.getFullYear()}-${String(dataFechamentoParsed.getMonth()+1).padStart(2,'0')}`:''
     return{protocolo,os,cliente,uf,cidade,cidadeRaw,mop,mes,cluster,clusterCalc,clusterNome,causaRaiz,semana,segmento,faixa,tempoTotal,dentro8h,outlier24h,numplan,clienteId,titulo,clientesAfetados,dataAbertura:fmtReportDate(dataAbertura),dataFechamento:fmtReportDate(dataFechamento),periodoAtendimento:`${fmtReportDate(dataAbertura)} - ${fmtReportDate(dataFechamento)}`};
   });
