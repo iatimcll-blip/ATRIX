@@ -1646,7 +1646,7 @@ function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
 function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,selMes,activeTab,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>{const mop=normMopByCity(d.uf,d.cidade)||fmtMop(d.mop);return{...d,rowKey:d.rowKey??i,mop,assunto:d.assunto||'',substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}})}
-function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>{let mes=d.mes||'';if(!mes&&d.dataFechamento){const m=String(d.dataFechamento).match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)mes=`${m[3]}-${m[2]}`}const cidade=titleCasePT(repairPtBR(d.cidade||''));const mop=normMopByCity(d.uf,cidade)||d.mop||'';return{...d,cidade,mes,mop,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}})}
+function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>{let mes=d.mes||'';if(!mes&&d.dataFechamento){const m=String(d.dataFechamento).match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)mes=`${m[3]}-${m[2]}`}const cidade=titleCasePT(repairPtBR(d.cidade||d.cidadeRaw||''));const mop=normMopByCity(d.uf,cidade)||d.mop||'';return{...d,cidade,mes,mop,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}})}
 function repairPtBR(s){
   if(!s)return s;
   s=String(s);
@@ -1740,8 +1740,16 @@ async function restoreRemoteState(){
     const res=await fetch(REMOTE_STATE_API,{cache:'no-store'});
     if(!res.ok)return;
     const data=await res.json();
-    if(data&&data.state&&applyState(data.state,'Base compartilhada'))saveLocalState(buildState());
-    else if(data&&data.ok&&canEdit()&&(dAb.length||dEnc.length))saveRemoteState(buildState());
+    if(data&&data.state){
+      /* só aplica o estado remoto se for mais recente que o local */
+      const localRaw=localStorage.getItem(STORAGE_KEY);
+      const localSt=localRaw?JSON.parse(localRaw):null;
+      const remoteAt=data.state.savedAt||'';
+      const localAt=localSt&&localSt.savedAt||'';
+      if(remoteAt>=localAt){
+        if(applyState(data.state,'Base compartilhada'))saveLocalState(buildState());
+      }
+    }else if(data&&data.ok&&canEdit()&&(dAb.length||dEnc.length))saveRemoteState(buildState());
   }catch(e){console.warn('Não foi possível carregar as bases compartilhadas:',e)}
 }
 function restoreState(){
@@ -1866,7 +1874,7 @@ function procEnc(raw,fname){
     const mop=normMopByCity(uf,cidade);
     const dataFechamentoParsed=parseOpeningDate(dataFechamento);
     const mes=dataFechamentoParsed?`${dataFechamentoParsed.getFullYear()}-${String(dataFechamentoParsed.getMonth()+1).padStart(2,'0')}`:''
-    return{protocolo,os,cliente,uf,cidade,mop,mes,cluster,clusterCalc,clusterNome,causaRaiz,semana,segmento,faixa,tempoTotal,dentro8h,outlier24h,numplan,clienteId,titulo,clientesAfetados,dataAbertura:fmtReportDate(dataAbertura),dataFechamento:fmtReportDate(dataFechamento),periodoAtendimento:`${fmtReportDate(dataAbertura)} - ${fmtReportDate(dataFechamento)}`};
+    return{protocolo,os,cliente,uf,cidade,cidadeRaw,mop,mes,cluster,clusterCalc,clusterNome,causaRaiz,semana,segmento,faixa,tempoTotal,dentro8h,outlier24h,numplan,clienteId,titulo,clientesAfetados,dataAbertura:fmtReportDate(dataAbertura),dataFechamento:fmtReportDate(dataFechamento),periodoAtendimento:`${fmtReportDate(dataAbertura)} - ${fmtReportDate(dataFechamento)}`};
   });
   document.getElementById('nb-enc').textContent=dEnc.length;
   document.getElementById('ft-enc').textContent='Atualizado em '+now2();
