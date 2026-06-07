@@ -897,8 +897,14 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
   </div>
 
   <div class="nav-right">
-    <label class="upload-pill up-ab" id="up-ab" for="file-ab"><i class="ti ti-upload"></i>Abertos</label>
-    <label class="upload-pill up-enc" id="up-enc" for="file-enc" style="display:none"><i class="ti ti-upload"></i>Encerrados</label>
+    <div id="up-ab" style="display:flex;flex-direction:column;align-items:center;gap:1px">
+      <label class="upload-pill up-ab" for="file-ab"><i class="ti ti-upload"></i>Abertos</label>
+      <span id="ts-ab" style="font-size:9px;color:var(--tx3);white-space:nowrap;line-height:1.2;min-height:12px"></span>
+    </div>
+    <div id="up-enc" style="display:none;flex-direction:column;align-items:center;gap:1px">
+      <label class="upload-pill up-enc" for="file-enc"><i class="ti ti-upload"></i>Encerrados</label>
+      <span id="ts-enc" style="font-size:9px;color:var(--tx3);white-space:nowrap;line-height:1.2;min-height:12px"></span>
+    </div>
     <label class="upload-pill admin-only" id="up-fuel" for="file-fuel" style="display:none"><i class="ti ti-upload"></i>Alelo</label>
     <div class="nav-btn" id="clear-ab-btn" onclick="clearAb()" title="Limpar base B2B Abertos" style="display:none;color:var(--red)"><i class="ti ti-trash"></i></div>
     <div class="nav-btn" id="clear-enc-btn" onclick="clearEnc()" title="Limpar base B2B Encerrados" style="display:none;color:var(--red)"><i class="ti ti-trash"></i></div>
@@ -1454,6 +1460,7 @@ let selWeek='';
 let selCluster='';
 let selMes='';
 let activeTab='abertos';
+let lastAbAt='',lastEncAt='';
 let wppUnreadCount=0,wppInitialized=false;
 let refreshTimer=null;
 const STORAGE_KEY='atrix:painel:bases:v1';
@@ -1675,7 +1682,7 @@ function startRefresh(){
 function stopRefresh(){if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;}}
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
-function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,selMes,activeTab,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
+function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,selMes,activeTab,lastAbAt,lastEncAt,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>{const mop=normMopByCity(d.uf,d.cidade)||fmtMop(d.mop);return{...d,rowKey:d.rowKey??i,mop,assunto:d.assunto||'',substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}})}
 function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>{let mes=d.mes||'';if(!mes&&d.dataFechamento){const m=String(d.dataFechamento).match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)mes=`${m[3]}-${m[2]}`}const cidade=titleCasePT(repairPtBR(d.cidade||d.cidadeRaw||''));const mop=normMopByCity(d.uf,cidade)||d.mop||'';const cluster=d.cluster||normClusterByCity(d.uf,cidade)||'';const faixa=cf(d.tempoTotal||0);const semana=calcSemana(parseOpeningDate(d.dataFechamento))||d.semana||'';return{...d,cidade,mes,mop,cluster,faixa,semana,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}})}
 function repairPtBR(s){
@@ -1704,7 +1711,7 @@ function applyState(st,label){
   if(Array.isArray(st.dAb)){
     dAb=normalizeAbState(st.dAb);
     document.getElementById('nb-ab').textContent=dAb.length;
-    document.getElementById('ft-ab').textContent=(label||'Base restaurada')+' em '+now2();
+    if(st.lastAbAt)lastAbAt=st.lastAbAt;
     fillFiltersAb();renderAllAb();startRefresh();
     document.getElementById('empty-ab').style.display=dAb.length?'none':'block';
     document.getElementById('dash-ab').style.display=dAb.length?'block':'none';
@@ -1713,7 +1720,7 @@ function applyState(st,label){
   if(Array.isArray(st.dEnc)){
     dEnc=normalizeEncState(st.dEnc);
     document.getElementById('nb-enc').textContent=dEnc.length;
-    document.getElementById('ft-enc').textContent=(label||'Base restaurada')+' em '+now2();
+    if(st.lastEncAt)lastEncAt=st.lastEncAt;
     fillFiltersEnc();fillWeekSelector();fillClusterSelector();fillMesSelector();
     if(st.selWeek&&dEnc.some(d=>d.semana===st.selWeek)){selWeek=st.selWeek;document.getElementById('week-selector').value=selWeek}else if(!st.selWeek){selWeek=''}
     if(st.selCluster&&dEnc.some(d=>d.cluster===st.selCluster)){selCluster=st.selCluster;document.getElementById('cluster-selector').value=selCluster}else if(!st.selCluster){selCluster=''}
@@ -1743,6 +1750,7 @@ function applyState(st,label){
   fuelCycleEndDate=/^\d{4}-\d{2}-\d{2}$/.test(st.fuelCycleEndDate||'')?st.fuelCycleEndDate:'';
   renderFuel();
   if(clearLegacyFuelRequests)saveState();
+  updateUploadTimes();
   if(changed)applyPermissions();
   return changed;
 }
@@ -1847,7 +1855,7 @@ function clienteAbertoNome(r){
 function clearAb(){
   if(!canEdit()){alert('Apenas administradores podem limpar a base.');return;}
   if(!confirm('Limpar toda a base de B2B Abertos? Essa ação não pode ser desfeita.'))return;
-  dAb=[];stopRefresh();
+  dAb=[];stopRefresh();lastAbAt='';updateUploadTimes();
   document.getElementById('nb-ab').textContent='0';
   document.getElementById('empty-ab').style.display='';
   document.getElementById('dash-ab').style.display='none';
@@ -1857,7 +1865,7 @@ function clearAb(){
 function clearEnc(){
   if(!canEdit()){alert('Apenas administradores podem limpar a base.');return;}
   if(!confirm('Limpar toda a base de B2B Encerrados? Isso também limpará B2B Repetidos.'))return;
-  dEnc=[];
+  dEnc=[];lastEncAt='';updateUploadTimes();
   document.getElementById('nb-enc').textContent='0';
   document.getElementById('nb-rep').textContent='0';
   document.getElementById('empty-enc').style.display='';
@@ -1870,6 +1878,10 @@ function clearRede(){
   if(!confirm('Recarregar o painel Rede?'))return;
   const f=document.querySelector('#panel-rede iframe');
   if(f){const src=f.src;f.src='about:blank';setTimeout(()=>{f.src=src;},100);}
+}
+function updateUploadTimes(){
+  const sa=document.getElementById('ts-ab');if(sa)sa.textContent=lastAbAt?'Anexado '+lastAbAt:'';
+  const se=document.getElementById('ts-enc');if(se)se.textContent=lastEncAt?'Anexado '+lastEncAt:'';
 }
 function updateClearBtns(){
   const isAb=activeTab==='abertos',isEnc=activeTab==='encerrados',isRep=activeTab==='repetidos',isRede=activeTab==='rede';
@@ -1952,7 +1964,7 @@ function procAb(raw,fname){
     return item;
   });
   document.getElementById('nb-ab').textContent=dAb.length;
-  document.getElementById('ft-ab').textContent='Atualizado em '+now2();
+  lastAbAt=now2();updateUploadTimes();
   fillFiltersAb();renderAllAb();startRefresh();
   document.getElementById('empty-ab').style.display='none';
   document.getElementById('dash-ab').style.display='block';
@@ -1994,7 +2006,7 @@ function procEnc(raw,fname){
     return{protocolo,os,cliente,uf,cidade,cidadeRaw,mop,mes,cluster,clusterCalc,clusterNome,causaRaiz,semana,segmento,faixa,tempoTotal,dentro8h,outlier24h,numplan,clienteId,titulo,clientesAfetados,dataAbertura:fmtReportDate(dataAbertura),dataFechamento:fmtReportDate(dataFechamento),periodoAtendimento:`${fmtReportDate(dataAbertura)} - ${fmtReportDate(dataFechamento)}`};
   });
   document.getElementById('nb-enc').textContent=dEnc.length;
-  document.getElementById('ft-enc').textContent='Atualizado em '+now2();
+  lastEncAt=now2();updateUploadTimes();
   fillFiltersEnc();fillWeekSelector();fillClusterSelector();fillMesSelector();
   renderAllEnc();
   renderPanelRepetidos();
@@ -3099,8 +3111,8 @@ function switchTab(tab,persist=true){
   const encSubbar=document.getElementById('enc-subbar');
   if(encSubbar)encSubbar.classList.toggle('visible',showEncControls);
   const upAb=document.getElementById('up-ab'),upEnc=document.getElementById('up-enc'),upFuel=document.getElementById('up-fuel');
-  if(upAb)upAb.style.display=isAb?'':'none';
-  if(upEnc)upEnc.style.display=(isEnc||isRep)?'':'none';
+  if(upAb)upAb.style.display=isAb?'flex':'none';
+  if(upEnc)upEnc.style.display=(isEnc||isRep)?'flex':'none';
   if(upFuel)upFuel.style.display=isFuel?'':'none';
   if(isFuel){renderFuel();setTimeout(initFuelSplit,80);}
   if(isRep)renderPanelRepetidos();
