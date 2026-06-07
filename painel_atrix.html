@@ -1002,7 +1002,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <tbody id="tb-ab"></tbody>
         </table></div>
       </div>
-      <div class="pfooter">ATRIX · Chamados Abertos · <span id="ft-ab"></span></div>
+      <div class="pfooter">Direitos reservados a Wanderson Marcellus Penha Costa · <span id="ft-ab"></span></div>
     </div>
   </div>
 
@@ -1098,7 +1098,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <tbody id="tb-enc"></tbody>
         </table></div>
       </div>
-      <div class="pfooter">ATRIX · Chamados Encerrados · <span id="ft-enc"></span></div>
+      <div class="pfooter">Direitos reservados a Wanderson Marcellus Penha Costa · <span id="ft-enc"></span></div>
     </div>
   </div>
 
@@ -1242,7 +1242,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       <div class="tw"><table><thead><tr><th>Data</th><th>Valor</th><th>Motivo / destino</th></tr></thead><tbody id="tb-fuel-w"></tbody></table></div>
     </div>
 
-    <div class="pfooter">ATRIX · Consumo de Combustíveis · dados compartilhados</div>
+    <div class="pfooter">Direitos reservados a Wanderson Marcellus Penha Costa · <span id="ft-fuel"></span></div>
   </div>
 
   <!-- ── PAINEL MONITORAMENTO WHATSAPP ── -->
@@ -1346,7 +1346,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <tbody id="tb-rep"></tbody>
         </table></div>
       </div>
-      <div class="pfooter">ATRIX · B2B Repetidos · <span id="ft-rep"></span></div>
+      <div class="pfooter">Direitos reservados a Wanderson Marcellus Penha Costa · <span id="ft-rep"></span></div>
     </div>
   </div>
 
@@ -1488,6 +1488,7 @@ function applyPermissions(){
   const av=document.getElementById('avatar-label');if(av)av.textContent=initials(currentUser&&currentUser.username);
   if(dAb.length)renderTAb();
   renderFuel();
+  updateClearBtns();
 }
 function showLogin(msg){
   currentUser=null;
@@ -1667,11 +1668,11 @@ function startRefresh(){
   refreshTimer=setInterval(()=>{
     if(!dAb.length)return;
     refreshAbTimes();
-    // Não re-renderiza enquanto substatus dropdown estiver aberto/focado
     if(document.activeElement&&document.activeElement.classList.contains('substatus-select'))return;
     renderTAb();
   },1000);
 }
+function stopRefresh(){if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;}}
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
 function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,selMes,activeTab,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
@@ -2706,6 +2707,7 @@ function renderFuel(){
   document.getElementById('cnt-fuel-w').textContent=dFuelWithdrawals.length+' retiradas';
   document.getElementById('tb-fuel-w').innerHTML=dFuelWithdrawals.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(r.reason||'')}</td></tr>`).join('')||'<tr><td colspan="3" class="nores">Nenhuma retirada registrada</td></tr>';
   renderFuelChart();
+  const ftf=document.getElementById('ft-fuel');if(ftf)ftf.textContent='Atualizado em '+now2();
 }
 function renderFuelChart(){
   const ctx=document.getElementById('ch-fuel');if(!ctx)return;if(chFuel){chFuel.destroy();chFuel=null}
