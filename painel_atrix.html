@@ -655,6 +655,32 @@ tbody tr.row-pending-client:hover td { background: rgba(255,149,0,.18); }
 }
 .substatus-select:focus { border-color: var(--blue); }
 .substatus-cell { display: inline-flex; align-items: center; gap: 6px; max-width: 190px; min-width: 0; }
+/* annotation cells */
+.td-ann { min-width: 130px; }
+.td-obs { min-width: 180px; }
+.ann-sel {
+  appearance: none; -webkit-appearance: none;
+  width: 100%; min-width: 120px; max-width: 180px;
+  border: 1px solid var(--bd2); border-radius: 8px;
+  background: var(--surface); color: var(--tx);
+  padding: 4px 22px 4px 8px; font-size: 11px; font-family: inherit;
+  outline: none; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%238e8e93' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 6px center;
+  transition: border-color .13s;
+}
+.ann-sel:focus { border-color: var(--blue); outline: none; }
+.ann-obs {
+  width: 100%; min-width: 160px; max-width: 260px;
+  border: 1px solid var(--bd2); border-radius: 8px;
+  background: var(--surface); color: var(--tx);
+  padding: 4px 9px; font-size: 11px; font-family: inherit;
+  outline: none; transition: border-color .13s;
+}
+.ann-obs:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,149,0,.12); }
+.ann-obs::placeholder { color: var(--tx3); }
+.ann-readonly { font-size: 11px; color: var(--tx2); }
+.ann-empty { font-size: 11px; color: var(--tx3); }
 .sla-lamp { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: 0 0 9px; box-shadow: 0 0 0 2px rgba(0,0,0,.04), 0 0 8px currentColor; }
 .lamp-green { background: var(--green); color: var(--green); }
 .lamp-orange { background: var(--orange); color: var(--orange); }
@@ -1114,7 +1140,10 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
             <th>MOP/EPS</th>
             <th onclick="sAb('cidade')">UF/Cidade</th>
             <th onclick="sAb('slaH')">SLA ↕</th>
-            <th>Faixa</th><th>Status SLA</th><th>Substatus</th><th></th>
+            <th>Faixa</th><th>Status SLA</th><th>Substatus</th>
+            <th title="Profissional OFS atribuído ao chamado">Profissional</th>
+            <th title="Observações vinculadas ao número do chamado — persistem ao recarregar a base">Observações</th>
+            <th></th>
           </tr></thead>
           <tbody id="tb-ab"></tbody>
         </table></div>
@@ -2595,8 +2624,10 @@ function renderTAb(){
     const subHtml=canEdit()?`<select class="substatus-select" title="Alterar substatus" onclick="event.stopPropagation()" onchange="updateSubstatus(${d.rowKey},this.value)">${getSubstatusOptions(d.substatus)}</select>`:`<span class="substatus-readonly">${eh(fmtSubstatus(d.substatus)||'Sem substatus')}</span>`;
     const _sk=nk(d.substatus);const rowCls=(isValidationSubstatus(d.substatus)||_sk.includes('FECHADO')||_sk.includes('CANCELADO'))?'row-validation':(_sk.includes('PENDENTE')&&_sk.includes('CLIENTE'))?'row-pending-client':'';
     const clienteDisplay=d.assunto?`${eh(d.cliente)} <span style="color:var(--tx3);font-size:10px">/ ${eh(d.assunto)}</span>`:eh(d.cliente);
-    return`<tr class="${rowCls}"><td class="tid">${idHtml}</td><td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)" title="${eh(d.cliente+(d.assunto?' / '+d.assunto:''))}">${clienteDisplay}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${MOP_CLR[d.mop]||'#8e8e93'};flex-shrink:0"></span>${eh(d.mop)}</span></td><td>${eh(d.cidade||'\u2014')}/${eh(d.uf)}</td><td style="${sc}"><span class="sla-clock">${fd(d.slaH)}</span></td><td><span class="badge ${bc}">${eh(d.faixa)}</span></td><td><span class="badge ${ss}">${eh(d.statusSla)}</span></td><td><span class="substatus-cell">${substatusLamp(d)}${subHtml}</span></td><td>${lk}</td></tr>`;
-  }).join('')||'<tr><td colspan="9" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
+    const profCell=canEdit()?abAnnProfSelect(d.id):abAnnProfReadonly(d.id);
+    const obsCell=canEdit()?abAnnObsInput(d.id):abAnnObsReadonly(d.id);
+    return`<tr class="${rowCls}"><td class="tid">${idHtml}</td><td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)" title="${eh(d.cliente+(d.assunto?' / '+d.assunto:''))}">${clienteDisplay}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${MOP_CLR[d.mop]||'#8e8e93'};flex-shrink:0"></span>${eh(d.mop)}</span></td><td>${eh(d.cidade||'\u2014')}/${eh(d.uf)}</td><td style="${sc}"><span class="sla-clock">${fd(d.slaH)}</span></td><td><span class="badge ${bc}">${eh(d.faixa)}</span></td><td><span class="badge ${ss}">${eh(d.statusSla)}</span></td><td><span class="substatus-cell">${substatusLamp(d)}${subHtml}</span></td><td class="td-ann">${profCell}</td><td class="td-ann td-obs">${obsCell}</td><td>${lk}</td></tr>`;
+  }).join('')||'<tr><td colspan="11" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
 }
 function sAb(c){scAb===c?sdAb*=-1:(scAb=c,sdAb=-1);renderTAb()}
 
@@ -3213,8 +3244,8 @@ function exportCSV(tipo){
   const rows=tipo==='ab'?gFAb():gFEnc();
   let hdr,data;
   if(tipo==='ab'){
-    hdr=['ID Ticket','Cliente','MOP/EPS','Cidade','UF','SLA (h)','Faixa SLA','Status SLA','Substatus'];
-    data=rows.map(d=>[d.id,d.cliente,d.mop,d.cidade,d.uf,d.slaH.toFixed(2),d.faixa,d.statusSla,d.substatus]);
+    hdr=['ID Ticket','Cliente','MOP/EPS','Cidade','UF','SLA (h)','Faixa SLA','Status SLA','Substatus','Profissional','Observações'];
+    data=rows.map(d=>{const ann=abAnnotations[d.id]||{};return[d.id,d.cliente,d.mop,d.cidade,d.uf,d.slaH.toFixed(2),d.faixa,d.statusSla,d.substatus,ann.prof||'',ann.obs||''];});
   }else{
     hdr=['Protocolo','Cliente','UF','Cluster','Tempo SLA (h)','Faixa SLA','Dentro 8h','Outlier +24h','Causa Raiz','Semana','Segmento'];
     data=rows.map(d=>[d.protocolo,d.cliente,d.uf,d.cluster,d.tempoTotal.toFixed(2),d.faixa,d.dentro8h?'Sim':'Não',d.outlier24h?'Sim':'Não',fmtCausaRaiz(d.causaRaiz),d.semana,repairPtBR(d.segmento)]);
@@ -3576,6 +3607,25 @@ let ofsChRank=null,ofsChStatus=null,ofsChTaxa=null,ofsChTipo=null,ofsChDia=null;
 let ofsSortCol='total',ofsSortAsc=false;
 let ofsFilter={uf:'all',grupo:'all',dtStart:'',dtEnd:''};
 let ofsAlertFilter='';
+
+/* ─── anotações persistentes de chamados abertos ─── */
+let abAnnotations={};
+const AB_ANN_KEY='atrix:ab:annotations:v1';
+function loadAbAnnotations(){try{abAnnotations=JSON.parse(localStorage.getItem(AB_ANN_KEY)||'{}')||{};}catch{abAnnotations={};}}
+function saveAbAnnotation(id,field,value){if(!id)return;if(!abAnnotations[id])abAnnotations[id]={};abAnnotations[id][field]=value;try{localStorage.setItem(AB_ANN_KEY,JSON.stringify(abAnnotations));}catch(e){console.warn('ann save',e);}}
+function getOfsProfList(){return[...new Set(ofsRows.map(r=>r.tecnico).filter(Boolean))].sort();}
+function abAnnProfSelect(id){
+  const saved=(abAnnotations[id]||{}).prof||'';
+  const profs=getOfsProfList();
+  const opts=['<option value="">— atribuir profissional —',...profs.map(p=>`<option value="${eh(p)}"${p===saved?' selected':''}>${eh(p)}`)].join('</option>');
+  return `<select class="ann-sel" title="Atribuir profissional" onclick="event.stopPropagation()" onchange="saveAbAnnotation('${eh(id)}','prof',this.value)">${opts}</select>`;
+}
+function abAnnProfReadonly(id){const p=(abAnnotations[id]||{}).prof||'';return p?`<span class="ann-readonly">${eh(p)}</span>`:`<span class="ann-empty">—</span>`;}
+function abAnnObsInput(id){
+  const saved=eh((abAnnotations[id]||{}).obs||'');
+  return `<input class="ann-obs" type="text" placeholder="Anotações…" value="${saved}" title="${saved}" onclick="event.stopPropagation()" oninput="saveAbAnnotation('${eh(id)}','obs',this.value)">`;
+}
+function abAnnObsReadonly(id){const o=(abAnnotations[id]||{}).obs||'';return o?`<span class="ann-readonly" title="${eh(o)}">${eh(o.length>30?o.slice(0,29)+'…':o)}</span>`:`<span class="ann-empty">—</span>`;}
 const OFS_STATUS_COLORS={'concluído':'#22c55e','iniciado':'#3b82f6','pendente':'#f59e0b','não concluído':'#ef4444','suspenso':'#8b5cf6','cancelado':'#6b7280','sem status':'#94a3b8'};
 const OFS_EXCLUDED=['almoço','almoco','checklist'];
 const OFS_DIAS_SEM=['segunda-feira','terca-feira','quarta-feira','quinta-feira','sexta-feira','sabado','domingo','segunda','terca','quarta','quinta','sexta','sabado'];
@@ -4200,6 +4250,8 @@ function _rptCap(id){
   const cl=el.cloneNode(true);
   cl.querySelectorAll('button,select,input,label,.admin-only,.card-action,.tsec-meta,.fbar,.pfooter,.quick-mop,.mop-ref-card,details,.lbtn,a.lbtn').forEach(e=>e.remove());
   cl.querySelectorAll('.substatus-cell').forEach(e=>{const rd=e.querySelector('.substatus-readonly');e.innerHTML=`<span style="font-size:11px;color:#636366">${rd?rd.textContent:''}</span>`;});
+  cl.querySelectorAll('.td-ann .ann-sel').forEach(e=>{const idx=e.selectedIndex;const txt=idx>0&&e.options[idx]?e.options[idx].text:'—';const sp=document.createElement('span');sp.textContent=txt;sp.style.cssText='font-size:11px;color:#3a3a3c';e.replaceWith(sp);});
+  cl.querySelectorAll('.td-ann .ann-obs').forEach(e=>{const sp=document.createElement('span');sp.textContent=e.value||'—';sp.style.cssText='font-size:11px;color:#3a3a3c';e.replaceWith(sp);});
   cl.querySelectorAll('*').forEach(e=>{['onclick','onchange','oninput','ondblclick'].forEach(a=>e.removeAttribute(a));if(e.style)e.style.cursor='';});
   cl.querySelectorAll('a').forEach(a=>{a.removeAttribute('href');a.removeAttribute('target');a.style.textDecoration='none';a.style.color='inherit';});
   return cl.innerHTML;
@@ -4229,7 +4281,9 @@ function _rCap(id){const h=_rptCap(id);return h?`<div class="rpt-dom-cap">${h}</
 function rptBuildAbertos(){
   if(!dAb.length)return '';
   const data=gFAb(),total=dAb.length;
-  const tRows=data.slice(0,500).map(d=>`<tr>
+  const tRows=data.slice(0,500).map(d=>{
+    const ann=abAnnotations[d.id]||{};
+    return`<tr>
     <td style="font-family:monospace;font-size:11px;white-space:nowrap">${d.id||'—'}</td>
     <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">${d.cliente||'—'}</td>
     <td style="white-space:nowrap">${d.mop||'—'}</td>
@@ -4238,7 +4292,9 @@ function rptBuildAbertos(){
     <td style="white-space:nowrap">${d.faixa||'—'}</td>
     <td style="color:${d.statusSla==='FORA DO PRAZO'?'#ef4444':'#22c55e'};font-weight:600;white-space:nowrap">${d.statusSla||'—'}</td>
     <td style="font-size:11px;color:#636366">${d.substatus||'—'}</td>
-  </tr>`);
+    <td style="font-size:11px;color:#3a3a3c;white-space:nowrap">${ann.prof||'—'}</td>
+    <td style="font-size:11px;color:#3a3a3c;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ann.obs||'—'}</td>
+  </tr>`;});
   const body=`
   ${_rCap('mrow-ab')}
   ${_rCap('prow-ab')}
@@ -4250,7 +4306,7 @@ function rptBuildAbertos(){
   ${_rCard('Por Substatus',_rptCap('sub-ab'))}
   <div class="chart-grid" style="margin-top:12px">${_rI(chAb,'Distribuição por Faixa SLA')}</div>
   <div class="stit">Chamados em aberto — ${data.length} de ${total} registros</div>
-  ${_rT(['ID Ticket','Cliente','MOP/EPS','UF/Cidade','SLA','Faixa','Status SLA','Substatus'],tRows,'400px')}
+  ${_rT(['ID Ticket','Cliente','MOP/EPS','UF/Cidade','SLA','Faixa','Status SLA','Substatus','Profissional','Observações'],tRows,'400px')}
   ${data.length>500?`<p style="color:#8e8e93;font-size:11px;margin-top:6px">Exibindo 500 de ${data.length} registros.</p>`:''}`;
   return _rSec('📋','B2B Chamados Abertos',`${total} chamados`,body,false);
 }
@@ -4576,7 +4632,7 @@ button,select,input,textarea,.card-action,.admin-only,.tsec-meta,.fbar,.pfooter,
   w.document.open();w.document.write(html);w.document.close();
 }
 
-initAuth();renderFuel();
+loadAbAnnotations();initAuth();renderFuel();
 </script>
 </body>
 </html>
