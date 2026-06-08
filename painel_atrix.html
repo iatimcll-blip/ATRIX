@@ -1229,6 +1229,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       </div>
       <div id="fuel-balance-summary"></div>
     </div>
+    <div id="fuel-extra-projection" style="margin-bottom:16px"></div>
 
     <!-- 2. KPIs e métricas -->
     <div class="section-hd">Consumo de Combustíveis <span class="sh-line"></span></div>
@@ -1485,7 +1486,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       </div>
       <div class="card">
         <div class="card-hd"><span class="card-title"><i class="ti ti-alert-triangle" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:#f59e0b"></i>Alertas e Riscos</span></div>
-        <div class="pdesc" style="margin-left:0;margin-bottom:12px;font-size:11.5px;color:var(--tx3)">Técnicos que necessitam atenção · ordenados por nível de risco · clique para ver detalhes</div>
+        <div class="pdesc" style="margin-left:0;margin-bottom:12px;font-size:11.5px;color:var(--tx3)">Técnicos que necessitam atenção · ordenados por nível de risco · clique num card para filtrar a tabela · clique novamente para limpar</div>
         <div id="ofs-alert-kpis" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"></div>
         <div style="overflow-x:auto">
           <table style="width:100%;border-collapse:collapse;font-size:12px">
@@ -1991,7 +1992,7 @@ function startRefresh(){
 function stopRefresh(){if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;}}
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
-function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,selMes,selRepMes,selRepSemana,selRepCluster,selRepCausa,selRepSeg,selRepSrch,activeTab,lastAbAt,lastEncAt,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
+function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,selMes,selRepMes,selRepSemana,selRepCluster,selRepCausa,selRepSeg,selRepSrch,activeTab,lastAbAt,lastEncAt,ofsRows:ofsRows.slice(0,6000),ofsMeta,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>{const mop=normMopByCity(d.uf,d.cidade)||fmtMop(d.mop);return{...d,rowKey:d.rowKey??i,mop,assunto:d.assunto||'',substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}})}
 function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>{let mes=d.mes||'';if(!mes&&d.dataFechamento){const m=String(d.dataFechamento).match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)mes=`${m[3]}-${m[2]}`}const cidade=titleCasePT(repairPtBR(d.cidade||d.cidadeRaw||''));const mop=normMopByCity(d.uf,cidade)||d.mop||'';const cluster=d.cluster||normClusterByCity(d.uf,cidade)||'';const faixa=d.faixa&&SLA_ORDER.includes(d.faixa)?d.faixa:cf(d.tempoTotal||0);const semana=d.semana||calcSemana(parseOpeningDate(d.dataFechamento))||'';const dentro8h=d.dentro8h!==undefined?d.dentro8h:encBucket(d.tempoTotal)==='prazo';const outlier24h=d.outlier24h!==undefined?d.outlier24h:encBucket(d.tempoTotal)==='outlier';return{...d,cidade,mes,mop,cluster,faixa,semana,dentro8h,outlier24h}})}
 function repairPtBR(s){
@@ -2066,6 +2067,13 @@ function applyState(st,label){
   fuelCycleStartDate=/^\d{4}-\d{2}-\d{2}$/.test(st.fuelCycleStartDate||'')?st.fuelCycleStartDate:'';
   fuelCycleEndDate=/^\d{4}-\d{2}-\d{2}$/.test(st.fuelCycleEndDate||'')?st.fuelCycleEndDate:'';
   renderFuel();
+  if(Array.isArray(st.ofsRows)&&st.ofsRows.length&&!ofsRows.length){
+    ofsRows=st.ofsRows.map(r=>({...r,uf:r.uf||getOfsUF(r.tecnico),grupo:r.grupo||getOfsGrupo(r.tecnico)}));
+    if(st.ofsMeta)ofsMeta={fname:'',loaded:true,...st.ofsMeta};
+    saveOfsState();
+    const nb=document.getElementById('nb-ofs');if(nb){nb.textContent=ofsRows.length;nb.style.display=ofsRows.length?'':'none';}
+    const tsEl=document.getElementById('ts-ofs');if(tsEl&&ofsMeta.uploadedAt)tsEl.textContent='Anexado '+ofsMeta.uploadedAt;
+  }
   if(clearLegacyFuelRequests)saveState();
   updateUploadTimes();
   if(changed)applyPermissions();
@@ -2679,7 +2687,8 @@ function rChEnc(d){
   if(chEnc){chEnc.destroy();chEnc=null}
   const ctx=document.getElementById('ch-enc');if(!ctx)return;
   const dk=document.body.dataset.theme==='dark';
-  chEnc=new Chart(ctx,{type:'bar',data:{labels:['Prazo ≤8h','8h a 24h','Outlier >24h'],datasets:[{data:[s.prazo,s.intermediario,s.outlier],backgroundColor:['#34c759','#ff9500','#ff3b30'],borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>c2.label+': '+c2.parsed.y+' chamados'}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93'}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:1}}}}});
+  const DL=typeof ChartDataLabels!=='undefined'?ChartDataLabels:null;
+  chEnc=new Chart(ctx,{type:'bar',plugins:DL?[DL]:[],data:{labels:['Prazo ≤8h','8h a 24h','Outlier >24h'],datasets:[{data:[s.prazo,s.intermediario,s.outlier],backgroundColor:['#34c759','#ff9500','#ff3b30'],borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>c2.label+': '+c2.parsed.y+' chamados'}},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:11,weight:'bold'},color:dk?'#ccc':'#444',clip:false}:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93'}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:1}}}}});
 }
 
 function rChSem(){
@@ -2692,7 +2701,8 @@ function rChSem(){
   if(chSem){chSem.destroy();chSem=null}
   const ctx=document.getElementById('ch-sem');if(!ctx)return;
   const dk=document.body.dataset.theme==='dark';
-  chSem=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>'Semana '+c2.label+': '+c2.parsed.y+' chamados'}}},onClick:(ev,els)=>{if(!els||!els.length)return;const week=labels[els[0].index];selWeek=(selWeek===week?'':week);const sel=document.getElementById('week-selector');if(sel)sel.value=selWeek;renderAllEnc();},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:dk?'#636366':'#8e8e93',maxRotation:45,autoSkip:false}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:10}}}}});
+  const DL=typeof ChartDataLabels!=='undefined'?ChartDataLabels:null;
+  chSem=new Chart(ctx,{type:'bar',plugins:DL?[DL]:[],data:{labels,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>'Semana '+c2.label+': '+c2.parsed.y+' chamados'}},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:11,weight:'bold'},color:dk?'#ccc':'#444',clip:false}:{display:false}},onClick:(ev,els)=>{if(!els||!els.length)return;const week=labels[els[0].index];selWeek=(selWeek===week?'':week);const sel=document.getElementById('week-selector');if(sel)sel.value=selWeek;renderAllEnc();},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:dk?'#636366':'#8e8e93',maxRotation:45,autoSkip:false}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:10}}}}});
 }
 
 function rSegEnc(d){
@@ -3037,6 +3047,49 @@ function fuelMonthProjection(){
   return Object.values(by).sort((a,b)=>a.atual-b.atual||a.proj-b.proj||a.label.localeCompare(b.label));
 }
 function fuelNextMonthSuggestion(){return fuelMonthProjection().reduce((s,e)=>s+Number(e.proj||0),0)}
+function renderFuelExtraProjection(){
+  const el=document.getElementById('fuel-extra-projection');if(!el)return;
+  const win=fuelProjectionWindow(),bal=fuelBalance();
+  const active=dFuelVehicles.filter(v=>v.status==='Ativo').length;
+  if(!win.totalDays||!active){el.innerHTML='';return}
+  const remaining=Math.max(0,win.totalDays-win.elapsed);
+  const dailyRate=win.elapsed>0?bal.spent/win.elapsed:0;
+  const projRemaining=dailyRate*remaining;
+  const extra=Math.max(0,projRemaining-bal.available);
+  const surplus=Math.max(0,bal.available-projRemaining);
+  const pct=Math.round(win.elapsed/win.totalDays*100);
+  const ok=extra===0;
+  const clr=ok?'#22c55e':'#ef4444';
+  el.innerHTML=`<div class="tsec">
+    <div class="tsec-hd">
+      <span class="tsec-title"><i class="ti ti-calculator" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:#007aff"></i>Projeção de Aporte Extra</span>
+      <span style="font-size:10px;color:var(--tx3)">${active} veículo${active!==1?'s':''} ativo${active!==1?'s':''} · ${win.label}</span>
+    </div>
+    <div style="padding:12px 16px 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+      <div style="background:var(--surface2);border-radius:10px;padding:10px 14px">
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Progresso do ciclo</div>
+        <div style="font-size:17px;font-weight:700;color:var(--tx)">${win.elapsed}<span style="font-size:11px;font-weight:400;color:var(--tx3)"> / ${win.totalDays} dias</span></div>
+        <div style="margin-top:6px;height:4px;background:var(--bd);border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#007aff;border-radius:2px"></div></div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:3px">${pct}% do ciclo consumido · ${remaining} dias restantes</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:10px 14px">
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Média diária (consumo)</div>
+        <div style="font-size:17px;font-weight:700;color:var(--tx)">${brl(dailyRate)}<span style="font-size:10px;font-weight:400;color:var(--tx3)">/dia</span></div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:3px">${brl(bal.spent)} consumido em ${win.elapsed} dia${win.elapsed!==1?'s':''}</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:10px 14px">
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">Gasto projetado (${remaining} dias)</div>
+        <div style="font-size:17px;font-weight:700;color:#f59e0b">${brl(projRemaining)}</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:3px">${brl(dailyRate)}/dia × ${remaining} dias restantes</div>
+      </div>
+      <div style="background:${ok?'rgba(34,197,94,.08)':'rgba(239,68,68,.08)'};border-radius:10px;padding:10px 14px;border:.5px solid ${clr}55">
+        <div style="font-size:10px;color:${clr};margin-bottom:3px;font-weight:600">${ok?'✓ Saldo suficiente':'⚠ Aporte extra recomendado'}</div>
+        <div style="font-size:19px;font-weight:700;color:${clr}">${ok?brl(surplus):brl(extra)}</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:3px">${ok?`estimativa de sobra ao fim do ciclo`:`deficit projetado ao encerrar o ciclo`}</div>
+      </div>
+    </div>
+  </div>`;
+}
 function toggleFuelCalendarEdit(){if(!canEdit())return;fuelCalendarEditing=!fuelCalendarEditing;renderFuel()}
 function setFuelCycleCalendar(){
   if(!canEdit())return;
@@ -3091,6 +3144,7 @@ function renderFuel(){
   const nextSuggestion=fuelNextMonthSuggestion();
   const driverOptions=fuelDriverOptions();if(selectedFuelDriver&&!driverOptions.includes(selectedFuelDriver))selectedFuelDriver='';
   document.getElementById('prow-fuel').innerHTML=`<div class="pc"><div class="pico pi-b"><i class="ti ti-gas-station"></i></div><div><div class="pv">${brl(bal.available)}</div><div class="ps">saldo disponível</div></div></div><div class="pc"><div class="pico pi-o"><i class="ti ti-user-dollar"></i></div><div><div class="pv" style="font-size:14px">${eh(top[0])}</div><div class="ps">maior consumo ${brl(top[1].valor)}</div></div></div><div class="pc"><div class="pico pi-g"><i class="ti ti-chart-line"></i></div><div><div class="pv">${brl(nextSuggestion)}</div><div class="ps">sugestão para próximo mês</div></div></div><div class="pc"><div class="pico pi-t"><i class="ti ti-user-search"></i></div><div style="min-width:0;flex:1"><div class="pv" style="font-size:14px">Condutor</div><div class="ps">transações e datas</div><select class="pc-select" onchange="onFuelDriverChange(this.value)"><option value="">Selecionar condutor</option>${driverOptions.map(n=>`<option value="${eh(n)}"${n===selectedFuelDriver?' selected':''}>${eh(n)}</option>`).join('')}</select></div></div>`;
+  renderFuelExtraProjection();
   renderFuelDriverDetail();
   renderAleloPanel();
   renderFuelProjectionDetail();
@@ -3310,7 +3364,8 @@ function renderRepClientsChart(all,dk){
   if(chRepClients){chRepClients.destroy();chRepClients=null;}
   const top=all.slice(0,15);
   const rankClr=i=>i===0?'rgba(255,59,48,.85)':i<3?'rgba(255,149,0,.8)':i<7?'rgba(175,82,222,.75)':'rgba(90,200,250,.75)';
-  chRepClients=new Chart(ctx,{type:'bar',data:{labels:top.map(v=>v.nome.length>22?v.nome.slice(0,21)+'…':v.nome),datasets:[{label:'Chamados repetidos',data:top.map(v=>v.records.length),backgroundColor:top.map((_,i)=>rankClr(i)),hoverBackgroundColor:top.map((_,i)=>rankClr(i).replace(/[\d.]+\)$/,'1)')),borderRadius:8,borderSkipped:false,repKeys:top.map(v=>v.repKey)}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onHover:(ev,els)=>{if(ev.native&&ev.native.target)ev.native.target.style.cursor=els.length?'pointer':'default'},onClick:(ev,els,chart)=>{const idx=els&&els[0]&&els[0].index;if(idx===undefined)return;openRepDetail(chart.data.datasets[0].repKeys[idx])},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const v=top[c.dataIndex];return[`${c.parsed.x} chamados repetidos`,v?`≤8h: ${v.dentro8h} · Outlier: ${v.outlier}`:''].filter(Boolean)}},backgroundColor:dk?'#1c1c1e':'#ffffff',titleColor:dk?'#f2f2f7':'#1c1c1e',bodyColor:dk?'#ebebf0':'#3a3a3c',borderColor:dk?'rgba(255,255,255,.12)':'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',stepSize:1}},y:{grid:{display:false},ticks:{font:{size:10},color:dk?'#ebebf0':'#3a3a3c'}}}}});
+  const DL_RC=typeof ChartDataLabels!=='undefined'?ChartDataLabels:null;
+  chRepClients=new Chart(ctx,{type:'bar',plugins:DL_RC?[DL_RC]:[],data:{labels:top.map(v=>v.nome.length>22?v.nome.slice(0,21)+'…':v.nome),datasets:[{label:'Chamados repetidos',data:top.map(v=>v.records.length),backgroundColor:top.map((_,i)=>rankClr(i)),hoverBackgroundColor:top.map((_,i)=>rankClr(i).replace(/[\d.]+\)$/,'1)')),borderRadius:8,borderSkipped:false,repKeys:top.map(v=>v.repKey)}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:32}},onHover:(ev,els)=>{if(ev.native&&ev.native.target)ev.native.target.style.cursor=els.length?'pointer':'default'},onClick:(ev,els,chart)=>{const idx=els&&els[0]&&els[0].index;if(idx===undefined)return;openRepDetail(chart.data.datasets[0].repKeys[idx])},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const v=top[c.dataIndex];return[`${c.parsed.x} chamados repetidos`,v?`≤8h: ${v.dentro8h} · Outlier: ${v.outlier}`:''].filter(Boolean)}},backgroundColor:dk?'#1c1c1e':'#ffffff',titleColor:dk?'#f2f2f7':'#1c1c1e',bodyColor:dk?'#ebebf0':'#3a3a3c',borderColor:dk?'rgba(255,255,255,.12)':'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8,padding:10},datalabels:DL_RC?{anchor:'end',align:'right',formatter:v=>v>0?v:'',font:{size:10,weight:'bold'},color:dk?'#ccc':'#444',clip:false}:{display:false}},scales:{x:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',stepSize:1}},y:{grid:{display:false},ticks:{font:{size:10},color:dk?'#ebebf0':'#3a3a3c'}}}}});
 }
 function openRepDetail(repKey){
   const key=String(repKey||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"');
@@ -3325,7 +3380,8 @@ function renderRepCausasChart(causas,dk){
   if(chRepCausas){chRepCausas.destroy();chRepCausas=null;}
   const CCLR={'Rompimento de Fibra':'#ff3b30','Normalizado Sem Intervenção':'#34c759','Ajuste de Atenuação':'#ffcc00','Configuração':'#007aff','Falha Elétrica Cliente':'#ff9500','Ação Cliente':'#af52de','Falha Elétrica no POP':'#ff6b35','Demais Causas de Rompimento':'#ff6b35','Sem Ação':'#8e8e93'};
   const sorted=se(causas);
-  chRepCausas=new Chart(ctx,{type:'bar',data:{labels:sorted.map(([k])=>k.length>24?k.slice(0,23)+'…':k),datasets:[{label:'Ocorrências',data:sorted.map(([,n])=>n),backgroundColor:sorted.map(([k])=>CCLR[k]||'#af52de'),borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.y} ocorrências`},backgroundColor:dk?'#1c1c1e':'#ffffff',titleColor:dk?'#f2f2f7':'#1c1c1e',bodyColor:dk?'#ebebf0':'#3a3a3c',borderColor:dk?'rgba(255,255,255,.12)':'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',maxRotation:35}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',stepSize:1}}}}});
+  const DL_CC=typeof ChartDataLabels!=='undefined'?ChartDataLabels:null;
+  chRepCausas=new Chart(ctx,{type:'bar',plugins:DL_CC?[DL_CC]:[],data:{labels:sorted.map(([k])=>k.length>24?k.slice(0,23)+'…':k),datasets:[{label:'Ocorrências',data:sorted.map(([,n])=>n),backgroundColor:sorted.map(([k])=>CCLR[k]||'#af52de'),borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.y} ocorrências`},backgroundColor:dk?'#1c1c1e':'#ffffff',titleColor:dk?'#f2f2f7':'#1c1c1e',bodyColor:dk?'#ebebf0':'#3a3a3c',borderColor:dk?'rgba(255,255,255,.12)':'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8,padding:10},datalabels:DL_CC?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:10,weight:'bold'},color:dk?'#ccc':'#444',clip:false}:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',maxRotation:35}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',stepSize:1}}}}});
 }
 function renderRepSemanaChart(all,dk){
   const ctx=document.getElementById('ch-rep-semana');if(!ctx)return;
@@ -3337,7 +3393,8 @@ function renderRepSemanaChart(all,dk){
   if(!labels.length)return;
   const maxV=Math.max(...vals)||1;
   const bgColors=vals.map(v=>v===maxV?'rgba(255,59,48,.85)':'rgba(90,200,250,.72)');
-  chRepSemana=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:bgColors,hoverBackgroundColor:vals.map(v=>v===maxV?'rgba(255,59,48,1)':'rgba(90,200,250,1)'),borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`Semana ${c.label}: ${c.parsed.y} chamados repetidos`},backgroundColor:dk?'#1c1c1e':'#ffffff',titleColor:dk?'#f2f2f7':'#1c1c1e',bodyColor:dk?'#ebebf0':'#3a3a3c',borderColor:dk?'rgba(255,255,255,.12)':'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',stepSize:1}}}}});
+  const DL_RS=typeof ChartDataLabels!=='undefined'?ChartDataLabels:null;
+  chRepSemana=new Chart(ctx,{type:'bar',plugins:DL_RS?[DL_RS]:[],data:{labels,datasets:[{data:vals,backgroundColor:bgColors,hoverBackgroundColor:vals.map(v=>v===maxV?'rgba(255,59,48,1)':'rgba(90,200,250,1)'),borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`Semana ${c.label}: ${c.parsed.y} chamados repetidos`},backgroundColor:dk?'#1c1c1e':'#ffffff',titleColor:dk?'#f2f2f7':'#1c1c1e',bodyColor:dk?'#ebebf0':'#3a3a3c',borderColor:dk?'rgba(255,255,255,.12)':'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8,padding:10},datalabels:DL_RS?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:10,weight:'bold'},color:dk?'#ccc':'#444',clip:false}:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366'}},y:{beginAtZero:true,grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#8e8e93':'#636366',stepSize:1}}}}});
 }
 function renderRepSLAChart(totDentro,totOutlier,totalRep,dk){
   const ctx=document.getElementById('ch-rep-sla');if(!ctx)return;
@@ -3492,6 +3549,7 @@ let ofsRows=[],ofsMeta={fname:'',loaded:false};
 let ofsChRank=null,ofsChStatus=null,ofsChTaxa=null,ofsChTipo=null,ofsChDia=null;
 let ofsSortCol='total',ofsSortAsc=false;
 let ofsFilter={uf:'all',grupo:'all',dtStart:'',dtEnd:''};
+let ofsAlertFilter='';
 const OFS_STATUS_COLORS={'concluído':'#22c55e','iniciado':'#3b82f6','pendente':'#f59e0b','não concluído':'#ef4444','suspenso':'#8b5cf6','cancelado':'#6b7280','sem status':'#94a3b8'};
 const OFS_EXCLUDED=['almoço','almoco','checklist'];
 const OFS_DIAS_SEM=['segunda-feira','terca-feira','quarta-feira','quinta-feira','sexta-feira','sabado','domingo','segunda','terca','quarta','quinta','sexta','sabado'];
@@ -3766,6 +3824,11 @@ function _ofsRisk(t){
   if(t.susp>2)return{ord:1,level:'atencao',label:'Atenção',color:'#f59e0b',bg:'rgba(245,158,11,.1)',motivo:`${t.susp} suspensas`};
   return{ord:2,level:'ok',label:'No esperado',color:'#22c55e',bg:'rgba(34,197,94,.1)',motivo:'Dentro do esperado'};
 }
+function toggleOfsAlertFilter(level){
+  ofsAlertFilter=ofsAlertFilter===level?'':level;
+  const rows=ofsFilteredRows();
+  ofsRenderAlerts(ofsCalcTecnicos(rows));
+}
 function ofsRenderAlerts(tecs){
   const tbody=document.getElementById('ofs-tbody');if(!tbody)return;
   const scored=tecs.map(t=>({...t,_r:_ofsRisk(t)}));
@@ -3773,17 +3836,34 @@ function ofsRenderAlerts(tecs){
   const critico=scored.filter(t=>t._r.level==='critico').length;
   const atencao=scored.filter(t=>t._r.level==='atencao').length;
   const ok=scored.filter(t=>t._r.level==='ok').length;
+  const kpiDefs=[
+    {level:'critico',n:critico,label:'Crítico',color:'#ef4444',bg:'rgba(239,68,68,.1)',icon:'ti-alert-circle',
+     desc:'Taxa de conclusão < 60% ou mais de 3 não concluídos'},
+    {level:'atencao',n:atencao,label:'Atenção',color:'#f59e0b',bg:'rgba(245,158,11,.1)',icon:'ti-alert-triangle',
+     desc:'Taxa < 80%, mais de 5 em aberto ou mais de 2 suspensas'},
+    {level:'ok',n:ok,label:'No esperado',color:'#22c55e',bg:'rgba(34,197,94,.1)',icon:'ti-circle-check',
+     desc:'Taxa ≥ 80%, ≤ 3 não concluídos, ≤ 5 em aberto, ≤ 2 suspensas'},
+  ];
   const kpis=document.getElementById('ofs-alert-kpis');
-  if(kpis)kpis.innerHTML=[
-    {n:critico,label:'Crítico',color:'#ef4444',bg:'rgba(239,68,68,.1)',icon:'ti-alert-circle'},
-    {n:atencao,label:'Atenção',color:'#f59e0b',bg:'rgba(245,158,11,.1)',icon:'ti-alert-triangle'},
-    {n:ok,label:'No esperado',color:'#22c55e',bg:'rgba(34,197,94,.1)',icon:'ti-circle-check'},
-  ].map(k=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:${k.bg};border-radius:8px;border:.5px solid ${k.color}55">
-    <i class="ti ${k.icon}" style="color:${k.color};font-size:15px"></i>
-    <span style="font-size:19px;font-weight:700;color:${k.color};font-variant-numeric:tabular-nums">${k.n}</span>
-    <span style="font-size:11px;color:${k.color};font-weight:600">${k.label}</span>
-  </div>`).join('');
-  tbody.innerHTML=scored.map((t,i)=>{
+  if(kpis)kpis.innerHTML=kpiDefs.map(k=>{
+    const sel=ofsAlertFilter===k.level;
+    return`<div role="button" title="Clique para filtrar: ${k.desc}" onclick="toggleOfsAlertFilter('${k.level}')"
+      style="display:flex;align-items:center;gap:8px;padding:7px 14px;background:${k.bg};border-radius:8px;
+      border:${sel?`2px solid ${k.color}`:`1px solid ${k.color}55`};cursor:pointer;user-select:none;
+      transition:border .15s,box-shadow .15s;${sel?`box-shadow:0 0 0 3px ${k.color}22`:''}">
+      <i class="ti ${k.icon}" style="color:${k.color};font-size:16px"></i>
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <span style="display:flex;align-items:baseline;gap:5px">
+          <span style="font-size:20px;font-weight:700;color:${k.color};font-variant-numeric:tabular-nums">${k.n}</span>
+          <span style="font-size:11px;color:${k.color};font-weight:600">${k.label}</span>
+          ${sel?`<span style="font-size:9px;color:${k.color};opacity:.7;margin-left:2px">● filtro ativo</span>`:''}
+        </span>
+        <span style="font-size:9px;color:${k.color};opacity:.75;max-width:200px;line-height:1.3">${k.desc}</span>
+      </div>
+    </div>`;
+  }).join('');
+  const visible=ofsAlertFilter?scored.filter(t=>t._r.level===ofsAlertFilter):scored;
+  tbody.innerHTML=visible.map((t,i)=>{
     const r=t._r;
     const isMop=(t.grupo||'').includes('MOP');
     const tc=t.taxa>=80?'#22c55e':t.taxa>=60?'#f59e0b':'#ef4444';
