@@ -924,6 +924,84 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
   .nav-btn{width:24px;height:24px}
   .avatar-btn{width:26px;height:26px}
 }
+/* ─── REDE PANEL ─── */
+.rede-hrow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.rede-htitle{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.rede-htitle span{color:var(--blue)}
+.rede-hsub{font-size:11px;color:var(--tx2);margin-top:2px}
+.rede-hright{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rede-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:14px;background:var(--surface);border:.5px solid var(--bd);border-radius:var(--rl);box-shadow:var(--shadow-sm);padding:10px 14px}
+.rede-tgroup{display:flex;align-items:center;gap:8px}
+.rede-tlbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--tx3);white-space:nowrap}
+.rede-vtog{display:flex;flex-wrap:wrap;background:var(--surface2);border-radius:6px;overflow:hidden;border:.5px solid var(--bd)}
+.rede-vbtn{padding:6px 14px;font-size:11px;font-weight:600;border:none;background:transparent;color:var(--tx2);cursor:pointer;transition:all .15s;letter-spacing:.02em;font-family:inherit;white-space:nowrap}
+.rede-vbtn.on{background:var(--blue);color:#fff}
+.rede-period-sel{appearance:none;-webkit-appearance:none;min-width:130px;background:var(--surface);border:.5px solid var(--bd2);border-radius:8px;padding:6px 28px 6px 10px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238e8e93' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.rede-period-sel:focus{border-color:var(--blue)}
+.rede-meta-info{display:grid;grid-template-columns:1.15fr repeat(3,1fr);gap:10px;margin-bottom:16px}
+.rede-meta-card{background:var(--surface);border:.5px solid var(--bd);border-radius:var(--rl);box-shadow:var(--shadow-sm);padding:14px 16px;min-width:0}
+.rede-meta-card.rede-meta-main{background:linear-gradient(135deg,rgba(0,122,255,.07),rgba(90,200,250,.05));border-color:rgba(0,122,255,.14)}
+.rede-mkicker{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--tx3);margin-bottom:5px}
+.rede-mtitle{font-size:13px;font-weight:800;color:var(--tx);letter-spacing:-.02em;margin-bottom:5px}
+.rede-mtext{font-size:11px;line-height:1.45;color:var(--tx2)}
+.rede-mnote{font-size:10px;color:var(--tx3);line-height:1.4;margin-top:4px}
+.rede-mvalue{display:inline-flex;align-items:center;gap:5px;font-size:18px;font-weight:800;letter-spacing:-.02em;margin-bottom:5px}
+.rede-mdot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.rede-ctabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.rede-ctab{padding:7px 16px;font-size:11px;font-weight:600;border:.5px solid var(--bd);border-radius:20px;cursor:pointer;background:var(--surface);color:var(--tx2);transition:all .12s;letter-spacing:.02em;box-shadow:var(--shadow-sm)}
+.rede-ctab:hover{border-color:var(--bd2);color:var(--tx)}
+.rede-ctab.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.rede-cpanel{display:none}.rede-cpanel.on{display:block}
+.rede-sec{margin-bottom:24px}
+.rede-shead{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:8px;border-bottom:.5px solid var(--bd)}
+.rede-shead h2{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx2);margin:0}
+.rede-stag{font-size:9px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:.06em;text-transform:uppercase}
+.rede-stag-bb{background:rgba(0,122,255,.1);color:var(--blue);border:1px solid rgba(0,122,255,.2)}
+.rede-stag-ac{background:rgba(52,199,89,.1);color:var(--green);border:1px solid rgba(52,199,89,.2)}
+.rede-krow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.rede-kpi{background:var(--surface);border:.5px solid var(--bd);border-radius:var(--r);box-shadow:var(--shadow-sm);padding:14px 16px}
+.rede-kpi .lb{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--tx3);margin-bottom:6px}
+.rede-kpi .vl{font-size:24px;font-weight:700;line-height:1}
+.rede-kpi .sb{font-size:10px;color:var(--tx3);margin-top:4px}
+.rede-pill{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;margin-top:6px;letter-spacing:.04em;text-transform:uppercase}
+.rede-pill.ok{background:var(--green-bg);color:var(--green-dk);border:1px solid rgba(52,199,89,.2)}
+.rede-pill.wn{background:var(--orange-bg);color:var(--orange);border:1px solid rgba(255,149,0,.2)}
+.rede-pill.bd{background:var(--red-bg);color:var(--red-dk);border:1px solid rgba(255,59,48,.2)}
+.rede-c3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.rede-cbx{background:var(--surface);border:.5px solid var(--bd);border-radius:var(--r);box-shadow:var(--shadow-sm);padding:14px}
+.rede-cbx h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--tx3);margin-bottom:8px}
+.rede-leg{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px;font-size:10px;color:var(--tx2)}
+.rede-ld{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:3px;vertical-align:middle}
+.rede-blist .rede-br{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.rede-bn{font-size:10px;color:var(--tx);width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rede-bb_{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.rede-bf{height:100%;border-radius:3px}
+.rede-bv{font-size:10px;color:var(--tx2);width:26px;text-align:right}
+.rede-sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.rede-sc{border:.5px solid var(--bd);border-radius:var(--r);padding:14px;background:var(--surface);box-shadow:var(--shadow-sm);transition:border-color .15s}
+.rede-sc:hover{border-color:var(--bd2)}
+.rede-sct{font-size:11px;font-weight:600;color:var(--tx);margin-bottom:10px;padding-bottom:8px;border-bottom:.5px solid var(--bd)}
+.rede-scr{display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px;color:var(--tx2)}
+.rede-scv{font-weight:600;color:var(--tx)}
+.rede-nodata{font-size:11px;color:var(--tx3);text-align:center;padding:2rem;background:var(--surface);border-radius:var(--r);border:1px dashed var(--bd);grid-column:1/-1}
+.rede-detail-box{display:none;background:var(--surface);border:.5px solid var(--bd);border-radius:var(--rl);box-shadow:var(--shadow);padding:14px;margin-top:18px}
+.rede-detail-box.on{display:block}
+.rede-dhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;padding-bottom:10px;border-bottom:.5px solid var(--bd)}
+.rede-dtitle{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--tx2)}
+.rede-dsub{font-size:10px;color:var(--tx3);margin-top:3px}
+.rede-dacts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.rede-dcnt{font-size:10px;font-weight:700;color:var(--blue);background:var(--blue-bg);border:1px solid var(--blue-lt);border-radius:999px;padding:4px 8px;white-space:nowrap}
+.rede-dclose{border:.5px solid var(--bd2);background:var(--surface2);color:var(--tx2);border-radius:20px;padding:6px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit}
+.rede-dclose:hover{background:var(--blue);border-color:var(--blue);color:#fff}
+.rede-dtw{max-height:360px;overflow:auto;border:.5px solid var(--bd);border-radius:var(--r)}
+.rede-dtable{width:100%;border-collapse:collapse;font-size:10px}
+.rede-dtable th{position:sticky;top:0;background:var(--surface);z-index:1;text-align:left;color:var(--tx3);font-size:9px;text-transform:uppercase;letter-spacing:.04em;border-bottom:.5px solid var(--bd);padding:8px}
+.rede-dtable td{border-bottom:.5px solid var(--bd);padding:8px;color:var(--tx2);vertical-align:top}
+.rede-dtable tr:last-child td{border-bottom:0}
+.rede-did{font-weight:700;color:var(--blue)}
+.rede-dmuted{color:var(--tx3);text-align:center}
+@media(max-width:900px){.rede-krow{grid-template-columns:repeat(2,1fr)}.rede-sgrid{grid-template-columns:repeat(2,1fr)}.rede-c3{grid-template-columns:1fr}.rede-meta-info{grid-template-columns:1fr 1fr}.rede-meta-card.rede-meta-main{grid-column:1/-1}}
+@media(max-width:600px){.rede-krow{grid-template-columns:1fr}.rede-sgrid{grid-template-columns:1fr}.rede-meta-info{grid-template-columns:1fr}}
 </style>
 </head>
 <body data-theme="light">
@@ -932,6 +1010,7 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
 <input type="file" id="file-enc" accept=".xlsx,.xls" style="display:none">
 <input type="file" id="file-fuel" accept=".csv" style="display:none">
 <input type="file" id="file-ofs" accept=".xlsx,.xls,.csv" style="display:none">
+<input type="file" id="file-rede" accept=".xlsx,.xls" style="display:none">
 <div class="login-screen" id="login-screen">
   <form class="login-card" onsubmit="loginUser(event)">
     <img class="login-logo" src="assets/mcll-logo.png" alt="MCLL Monitoramento B2B">
@@ -1251,9 +1330,188 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     </div>
   </div>
 
+  <!-- ── PAINEL REDE ── -->
   <div class="panel" id="panel-rede">
-    <iframe src="PAINEL_REDE.html" title="Painel Rede Backbone e Acesso" style="width:100%;height:calc(100vh - 104px);border:0;border-radius:14px;background:transparent"></iframe>
-  </div>
+    <!-- Empty state -->
+    <div id="rede-empty" class="empty">
+      <div class="empty-icon"><i class="ti ti-router"></i></div>
+      <h2>Base Rede não carregada</h2>
+      <p>Faça upload do arquivo XLSX com os dados de Backbone e Acesso para visualizar os indicadores de rede.</p>
+      <label class="empty-btn" for="file-rede" style="background:var(--blue);color:#fff;border-color:var(--blue)"><i class="ti ti-upload" style="font-size:14px"></i> Carregar Base Rede</label>
+    </div>
+    <!-- Dashboard -->
+    <div id="rede-dash" style="display:none">
+      <div class="rede-hrow">
+        <div>
+          <div class="rede-htitle">Painel <span>Rede</span></div>
+          <div class="rede-hsub">MA CAP · MA INT · PI · NORTE &nbsp;|&nbsp; Meta: ≥88,9% prazo · ≤4,9% outlier · TME ≤6,0h &nbsp;·&nbsp; <span id="rede-fname" style="color:var(--tx3)"></span></div>
+        </div>
+        <div class="rede-hright">
+          <span id="rede-ts-text" style="font-size:11px;color:var(--tx3)"></span>
+          <label class="upload-pill" for="file-rede" style="background:var(--blue-bg);color:var(--blue);border-color:var(--blue-lt)"><i class="ti ti-upload"></i> Atualizar base</label>
+        </div>
+      </div>
+      <!-- Toolbar -->
+      <div class="rede-toolbar">
+        <div class="rede-tgroup">
+          <span class="rede-tlbl">Visão</span>
+          <div class="rede-vtog">
+            <button class="rede-vbtn on" onclick="rdeSetView('bb')">Backbone</button>
+            <button class="rede-vbtn" onclick="rdeSetView('ac')">Acesso</button>
+            <button class="rede-vbtn" onclick="rdeSetView('all')">Backbone + Acesso</button>
+          </div>
+        </div>
+        <div class="rede-tgroup">
+          <span class="rede-tlbl">Mês</span>
+          <select class="rede-period-sel" id="rede-month-sel" onchange="rdeSetMonth(this.value)"><option value="">Todos os meses</option></select>
+        </div>
+        <div class="rede-tgroup">
+          <span class="rede-tlbl">Semana</span>
+          <select class="rede-period-sel" id="rede-week-sel" onchange="rdeSetWeek(this.value)"><option value="">Todas as semanas</option></select>
+        </div>
+      </div>
+      <!-- Meta cards -->
+      <section class="rede-meta-info">
+        <div class="rede-meta-card rede-meta-main">
+          <div class="rede-mkicker">Como interpretar</div>
+          <div class="rede-mtitle">Metas operacionais da Rede</div>
+          <p class="rede-mtext">Os indicadores comparam Backbone e Acesso contra metas de atendimento. Use Prazo para medir cumprimento, Outlier para identificar chamados críticos e TME para acompanhar o tempo médio de execução.</p>
+        </div>
+        <div class="rede-meta-card">
+          <div class="rede-mkicker">Prazo</div>
+          <div class="rede-mvalue" style="color:var(--green)"><span class="rede-mdot" style="background:var(--green)"></span>88,9%</div>
+          <p class="rede-mnote">Meta mínima. Percentual de chamados concluídos dentro do prazo definido na base.</p>
+        </div>
+        <div class="rede-meta-card">
+          <div class="rede-mkicker">Outlier</div>
+          <div class="rede-mvalue" style="color:var(--red)"><span class="rede-mdot" style="background:var(--red)"></span>4,9%</div>
+          <p class="rede-mnote">Limite máximo. Chamados fora do comportamento esperado, com tempo excessivo.</p>
+        </div>
+        <div class="rede-meta-card">
+          <div class="rede-mkicker">TME</div>
+          <div class="rede-mvalue" style="color:var(--orange)"><span class="rede-mdot" style="background:var(--orange)"></span>6,0h</div>
+          <p class="rede-mnote">Tempo médio esperado para atendimento. Acima da meta indica lentidão.</p>
+        </div>
+      </section>
+      <!-- Cluster tabs -->
+      <div class="rede-ctabs">
+        <button class="rede-ctab on" onclick="rdeGoTab('vis')">Visão Geral</button>
+        <button class="rede-ctab" onclick="rdeGoTab('C')">MA CAP</button>
+        <button class="rede-ctab" onclick="rdeGoTab('I')">MA INT</button>
+        <button class="rede-ctab" onclick="rdeGoTab('P')">PI</button>
+        <button class="rede-ctab" onclick="rdeGoTab('N')">NORTE</button>
+      </div>
+      <!-- Visão Geral -->
+      <div id="rcp-vis" class="rede-cpanel on"><div id="rde-vis"></div></div>
+      <!-- MA CAP -->
+      <div id="rcp-C" class="rede-cpanel">
+        <div id="rsec-C-bb" class="rede-sec">
+          <div class="rede-shead"><h2>MA CAP</h2><span class="rede-stag rede-stag-bb">Backbone</span></div>
+          <div class="rede-krow" id="rk-C-b"></div>
+          <div class="rede-c3">
+            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-C-b-p"></canvas></div></div>
+            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-C-b-o"></canvas></div></div>
+            <div class="rede-cbx"><h4>Top Motivos de Falha</h4><div class="rede-blist" id="rbl-C-b"></div></div>
+          </div>
+        </div>
+        <div id="rsec-C-ac" class="rede-sec">
+          <div class="rede-shead"><h2>MA CAP</h2><span class="rede-stag rede-stag-ac">Acesso</span></div>
+          <div class="rede-krow" id="rk-C-a"></div>
+          <div class="rede-c3">
+            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-C-a-p"></canvas></div></div>
+            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-C-a-o"></canvas></div></div>
+            <div class="rede-cbx"><h4>TME por Período (horas)</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#3ecf8e"></span>TME</span><span><span class="rede-ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div><div style="position:relative;height:160px"><canvas id="rch-C-t"></canvas></div></div>
+          </div>
+          <div class="rede-cbx"><h4>Top Causas — Acesso</h4><div class="rede-blist" id="rbl-C-a"></div></div>
+        </div>
+      </div>
+      <!-- MA INT -->
+      <div id="rcp-I" class="rede-cpanel">
+        <div id="rsec-I-bb" class="rede-sec">
+          <div class="rede-shead"><h2>MA INT</h2><span class="rede-stag rede-stag-bb">Backbone</span></div>
+          <div class="rede-krow" id="rk-I-b"></div>
+          <div class="rede-c3">
+            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-I-b-p"></canvas></div></div>
+            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-I-b-o"></canvas></div></div>
+            <div class="rede-cbx"><h4>Top Motivos de Falha</h4><div class="rede-blist" id="rbl-I-b"></div></div>
+          </div>
+        </div>
+        <div id="rsec-I-ac" class="rede-sec">
+          <div class="rede-shead"><h2>MA INT</h2><span class="rede-stag rede-stag-ac">Acesso</span></div>
+          <div class="rede-krow" id="rk-I-a"></div>
+          <div class="rede-c3">
+            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-I-a-p"></canvas></div></div>
+            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-I-a-o"></canvas></div></div>
+            <div class="rede-cbx"><h4>TME por Período (horas)</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#3ecf8e"></span>TME</span><span><span class="rede-ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div><div style="position:relative;height:160px"><canvas id="rch-I-t"></canvas></div></div>
+          </div>
+          <div class="rede-cbx"><h4>Top Causas — Acesso</h4><div class="rede-blist" id="rbl-I-a"></div></div>
+        </div>
+      </div>
+      <!-- PI -->
+      <div id="rcp-P" class="rede-cpanel">
+        <div id="rsec-P-bb" class="rede-sec">
+          <div class="rede-shead"><h2>PI</h2><span class="rede-stag rede-stag-bb">Backbone</span></div>
+          <div class="rede-krow" id="rk-P-b"></div>
+          <div class="rede-c3">
+            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-P-b-p"></canvas></div></div>
+            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-P-b-o"></canvas></div></div>
+            <div class="rede-cbx"><h4>Top Motivos de Falha</h4><div class="rede-blist" id="rbl-P-b"></div></div>
+          </div>
+        </div>
+        <div id="rsec-P-ac" class="rede-sec">
+          <div class="rede-shead"><h2>PI</h2><span class="rede-stag rede-stag-ac">Acesso</span></div>
+          <div class="rede-krow" id="rk-P-a"></div>
+          <div class="rede-c3">
+            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-P-a-p"></canvas></div></div>
+            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-P-a-o"></canvas></div></div>
+            <div class="rede-cbx"><h4>TME por Período (horas)</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#3ecf8e"></span>TME</span><span><span class="rede-ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div><div style="position:relative;height:160px"><canvas id="rch-P-t"></canvas></div></div>
+          </div>
+          <div class="rede-cbx"><h4>Top Causas — Acesso</h4><div class="rede-blist" id="rbl-P-a"></div></div>
+        </div>
+      </div>
+      <!-- NORTE -->
+      <div id="rcp-N" class="rede-cpanel">
+        <div id="rsec-N-bb" class="rede-sec">
+          <div class="rede-shead"><h2>NORTE</h2><span class="rede-stag rede-stag-bb">Backbone</span></div>
+          <div class="rede-krow" id="rk-N-b"></div>
+          <div class="rede-c3">
+            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-N-b-p"></canvas></div></div>
+            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-N-b-o"></canvas></div></div>
+            <div class="rede-cbx"><h4>Top Motivos de Falha</h4><div class="rede-blist" id="rbl-N-b"></div></div>
+          </div>
+        </div>
+        <div id="rsec-N-ac" class="rede-sec">
+          <div class="rede-shead"><h2>NORTE</h2><span class="rede-stag rede-stag-ac">Acesso</span></div>
+          <div class="rede-krow" id="rk-N-a"></div>
+          <div class="rede-c3">
+            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-N-a-p"></canvas></div></div>
+            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-N-a-o"></canvas></div></div>
+            <div class="rede-cbx"><h4>TME por Período (horas)</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#3ecf8e"></span>TME</span><span><span class="rede-ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div><div style="position:relative;height:160px"><canvas id="rch-N-t"></canvas></div></div>
+          </div>
+          <div class="rede-cbx"><h4>Top Causas — Acesso</h4><div class="rede-blist" id="rbl-N-a"></div></div>
+        </div>
+      </div>
+      <!-- Detail report -->
+      <div id="rde-detail" class="rede-detail-box">
+        <div class="rede-dhead">
+          <div>
+            <div class="rede-dtitle" id="rde-dtitle">Chamados do indicador</div>
+            <div class="rede-dsub" id="rde-dsub"></div>
+          </div>
+          <div class="rede-dacts">
+            <span class="rede-dcnt" id="rde-dcnt">0 chamados</span>
+            <button class="rede-dclose" onclick="rdeClearDetail()">✕ Fechar</button>
+          </div>
+        </div>
+        <div class="rede-dtw">
+          <table class="rede-dtable">
+            <thead><tr><th>OS/ID</th><th>Cidade</th><th>UF</th><th>Clientes Af.</th><th>TME</th><th>Causa</th><th>Período</th></tr></thead>
+            <tbody id="rde-dbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /rede-dash -->
+  </div><!-- /panel-rede -->
 
   <div class="panel" id="panel-combustivel">
 
@@ -2259,9 +2517,13 @@ function clearEnc(){
   saveState();updateClearBtns();
 }
 function clearRede(){
-  if(!confirm('Recarregar o painel Rede?'))return;
-  const f=document.querySelector('#panel-rede iframe');
-  if(f){const src=f.src;f.src='about:blank';setTimeout(()=>{f.src=src;},100);}
+  if(!confirm('Limpar base de rede? Os dados serão removidos.'))return;
+  try{localStorage.removeItem(REDE_STORAGE);localStorage.removeItem(REDE_UI_KEY);}catch(e){}
+  rdeBD=[];rdeAD=[];
+  ['mes','ml','sem','sl','ca','mo'].forEach(k=>rdeM[k].length=0);
+  rdeSelMonth='';rdeSelWeek='';rdeModo='m';rdeActiveView='bb';
+  Object.values(rdeCharts).forEach(ch=>{try{ch.destroy();}catch(e){}});rdeCharts={};
+  rdeShowDash();updateClearBtns();
 }
 function updateUploadTimes(){
   const sa=document.getElementById('ts-ab');if(sa)sa.textContent=lastAbAt?'Anexado '+lastAbAt:'';
@@ -2275,7 +2537,7 @@ function updateClearBtns(){
   const bOfs=document.getElementById('clear-ofs-btn');
   if(bAb)bAb.style.display=isAb&&dAb.length?'flex':'none';
   if(bEnc)bEnc.style.display=(isEnc||isRep)&&dEnc.length?'flex':'none';
-  if(bRede)bRede.style.display=isRede?'flex':'none';
+  if(bRede)bRede.style.display=isRede&&(rdeBD.length||rdeAD.length)?'flex':'none';
   if(bOfs)bOfs.style.display=isOfs&&ofsRows.length?'flex':'none';
 }
 /* ─── MODAL ADICIONAR CHAMADO ─── */
@@ -4156,6 +4418,7 @@ function switchTab(tab,persist=true){
   if(isFuel){renderFuel();setTimeout(initFuelSplit,80);}
   if(isRep)renderPanelRepetidos();
   if(isOfs)renderOfs();
+  if(isRede){rdeBuildPeriodSelects();renderRede();}
   if(isWpp){wppUnreadCount=0;updateWppBadge();const f=document.getElementById('wpp-frame');if(f&&f.src==='about:blank')f.src='https://mcll-painel-acionamentos-production.up.railway.app/painel';}
   updateClearBtns();
 }
@@ -4638,7 +4901,277 @@ button,select,input,textarea,.card-action,.admin-only,.tsec-meta,.fbar,.pfooter,
   w.document.open();w.document.write(html);w.document.close();
 }
 
+/* ─── REDE PANEL ─── */
+let rdeBD=[],rdeAD=[];
+const rdeM={mes:[],ml:[],sem:[],sl:[],ca:[],mo:[]};
+const RDE_CL_NM={"C":"MA CAP","I":"MA INT","P":"PI","N":"NORTE"};
+const RDE_CL_CL={"C":"#9d7ef0","I":"#4d8ef0","P":"#3ecf8e","N":"#f0a14d"};
+const RDE_CLS=["C","I","P","N"];
+const RDE_M89=88.9,RDE_MOUT=4.9,RDE_MTME=6.0;
+let rdeModo='m',rdeSelMonth='',rdeSelWeek='',rdeActiveView='bb',rdeCharts={};
+const REDE_STORAGE='atrix:rede:bases:v2';
+const REDE_UI_KEY='atrix:rede:ui:v1';
+function rdeNk(v){return String(v||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/gi,'').toUpperCase()}
+function rdeGv(r,cols){const m=Object.fromEntries(Object.keys(r).map(k=>[rdeNk(k),k]));for(const c of cols){const k=m[rdeNk(c)];if(k&&r[k]!==undefined&&r[k]!=='')return r[k]}return''}
+function rdeNum(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number')return v;return parseFloat(String(v).replace(',','.').replace(/[^\d.-]/g,''))||0}
+function rdeBoolish(v){const s=rdeNk(v);return v===1||v===true||['SIM','S','TRUE','YES','Y','1','NO PRAZO','DENTRO PRAZO','DENTRO SLA'].includes(s)}
+function rdeParseDateBR(v){if(v instanceof Date&&!isNaN(v))return v;if(typeof v==='number'&&isFinite(v)){const d=new Date(Math.round((v-25569)*86400*1000));return isNaN(d)?null:d}const raw=String(v||'').trim();if(!raw)return null;const d=new Date(raw);if(!isNaN(d))return d;const m=raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);if(!m)return null;const y=Number(m[3].length===2?'20'+m[3]:m[3]);const x=new Date(y,Number(m[2])-1,Number(m[1]),Number(m[4]||0),Number(m[5]||0),Number(m[6]||0));return isNaN(x)?null:x}
+function rdeIsoWeek(d){if(!d)return 0;const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=x.getUTCDay()||7;x.setUTCDate(x.getUTCDate()+4-day);const y0=new Date(Date.UTC(x.getUTCFullYear(),0,1));return Math.ceil((((x-y0)/86400000)+1)/7)}
+function rdeClusterCode(v){const s=rdeNk(v);if(s.includes('CAP'))return'C';if(s.includes('NORTE')||s==='N'||s.includes('AM')||s.includes('AP')||s.includes('PA'))return'N';if(s.includes('PI')||s.includes('PIAUI')||s==='P'||s.includes('C31'))return'P';if(s.includes('INT')||s.includes('INTERIOR')||s==='I'||s.includes('MA')||s.includes('MARANHAO')||s.includes('C32'))return'I';return'I'}
+function rdeClusterFromRow(r){const uf=rdeNk(rdeGv(r,['UF','ufservico']));const cidade=rdeNk(rdeGv(r,['CIDADE','CIDADE_SIMPLES','cidadeservico','localidade']));const cluster=rdeGv(r,['cluster_calc','NOME CLUSTER','NOVO CLUSTER','CLUSTER','cluster','regional','regiao','area']);if(uf==='PI')return'P';if(uf==='AM'||uf==='AP'||uf==='PA')return'N';if(uf==='MA')return cidade.includes('SAOLUIS')?'C':'I';return rdeClusterCode(cluster||uf||cidade)}
+function rdeEnsureLabel(arr,key,label){let i=arr.indexOf(key);if(i<0){arr.push(key);label&&arr===rdeM.mes?rdeM.ml.push(label):label&&arr===rdeM.sem&&rdeM.sl.push(label);i=arr.length-1}return i}
+function rdeMonthIndex(v){if(v instanceof Date&&!isNaN(v))return rdeEnsureLabel(rdeM.mes,`${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}`,v.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}).replace('.',''));const raw=String(v||'').trim();if(!raw)return 0;const d=new Date(raw);if(!isNaN(d))return rdeMonthIndex(d);const m=raw.match(/(\d{4})[-\/](\d{1,2})|(\d{1,2})[-\/](\d{4})/);if(m){const y=m[1]||m[4],mo=m[2]||m[3];return rdeEnsureLabel(rdeM.mes,`${y}-${String(Number(mo)).padStart(2,'0')}`,raw)}const i=rdeM.ml.findIndex(x=>rdeNk(x)===rdeNk(raw));return i>=0?i:rdeEnsureLabel(rdeM.mes,raw,raw)}
+function rdeWeekIndex(v){if(v instanceof Date&&!isNaN(v)){const w=rdeIsoWeek(v);return rdeEnsureLabel(rdeM.sem,`${v.getFullYear()}-W${String(w).padStart(2,'0')}`,`S${String(w).padStart(2,'0')}`)}const raw=String(v||'').trim();if(!raw)return 0;const d=rdeParseDateBR(raw);if(d)return rdeWeekIndex(d);const n=Number((raw.match(/\d+/)||[])[0]||0);if(n>0)return rdeEnsureLabel(rdeM.sem,`2026-W${String(n).padStart(2,'0')}`,`S${String(n).padStart(2,'0')}`);const i=rdeM.sl.findIndex(x=>rdeNk(x)===rdeNk(raw));return i>=0?i:rdeEnsureLabel(rdeM.sem,raw,raw)}
+function rdeLabelIndex(arr,v){const raw=String(v||'Não informado').trim()||'Não informado';let i=arr.findIndex(x=>rdeNk(x)===rdeNk(raw));if(i<0){arr.push(raw);i=arr.length-1}return i}
+function rdeFmtDate(v){const d=rdeParseDateBR(v);if(d){const ht=d.getHours()||d.getMinutes()||d.getSeconds();return ht?d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString('pt-BR')}return String(v||'').trim()||'-'}
+function rdeCompactDetail(r,kind,cl,mi,wi,prazo,out,tempo,label,impacto){
+  const ab=rdeGv(r,['DATA_ABERTURA','Data Abertura','Data de Abertura','data abertura','abertura','ABERTURA','data']);
+  const fc=rdeGv(r,['DATA_FECHAMENTO','Data Fechamento','Data de Fechamento','data fechamento','fechamento','ENCERRAMENTO','Data Encerramento','data encerramento','data fim']);
+  return{id:String(rdeGv(r,['protocolo','ticket_id','ID Ticket','id ticket','id','chamado','numero'])||'').trim(),os:String(rdeGv(r,['OS','os','ult_OS','ult os','ultima OS','última OS','os_agrupada','os concluida agrupada','os_concluida_agrupada','ordem servico','protocolo','ticket_id','ID Ticket','chamado','numero'])||'').trim(),cliente:String(rdeGv(r,['cliente','CLIENTE','nome cliente','razao social','CLIENTE FINAL'])||'').trim(),cidade:String(rdeGv(r,['cidade','CIDADE','CIDADE_SIMPLES','cidadeservico','localidade'])||'').trim(),uf:String(rdeGv(r,['uf','UF','estado'])||'').trim(),motivo:String(label||rdeGv(r,['motivo','causa','causa raiz','CAUSA_SIMPLES','ORIGEM','FALHA'])||'').trim(),periodoAtendimento:`${rdeFmtDate(ab)} - ${rdeFmtDate(fc)}`,kind,cluster:cl,mes:mi,semana:wi,prazo,out,tempo,impacto};
+}
+function rdeRowToRede(r,sheet){
+  const tipo=String(rdeGv(r,['tipo','rede','categoria','grupo'])||sheet||'').toLowerCase();
+  const isAC=tipo.includes('acesso');
+  const openedAt=rdeParseDateBR(rdeGv(r,['DATA_ABERTURA','data abertura','abertura','data']));
+  const mes=rdeGv(r,['mes','mês','competencia','competência','periodo','período']);
+  const ano=rdeGv(r,['ano']);
+  const cl=rdeClusterFromRow(r);
+  const mi=rdeMonthIndex(mes&&ano?`${ano}-${mes}`:(mes||openedAt));
+  const wi=rdeWeekIndex(rdeGv(r,['semana','week','periodo semanal','período semanal'])||openedAt);
+  const tempo=rdeNum(rdeGv(r,isAC?['TME','tme','tempo medio','tempo médio','tempo','horas','duracao','duração']:['TMR','tmr','tempo medio','tempo médio','tempo','horas','duracao','duração']));
+  const prazoRaw=rdeGv(r,['PRAZO_SEM_PARADA_RELOGIO','prazo sem parada relogio','no prazo','prazo','dentro prazo','dentro_sla','sla prazo','dentro']);
+  const outRaw=rdeGv(r,['OUTLIER_SEM_PARADA_RELOGIO','outlier sem parada relogio','outlier','fora outlier','outlier 24h','outlier_24h']);
+  const prazo=prazoRaw!==''?rdeBoolish(prazoRaw):(tempo?tempo<=RDE_MTME:false);
+  const out=outRaw!==''?rdeBoolish(outRaw):(tempo>24);
+  if(isAC){
+    const cli=rdeNum(rdeGv(r,['CLIENTES AFETADOS','clientes afetados','clientes','cliente afetado','impactados','afetados']));
+    const motivo=rdeLabelIndex(rdeM.mo,rdeGv(r,['CAUSA_SIMPLES','ORIGEM','CLASSE_CABO','motivo','causa','causa raiz','falha','tipo encerramento']));
+    const detail=rdeCompactDetail(r,'Acesso',cl,mi,wi,prazo,out,tempo,rdeM.mo[motivo]||'Acesso',cli);
+    return{kind:'ac',row:[cl,mi,wi,prazo?1:0,out?1:0,tempo,cli,motivo,detail]};
+  }
+  const causa=rdeLabelIndex(rdeM.ca,rdeGv(r,['[INCIDENTE - TRECHO DOWN] MOTIVO DA FALHA (REDE)','MOTIVO DA FALHA (REDE)','FALHA','motivo','causa','causa raiz','tipo encerramento']));
+  const detail=rdeCompactDetail(r,'Backbone',cl,mi,wi,prazo,out,tempo,rdeM.ca[causa]||'Backbone',0);
+  return{kind:'bb',row:[cl,mi,wi,prazo?1:0,out?1:0,tempo,causa,detail]};
+}
+function rdeApplyRows(rows,fileName){
+  const bb=[],ac=[];
+  rows.forEach(x=>{const it=rdeRowToRede(x.row,x.sheet);(it.kind==='ac'?ac:bb).push(it.row)});
+  if(!bb.length&&!ac.length)throw new Error('Nenhuma linha reconhecida para Backbone ou Acesso.');
+  if(bb.length)rdeBD=bb;if(ac.length)rdeAD=ac;
+  const _now=new Date();
+  try{localStorage.setItem(REDE_STORAGE,JSON.stringify({version:3,BD:rdeBD,AD:rdeAD,fileName,M:{mes:[...rdeM.mes],ml:[...rdeM.ml],sem:[...rdeM.sem],sl:[...rdeM.sl],ca:[...rdeM.ca],mo:[...rdeM.mo]},at:_now.toISOString()}));}catch(e){console.warn('rede save',e)}
+  const fn=document.getElementById('rede-fname');if(fn)fn.textContent=fileName;
+  const ts=document.getElementById('rede-ts-text');if(ts)ts.textContent='Anexado '+_now.toLocaleDateString('pt-BR')+' '+_now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  rdeSelMonth='';rdeSelWeek='';rdeModo='m';rdeShowDash();rdeBuildPeriodSelects();renderRede();updateClearBtns();
+}
+function rdeHasDetail(rows,idx){return Array.isArray(rows)&&rows.some(r=>r&&r[idx]&&typeof r[idx]==='object'&&String(r[idx].os||r[idx].id||'').trim())}
+function rdeRestoreM(saved){
+  if(!saved||typeof saved!=='object')return;
+  ['mes','ml','sem','sl','ca','mo'].forEach(k=>{if(Array.isArray(saved[k])&&saved[k].length){rdeM[k].length=0;saved[k].forEach(v=>rdeM[k].push(v));}});
+}
+function rdeRestoreBase(){
+  try{
+    localStorage.removeItem('atrix:rede:bases:v1');
+    const raw=localStorage.getItem(REDE_STORAGE);if(!raw)return;
+    const st=JSON.parse(raw);
+    if(st.version===2){localStorage.removeItem(REDE_STORAGE);return}
+    const okBD=!Array.isArray(st.BD)||!st.BD.length||rdeHasDetail(st.BD,7);
+    const okAD=!Array.isArray(st.AD)||!st.AD.length||rdeHasDetail(st.AD,8);
+    if(st.version!==3||!okBD||!okAD){localStorage.removeItem(REDE_STORAGE);return}
+    rdeRestoreM(st.M);
+    if(Array.isArray(st.BD)&&st.BD.length)rdeBD=st.BD;
+    if(Array.isArray(st.AD)&&st.AD.length)rdeAD=st.AD;
+    const fn=document.getElementById('rede-fname');if(fn&&st.fileName)fn.textContent=st.fileName;
+    const ts=document.getElementById('rede-ts-text');if(ts&&st.at){const d=new Date(st.at);ts.textContent='Anexado '+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+    rdeShowDash();
+  }catch(e){console.warn('rede restore',e)}
+}
+function rdeSaveUI(){try{localStorage.setItem(REDE_UI_KEY,JSON.stringify({selMonth:rdeSelMonth,selWeek:rdeSelWeek,modo:rdeModo,activeView:rdeActiveView}));}catch(e){}}
+function rdeRestoreUI(){
+  try{
+    const raw=localStorage.getItem(REDE_UI_KEY);if(!raw)return;
+    const ui=JSON.parse(raw);
+    if(ui.activeView&&['bb','ac','all'].includes(ui.activeView))rdeActiveView=ui.activeView;
+    if(ui.modo&&['m','s'].includes(ui.modo))rdeModo=ui.modo;
+    if(ui.selMonth&&rdeM.mes.includes(ui.selMonth))rdeSelMonth=ui.selMonth;
+    if(ui.selWeek&&rdeM.sem.includes(ui.selWeek))rdeSelWeek=ui.selWeek;
+    document.querySelectorAll('#panel-rede .rede-vbtn').forEach((b,i)=>b.classList.toggle('on',['bb','ac','all'][i]===rdeActiveView));
+  }catch(e){console.warn('rede ui restore',e)}
+}
+function rdeShowDash(){
+  const empty=document.getElementById('rede-empty'),dash=document.getElementById('rede-dash');
+  const hasData=rdeBD.length||rdeAD.length;
+  if(empty)empty.style.display=hasData?'none':'';
+  if(dash)dash.style.display=hasData?'':'none';
+}
+document.getElementById('file-rede').addEventListener('change',function(e){
+  const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'array'});const rows=[];wb.SheetNames.forEach(sn=>XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:''}).forEach(row=>rows.push({sheet:sn,row})));rdeApplyRows(rows,f.name)}catch(err){alert('Erro ao carregar base de rede: '+err.message)}};
+  rd.readAsArrayBuffer(f);e.target.value='';
+});
+function rdePkeys(){return rdeModo==='m'?rdeM.mes:rdeM.sem;}
+function rdePlbls(){return rdeModo==='m'?rdeM.ml:rdeM.sl;}
+function rdePeriodOpts(keys,labels,selected,all){return`<option value="">${all}</option>`+keys.map((k,i)=>`<option value="${k}"${k===selected?' selected':''}>${labels[i]||k}</option>`).join('')}
+function rdeWeeksForMonth(monthKey){
+  const all=[...rdeBD,...rdeAD];
+  const idxs=all.filter(r=>!monthKey||rdeM.mes[r[1]]===monthKey).map(r=>r[2]);
+  return[...new Set(idxs)].filter(i=>rdeM.sem[i]!==undefined).sort((a,b)=>rdeM.sem[a].localeCompare(rdeM.sem[b])).map(i=>({key:rdeM.sem[i],label:rdeM.sl[i]||rdeM.sem[i]}));
+}
+function rdeMonthForWeek(wk){if(!wk)return'';const all=[...rdeBD,...rdeAD];const idxs=[...new Set(all.filter(r=>rdeM.sem[r[2]]===wk).map(r=>r[1]))];return idxs.length===1?rdeM.mes[idxs[0]]||'':'';}
+function rdeBuildPeriodSelects(){
+  const ms=document.getElementById('rede-month-sel'),ws=document.getElementById('rede-week-sel');
+  if(ms)ms.innerHTML=rdePeriodOpts(rdeM.mes,rdeM.ml,rdeSelMonth,'Todos os meses');
+  if(ws){
+    const weeks=rdeWeeksForMonth(rdeSelMonth);
+    ws.innerHTML='<option value="">Todas as semanas</option>'+weeks.map(w=>`<option value="${w.key}"${w.key===rdeSelWeek?' selected':''}>${w.label}</option>`).join('');
+    if(rdeSelWeek&&!weeks.some(w=>w.key===rdeSelWeek)){rdeSelWeek='';ws.value='';}
+  }
+}
+function rdeSetMonth(v){rdeSelMonth=v;rdeSelWeek='';rdeModo='m';rdeBuildPeriodSelects();renderRede();rdeSaveUI();}
+function rdeSetWeek(v){rdeSelWeek=v;rdeModo=v?'s':'m';const mes=rdeMonthForWeek(rdeSelWeek);if(mes)rdeSelMonth=mes;rdeBuildPeriodSelects();renderRede();rdeSaveUI();}
+function rdeSetView(v){rdeActiveView=v;document.querySelectorAll('#panel-rede .rede-vbtn').forEach((b,i)=>b.classList.toggle('on',['bb','ac','all'][i]===v));renderRede();rdeSaveUI();}
+function rdeGoTab(id){
+  const ids=['vis','C','I','P','N'];
+  document.querySelectorAll('#panel-rede .rede-ctab').forEach((t,i)=>t.classList.toggle('on',ids[i]===id));
+  document.querySelectorAll('#panel-rede .rede-cpanel').forEach(p=>p.classList.toggle('on',p.id==='rcp-'+id));
+}
+function rdeFBB(cl){return rdeBD.filter(r=>{if(cl&&r[0]!==cl)return false;if(rdeSelMonth&&rdeM.mes[r[1]]!==rdeSelMonth)return false;if(rdeSelWeek&&rdeM.sem[r[2]]!==rdeSelWeek)return false;return true;})}
+function rdeFAC(cl){return rdeAD.filter(r=>{if(cl&&r[0]!==cl)return false;if(rdeSelMonth&&rdeM.mes[r[1]]!==rdeSelMonth)return false;if(rdeSelWeek&&rdeM.sem[r[2]]!==rdeSelWeek)return false;return true;})}
+function rdeFAll(cl){const bb=rdeFBB(cl).map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],0,rdeM.ca[r[6]]||'Backbone',r[7]]);const ac=rdeFAC(cl).map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],r[6],rdeM.mo[r[7]]||'Acesso',r[8]]);return bb.concat(ac);}
+function rdeAgg(rows,isAC){
+  const t=rows.length;if(!t)return null;
+  const p=rows.reduce((s,r)=>s+r[3],0),o=rows.reduce((s,r)=>s+r[4],0);
+  const res={t,pp:+(p/t*100).toFixed(1),op:+(o/t*100).toFixed(1)};
+  if(isAC){const tm=rows.filter(r=>r[5]>0);res.tme=tm.length?+(tm.reduce((s,r)=>s+r[5],0)/tm.length).toFixed(1):0;res.cli=rows.reduce((s,r)=>s+r[6],0);}
+  else{const tm=rows.filter(r=>r[5]>0);res.tmr=tm.length?+(tm.reduce((s,r)=>s+r[5],0)/tm.length).toFixed(1):0;}
+  return res;
+}
+function rdeTseries(rows,isAC){
+  const ks=rdePkeys(),ls=rdePlbls(),byP=new Map();
+  rows.forEach(r=>{const ki=rdeModo==='m'?r[1]:r[2];const k=ks[ki];if(!byP.has(k))byP.set(k,{l:ls[ki],rows:[]});byP.get(k).rows.push(r);});
+  const sorted=[...byP.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  const lbs=[],pp=[],op=[],tme=[],rowsByPeriod=[];
+  sorted.forEach(([k,v])=>{const a=rdeAgg(v.rows,isAC);rowsByPeriod.push(v.rows);lbs.push(v.l);pp.push(a?a.pp:null);op.push(a?a.op:null);if(isAC)tme.push(a?a.tme:null);});
+  return{lbs,pp,op,tme,rowsByPeriod};
+}
+function rdeTopN(rows,fi,n=5){const c={};rows.forEach(r=>{const v=(fi===6?rdeM.mo[r[6]]:rdeM.ca[r[7]])||'?';c[v]=(c[v]||0)+1;});return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n)}
+function rdeTopNL(rows,n=5){const c={};rows.forEach(r=>{const v=r[7]||'Não informado';c[v]=(c[v]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n)}
+function rdeRowReason(row,scope){if(scope==='all')return row[7]||'Nao informado';return scope==='ac'?(rdeM.mo[row[7]]||'Nao informado'):(rdeM.ca[row[6]]||'Nao informado');}
+function rdeHasRptDetail(row,scope){const d=scope==='all'?row[8]:(scope==='ac'?row[8]:row[7]);return d&&typeof d==='object'&&String(d.os||d.id||'').trim()}
+function rdeRowDetail(row,scope){
+  const src=scope==='all'?row[8]:(scope==='ac'?row[8]:row[7]);
+  const b=src&&typeof src==='object'?src:{};
+  const hc=b.impacto!==undefined&&b.impacto!==null&&String(b.impacto).trim()!==''&&Number(b.impacto)>0;
+  const cli=hc?b.impacto:(scope==='ac'&&Number(row[6]||0)>0?row[6]:'');
+  return{os:b.os||b.id||'-',cidade:b.cidade||'-',uf:b.uf||'-',clientesAfetados:cli!==''?Number(cli||0).toLocaleString('pt-BR'):'-',tme:Number(row[5]||0).toLocaleString('pt-BR',{maximumFractionDigits:2})+'h',causa:b.motivo||rdeRowReason(row,scope),periodo:b.periodoAtendimento||`${b.dataAbertura||'-'} - ${b.dataFechamento||'-'}`};
+}
+function rdeDetailByMetric(rows,metric){if(metric==='prazo')return rows.filter(r=>r[3]);if(metric==='outlier')return rows.filter(r=>r[4]);return rows;}
+function rdeMetricFromLabel(label){const l=String(label||'').toLowerCase();if(l.includes('outlier'))return'outlier';if(l.includes('prazo'))return'prazo';return'';}
+function rdeShowDetail(title,sub,rows,scope){
+  const box=document.getElementById('rde-detail'),body=document.getElementById('rde-dbody');if(!box||!body)return;
+  const valid=rows.filter(r=>rdeHasRptDetail(r,scope));
+  document.getElementById('rde-dtitle').textContent=title;
+  document.getElementById('rde-dsub').textContent=valid.length?sub:'A base atual não possui detalhamento por chamado para este indicador.';
+  document.getElementById('rde-dcnt').textContent=`${valid.length} chamado${valid.length===1?'':'s'}`;
+  body.innerHTML=valid.map(r=>{const d=rdeRowDetail(r,scope);return`<tr><td><span class="rede-did">${eh(d.os)}</span></td><td>${eh(d.cidade)}</td><td>${eh(d.uf)}</td><td>${eh(d.clientesAfetados)}</td><td>${eh(d.tme)}</td><td>${eh(d.causa)}</td><td>${eh(d.periodo)}</td></tr>`}).join('')||`<tr><td colspan="7" class="rede-dmuted">Nenhum chamado com detalhamento encontrado.</td></tr>`;
+  box.classList.add('on');box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function rdeClearDetail(){const box=document.getElementById('rde-detail');if(box)box.classList.remove('on');}
+function rdePH(v,meta,inv=false){const ok=inv?(v<=meta):(v>=meta),nr=inv?(v<=meta*1.5):(v>=meta*0.9);return ok?'<span class="rede-pill ok">✓ META</span>':nr?'<span class="rede-pill wn">ATENÇÃO</span>':'<span class="rede-pill bd">CRÍTICO</span>';}
+function rdeSetKPI(id,s,isAC){
+  const el=document.getElementById(id);if(!el)return;
+  if(!s){el.innerHTML=`<div class="rede-nodata" style="grid-column:1/-1">Sem dados no período selecionado</div>`;return;}
+  const cp=s.pp>=RDE_M89?'#3ecf8e':s.pp>=RDE_M89*.9?'#f0a14d':'#e05c5c';
+  const co=s.op<=RDE_MOUT?'#3ecf8e':s.op<=RDE_MOUT*1.8?'#f0a14d':'#e05c5c';
+  let h=`<div class="rede-kpi"><div class="lb">No Prazo</div><div class="vl" style="color:${cp}">${s.pp}%</div>${rdePH(s.pp,RDE_M89)}</div>`;
+  h+=`<div class="rede-kpi"><div class="lb">Outlier</div><div class="vl" style="color:${co}">${s.op}%</div>${rdePH(s.op,RDE_MOUT,true)}</div>`;
+  if(isAC){const ct=s.tme<=RDE_MTME?'#3ecf8e':s.tme<=RDE_MTME*1.2?'#f0a14d':'#e05c5c';h+=`<div class="rede-kpi"><div class="lb">TME Médio</div><div class="vl" style="color:${ct}">${s.tme}h</div>${rdePH(s.tme,RDE_MTME,true)}</div>`;h+=`<div class="rede-kpi"><div class="lb">Clientes Af.</div><div class="vl" style="font-size:20px">${s.cli.toLocaleString('pt-BR')}</div><div class="sb">${s.t} chamados</div></div>`;}
+  else{h+=`<div class="rede-kpi"><div class="lb">TMR Médio</div><div class="vl">${s.tmr}h</div><div class="sb">${s.t} chamados</div></div>`;h+=`<div class="rede-kpi"><div class="lb">Total</div><div class="vl" style="font-size:20px">${s.t}</div><div class="sb">chamados</div></div>`;}
+  el.innerHTML=h;
+}
+const rdeLabelPlugin={id:'rdeLabelPlugin',afterDatasetsDraw(chart){const{ctx,chartArea}=chart;chart.data.datasets.forEach((ds,i)=>{if(ds.type!=='line'||!ds.lineLabel)return;const meta=chart.getDatasetMeta(i);if(!meta.data.length)return;const p=meta.data[meta.data.length-1];ctx.save();ctx.font='700 10px sans-serif';ctx.fillStyle=ds.borderColor||'#555';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText(ds.lineLabel,Math.min(chartArea.right-4,p.x-4),p.y-4);ctx.restore();});}};
+function rdeMkCh(id,lbs,ds,opts={}){
+  const c=document.getElementById(id);if(!c)return;
+  if(rdeCharts[id]){try{rdeCharts[id].destroy();}catch(e){}}
+  const txClr=getComputedStyle(document.body).getPropertyValue('--tx3').trim()||'#8e8e93';
+  const gdClr=getComputedStyle(document.body).getPropertyValue('--bd').trim()||'rgba(0,0,0,.07)';
+  const o={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10},color:txClr}}},scales:{x:{ticks:{color:txClr,font:{size:10},maxRotation:rdeModo==='s'?60:0,minRotation:rdeModo==='s'?60:0},grid:{display:false}},y:{ticks:{color:txClr,font:{size:10}},grid:{color:gdClr}}},spanGaps:true};
+  if(opts.max)o.scales.y.max=opts.max;
+  if(opts.min!==undefined)o.scales.y.min=opts.min;
+  if(opts.percent){o.scales.y.ticks.callback=v=>v+'%';o.plugins.tooltip={callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}%`}};}
+  if(opts.onBarClick){o.onHover=(ev,els)=>{if(ev.native&&ev.native.target)ev.native.target.style.cursor=els.length?'pointer':'default'};o.onClick=(ev,els,chart)=>{const hit=(els||[]).find(e=>{const d=chart.data.datasets[e.datasetIndex]||{};return d.type!=='line'||String(d.label||'').toLowerCase().includes('tme')});if(hit)opts.onBarClick(hit,chart);};}
+  rdeCharts[id]=new Chart(c,{type:opts.type||'bar',data:{labels:lbs,datasets:ds},options:o,plugins:[rdeLabelPlugin]});
+}
+function rdeBarEv(id,ts,ctx={}){
+  rdeMkCh(id+'-p',ts.lbs,[{label:'No Prazo %',data:ts.pp,backgroundColor:'rgba(77,142,240,.8)',borderRadius:3,order:1,hoverBackgroundColor:'#4d8ef0'},{label:'Meta 89%',lineLabel:'Meta 89%',data:ts.lbs.map(()=>RDE_M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}],{max:100,percent:true,onBarClick:(hit)=>{const rows=rdeDetailByMetric(ts.rowsByPeriod[hit.index]||[],'prazo');rdeShowDetail(`Chamados — ${ctx.title||''}`,`No Prazo em ${ts.lbs[hit.index]||'período'}${ctx.sub?' — '+ctx.sub:''}`,rows,ctx.scope||'bb');}});
+  rdeMkCh(id+'-o',ts.lbs,[{label:'Outlier %',data:ts.op,backgroundColor:'rgba(224,92,92,.75)',borderRadius:3,order:1,hoverBackgroundColor:'#e05c5c'},{label:'Limite 4,9%',lineLabel:'Limite 4,9%',data:ts.lbs.map(()=>RDE_MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0}],{max:100,percent:true,onBarClick:(hit)=>{const rows=rdeDetailByMetric(ts.rowsByPeriod[hit.index]||[],'outlier');rdeShowDetail(`Chamados — ${ctx.title||''}`,`Outlier em ${ts.lbs[hit.index]||'período'}${ctx.sub?' — '+ctx.sub:''}`,rows,ctx.scope||'bb');}});
+}
+function rdeTmeEv(id,ts,ctx={}){
+  rdeMkCh(id,ts.lbs,[{label:'TME',data:ts.tme,type:'line',borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,.08)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#3ecf8e',borderWidth:2,order:1},{label:'Meta',data:ts.lbs.map(()=>RDE_MTME),type:'line',borderColor:'rgba(240,161,77,.6)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}],{type:'line',min:0,onBarClick:(hit)=>{const rows=ts.rowsByPeriod[hit.index]||[];rdeShowDetail(`Chamados — ${ctx.title||'TME'}`,`TME em ${ts.lbs[hit.index]||'período'}${ctx.sub?' — '+ctx.sub:''}`,rows,ctx.scope||'ac');}});
+}
+function rdeSetBL(id,items,color){
+  const el=document.getElementById(id);if(!el)return;
+  if(!items.length){el.innerHTML=`<div style="font-size:10px;color:var(--tx3)">Sem dados no período</div>`;return;}
+  const mx=items[0][1];
+  el.innerHTML=items.map(([n,v])=>`<div class="rede-br"><span class="rede-bn">${eh(n)}</span><div class="rede-bb_"><div class="rede-bf" style="width:${(v/mx*100).toFixed(0)}%;background:${color}"></div></div><span class="rede-bv">${v}</span></div>`).join('');
+}
+function rdeRenderVis(){
+  const isAC=rdeActiveView==='ac',isAll=rdeActiveView==='all';
+  const tag=isAll?'Backbone + Acesso':isAC?'Acesso':'Backbone';
+  const rowsFor=cl=>isAll?rdeFAll(cl):(isAC?rdeFAC(cl):rdeFBB(cl));
+  const allRows=rowsFor(''),total=rdeAgg(allRows,isAC||isAll)||{t:0,pp:0,op:0,tme:0,tmr:0,cli:0};
+  const avgTime=isAC||isAll?total.tme:total.tmr;
+  const good=total.pp>=RDE_M89?'#3ecf8e':total.pp>=RDE_M89*.9?'#f0a14d':'#e05c5c';
+  const bad=total.op<=RDE_MOUT?'#3ecf8e':total.op<=RDE_MOUT*1.8?'#f0a14d':'#e05c5c';
+  let cards='',d1=[],d2=[],bbP=[],acP=[],bbO=[],acO=[];
+  RDE_CLS.forEach(cl=>{
+    const rows=rowsFor(cl),s=rdeAgg(rows,isAC||isAll);
+    if(isAll){const bb=rdeAgg(rdeFBB(cl),false),ac=rdeAgg(rdeFAC(cl),true);bbP.push(bb?bb.pp:0);acP.push(ac?ac.pp:0);bbO.push(bb?bb.op:0);acO.push(ac?ac.op:0);}
+    const cp=s&&s.pp>=RDE_M89?'#3ecf8e':s&&s.pp>=RDE_M89*.9?'#f0a14d':'#e05c5c';
+    const co=s&&s.op<=RDE_MOUT?'#3ecf8e':s&&s.op<=RDE_MOUT*1.8?'#f0a14d':'#e05c5c';
+    d1.push(s?s.pp:0);d2.push(s?s.op:0);
+    const tempo=s?(isAC||isAll?s.tme:s.tmr):0;
+    cards+=`<div class="rede-sc"><div class="rede-sct">${RDE_CL_NM[cl]}</div><div class="rede-scr">No prazo <span class="rede-scv" style="color:${cp}">${s?s.pp+'%':'-'}</span></div><div class="rede-scr">Outlier <span class="rede-scv" style="color:${co}">${s?s.op+'%':'-'}</span></div><div class="rede-scr">Tempo médio <span class="rede-scv">${s?tempo+'h':'-'}</span></div><div class="rede-scr">Chamados <span class="rede-scv">${s?s.t:'0'}</span></div>${s?rdePH(s.pp,RDE_M89):''}</div>`;
+  });
+  document.getElementById('rde-vis').innerHTML=`<div class="rede-shead"><h2>Visão Geral — ${tag}</h2><span class="rede-stag ${isAC?'rede-stag-ac':'rede-stag-bb'}">${tag}</span></div><div class="rede-krow"><div class="rede-kpi"><div class="lb">Chamados analisados</div><div class="vl">${total.t}</div><div class="sb">base filtrada</div></div><div class="rede-kpi"><div class="lb">No prazo</div><div class="vl" style="color:${good}">${total.pp}%</div><div class="sb">meta mínima 88,9%</div></div><div class="rede-kpi"><div class="lb">Outlier</div><div class="vl" style="color:${bad}">${total.op}%</div><div class="sb">referência máx. 4,9%</div></div><div class="rede-kpi"><div class="lb">Tempo médio</div><div class="vl">${avgTime||0}h</div><div class="sb">${isAll?'backbone + acesso':tag.toLowerCase()}</div></div></div><div class="rede-sgrid">${cards||'<div class="rede-nodata">Sem dados para exibir</div>'}</div><div class="rede-cbx" style="margin-top:12px"><h4>Comparativo por cluster — no prazo × outlier (${tag})</h4><div class="rede-leg">${isAll?'<span><span class="rede-ld" style="background:#4d8ef0"></span>Backbone prazo</span><span><span class="rede-ld" style="background:#3ecf8e"></span>Acesso prazo</span><span><span class="rede-ld" style="background:#e05c5c"></span>Backbone outlier</span><span><span class="rede-ld" style="background:#f0a14d"></span>Acesso outlier</span>':'<span><span class="rede-ld" style="background:#4d8ef0"></span>No prazo %</span><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier %</span>'}<span style="font-size:10px;color:var(--tx3)">Meta prazo 88,9% — Outlier máx. 4,9%</span></div><div style="position:relative;height:210px"><canvas id="rcv-main"></canvas></div></div>`;
+  const hasOLine=isAll?[...bbO,...acO].some(v=>v>RDE_MOUT):d2.some(v=>v>RDE_MOUT);
+  const chData=isAll?[{label:'Backbone - Prazo',data:bbP,backgroundColor:'rgba(77,142,240,.82)',borderRadius:4,order:1},{label:'Acesso - Prazo',data:acP,backgroundColor:'rgba(62,207,142,.82)',borderRadius:4,order:1},{label:'Backbone - Outlier',data:bbO,backgroundColor:'rgba(224,92,92,.72)',borderRadius:4,order:1},{label:'Acesso - Outlier',data:acO,backgroundColor:'rgba(240,161,77,.72)',borderRadius:4,order:1},{label:'Meta',lineLabel:'Meta',data:RDE_CLS.map(()=>RDE_M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}]:[{label:'No prazo %',data:d1,backgroundColor:'rgba(77,142,240,.8)',borderRadius:4,order:1},{label:'Outlier %',data:d2,backgroundColor:'rgba(224,92,92,.75)',borderRadius:4,order:1},{label:'Meta',lineLabel:'Meta',data:RDE_CLS.map(()=>RDE_M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}];
+  if(hasOLine)chData.push({label:'Outlier',lineLabel:'Outlier',data:RDE_CLS.map(()=>RDE_MOUT),type:'line',borderColor:'#e05c5c',borderDash:[3,3],borderWidth:1.3,pointRadius:0,fill:false,order:0});
+  rdeMkCh('rcv-main',RDE_CLS.map(c=>RDE_CL_NM[c]),chData,{max:100,percent:true,onBarClick:(hit,chart)=>{const cl=RDE_CLS[hit.index],ds=chart.data.datasets[hit.datasetIndex]||{},lbl=String(ds.label||'');const metric=rdeMetricFromLabel(lbl);const scope=isAll?(lbl.toLowerCase().includes('acesso')?'ac':'bb'):(isAC?'ac':'bb');const baseRows=scope==='ac'?rdeFAC(cl):(scope==='bb'?rdeFBB(cl):rowsFor(cl));const rows=rdeDetailByMetric(baseRows,metric);rdeShowDetail(`Chamados — ${RDE_CL_NM[cl]}`,`${metric==='outlier'?'Outlier':metric==='prazo'?'No prazo':'Todos'} — ${scope==='ac'?'Acesso':scope==='bb'?'Backbone':tag}`,rows,scope);}});
+}
+function rdeRenderClusters(){
+  const isAC=rdeActiveView==='ac',isAll=rdeActiveView==='all';
+  RDE_CLS.forEach(cl=>{
+    const bbSec=document.getElementById(`rsec-${cl}-bb`),acSec=document.getElementById(`rsec-${cl}-ac`);
+    if(bbSec)bbSec.style.display=isAC?'none':'block';
+    if(acSec)acSec.style.display=isAC?'block':'none';
+    if(isAC){
+      const rows=rdeFAC(cl),ts=rdeTseries(rows,true);
+      rdeSetKPI(`rk-${cl}-a`,rdeAgg(rows,true),true);
+      rdeBarEv(`rch-${cl}-a`,ts,{title:RDE_CL_NM[cl],sub:'Acesso',scope:'ac'});rdeTmeEv(`rch-${cl}-t`,ts,{title:RDE_CL_NM[cl],sub:'Acesso',scope:'ac'});
+      rdeSetBL(`rbl-${cl}-a`,rdeTopN(rows,7),RDE_CL_CL[cl]);
+    }else if(isAll){
+      const rows=rdeFAll(cl),ts=rdeTseries(rows,true);
+      if(bbSec){const tg=bbSec.querySelector('.rede-stag');if(tg){tg.textContent='Backbone + Acesso';tg.className='rede-stag rede-stag-bb'}}
+      rdeSetKPI(`rk-${cl}-b`,rdeAgg(rows,true),true);
+      rdeBarEv(`rch-${cl}-b`,ts,{title:RDE_CL_NM[cl],sub:'Backbone + Acesso',scope:'all'});
+      rdeSetBL(`rbl-${cl}-b`,rdeTopNL(rows),RDE_CL_CL[cl]);
+    }else{
+      const rows=rdeFBB(cl),ts=rdeTseries(rows,false);
+      if(bbSec){const tg=bbSec.querySelector('.rede-stag');if(tg){tg.textContent='Backbone';tg.className='rede-stag rede-stag-bb'}}
+      rdeSetKPI(`rk-${cl}-b`,rdeAgg(rows,false),false);
+      rdeBarEv(`rch-${cl}-b`,ts,{title:RDE_CL_NM[cl],sub:'Backbone',scope:'bb'});
+      rdeSetBL(`rbl-${cl}-b`,rdeTopN(rows,6),RDE_CL_CL[cl]);
+    }
+  });
+}
+function renderRede(){
+  if(!rdeBD.length&&!rdeAD.length)return;
+  rdeRenderVis();rdeRenderClusters();
+}
 loadAbAnnotations();initAuth();renderFuel();
+rdeRestoreBase();if(rdeBD.length||rdeAD.length){rdeBuildPeriodSelects();rdeRestoreUI();}
 </script>
 </body>
 </html>
