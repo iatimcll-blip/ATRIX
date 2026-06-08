@@ -514,13 +514,34 @@ function plbls(){return modo==='m'?M.ml:M.sl;}
 function periodOptions(keys,labels,selected,allLabel){
   return `<option value="">${allLabel}</option>`+keys.map((k,i)=>`<option value="${k}" ${k===selected?'selected':''}>${labels[i]||k}</option>`).join('');
 }
+/* ─ helpers: vínculo Mês ↔ Semana ─ */
+function weeksForMonth(monthKey){
+  const all=[...BD,...AD];
+  const idxs=monthKey?all.filter(r=>M.mes[r[1]]===monthKey).map(r=>r[2]):[...Array(M.sem.length).keys()];
+  return[...new Set(idxs)].sort((a,b)=>M.sem[a].localeCompare(M.sem[b])).map(i=>({key:M.sem[i],label:M.sl[i]||M.sem[i]}));
+}
+function monthForWeek(weekKey){
+  if(!weekKey)return'';
+  const all=[...BD,...AD];
+  const idxs=[...new Set(all.filter(r=>M.sem[r[2]]===weekKey).map(r=>r[1]))];
+  return idxs.length===1?M.mes[idxs[0]]||'':'';
+}
 function buildPeriodSelects(){
   const ms=document.getElementById('month-select'),ws=document.getElementById('week-select');
   if(ms)ms.innerHTML=periodOptions(M.mes,M.ml,selMonth,'Todos os meses');
-  if(ws)ws.innerHTML=periodOptions(M.sem,M.sl,selWeek,'Todas as semanas');
+  if(ws){
+    const weeks=weeksForMonth(selMonth);
+    ws.innerHTML='<option value="">Todas as semanas</option>'+weeks.map(w=>`<option value="${w.key}"${w.key===selWeek?' selected':''}>${w.label}</option>`).join('');
+    if(selWeek&&!weeks.some(w=>w.key===selWeek)){selWeek='';ws.value='';}
+  }
 }
 function setMonthPeriod(v){selMonth=v;selWeek='';modo='m';buildPeriodSelects();render();}
-function setWeekPeriod(v){selWeek=v;selMonth='';modo=v?'s':'m';buildPeriodSelects();render();}
+function setWeekPeriod(v){
+  selWeek=v;modo=v?'s':'m';
+  const mes=monthForWeek(selWeek);
+  if(mes)selMonth=mes;
+  buildPeriodSelects();render();
+}
 function setView(v){
   activeView=v;
   document.querySelectorAll('.vbtn').forEach((b,i)=>b.classList.toggle('on',['bb','ac','all'][i]===v));
