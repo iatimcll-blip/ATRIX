@@ -414,6 +414,7 @@ const CLS=["C","I","P","N"];
 const M89=88.9,MOUT=4.9,MTME=6.0;
 let modo='m',selMonth='',selWeek='',activeView='bb',charts={};
 const REDE_STORAGE='atrix:rede:bases:v2';
+const REDE_UI_KEY='atrix:rede:ui:v1';
 
 function nk(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toUpperCase()}
 function gv(r,cols){const m=Object.fromEntries(Object.keys(r).map(k=>[nk(k),k]));for(const c of cols){const k=m[nk(c)];if(k&&r[k]!==undefined&&r[k]!=='')return r[k]}return''}
@@ -511,6 +512,19 @@ function restoreRedeBase(){
     document.getElementById('base-status').textContent=st.fileName?'Base restaurada: '+st.fileName:'Base restaurada';
   }catch(e){console.warn('Não foi possível restaurar base de rede',e)}
 }
+function saveRedeUI(){try{localStorage.setItem(REDE_UI_KEY,JSON.stringify({selMonth,selWeek,modo,activeView}));}catch(e){}}
+function restoreRedeUI(){
+  try{
+    const raw=localStorage.getItem(REDE_UI_KEY);if(!raw)return;
+    const ui=JSON.parse(raw);
+    if(ui.activeView&&['bb','ac','all'].includes(ui.activeView))activeView=ui.activeView;
+    if(ui.modo&&['m','s'].includes(ui.modo))modo=ui.modo;
+    if(ui.selMonth&&M.mes.includes(ui.selMonth)){selMonth=ui.selMonth;}
+    if(ui.selWeek&&M.sem.includes(ui.selWeek)){selWeek=ui.selWeek;}
+    buildPeriodSelects();
+    document.querySelectorAll('.vbtn').forEach((b,i)=>b.classList.toggle('on',['bb','ac','all'][i]===activeView));
+  }catch(e){console.warn('Não foi possível restaurar estado da UI de rede',e)}
+}
 document.getElementById('rede-file').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f)return;
   const rd=new FileReader();
@@ -549,17 +563,17 @@ function buildPeriodSelects(){
     if(selWeek&&!weeks.some(w=>w.key===selWeek)){selWeek='';ws.value='';}
   }
 }
-function setMonthPeriod(v){selMonth=v;selWeek='';modo='m';buildPeriodSelects();render();}
+function setMonthPeriod(v){selMonth=v;selWeek='';modo='m';buildPeriodSelects();render();saveRedeUI();}
 function setWeekPeriod(v){
   selWeek=v;modo=v?'s':'m';
   const mes=monthForWeek(selWeek);
   if(mes)selMonth=mes;
-  buildPeriodSelects();render();
+  buildPeriodSelects();render();saveRedeUI();
 }
 function setView(v){
   activeView=v;
   document.querySelectorAll('.vbtn').forEach((b,i)=>b.classList.toggle('on',['bb','ac','all'][i]===v));
-  render();
+  render();saveRedeUI();
 }
 function goTab(id){
   const ids=['vis','C','I','P','N'];
@@ -888,6 +902,7 @@ function render(){renderVis();renderClusters();}
 // INIT
 restoreRedeBase();
 buildPeriodSelects();
+restoreRedeUI();
 render();
 </script>
 </body>
