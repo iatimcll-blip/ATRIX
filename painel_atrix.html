@@ -99,7 +99,7 @@ body {
 .nav-brand-sub { font-size: 10px; color: var(--tx3); letter-spacing: .01em; }
 
 /* NAV TABS */
-.nav-tabs { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow: visible; scrollbar-width: none; flex-wrap: nowrap; }
+.nav-tabs { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; overflow-y: visible; scrollbar-width: none; flex-wrap: nowrap; }
 .nav-tabs::-webkit-scrollbar { display: none; }
 .ntab {
   display: flex; align-items: center; gap: clamp(3px, 0.5vw, 6px);
@@ -107,7 +107,7 @@ body {
   font-size: clamp(10px, 1vw, 12px); font-weight: 500; color: var(--tx3);
   cursor: pointer; background: none; border: none;
   font-family: inherit; transition: color .15s, background .15s; user-select: none; white-space: nowrap;
-  flex: 1 1 0; min-width: 0; justify-content: center; position: relative;
+  flex: 1 1 0; min-width: 60px; justify-content: center; position: relative;
 }
 .ntab:hover { background: var(--surface2); }
 .ntab.active { background: var(--surface); box-shadow: var(--shadow-sm); }
@@ -121,6 +121,7 @@ body {
 #ntab-rede:hover,#ntab-rede.active { color: var(--teal-dk); }
 #ntab-fuel:hover,#ntab-fuel.active { color: var(--orange); }
 #ntab-wpp:hover,#ntab-wpp.active   { color: #25d366; }
+#ntab-ofs:hover,#ntab-ofs.active   { color: #f97316; }
 .ntab-badge {
   font-size: 9px; font-weight: 700; padding: 1px 5px;
   border-radius: 6px; min-width: 18px; text-align: center; line-height: 1.4;
@@ -129,6 +130,52 @@ body {
 .nb-green { background: var(--green-bg); color: var(--green-dk); }
 .nb-purple { background: var(--purple-bg); color: var(--purple); }
 .nb-wpp { background: #e53935; color: #fff; font-weight: 700; }
+.nb-ofs { background: rgba(249,115,22,.12); color: #f97316; }
+/* ── OFS PANEL ── */
+.ofs-kpis { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:18px; }
+.ofs-kpi { background:var(--surface); border:.5px solid var(--bd); border-radius:var(--rl); padding:14px 14px 12px; position:relative; overflow:hidden; }
+.ofs-kpi::before { content:''; position:absolute; top:0; left:0; width:100%; height:3px; border-radius:3px 3px 0 0; background:#f97316; }
+.ofs-kpi.b::before { background:var(--blue); }
+.ofs-kpi.g::before { background:var(--green); }
+.ofs-kpi.w::before { background:var(--orange); }
+.ofs-kpi.p::before { background:var(--purple); }
+.ofs-kpi .klab { font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--tx3); font-weight:700; }
+.ofs-kpi .kval { font-size:26px; font-weight:700; font-variant-numeric:tabular-nums; margin:6px 0 2px; line-height:1; }
+.ofs-kpi .ksub { font-size:11px; color:var(--tx3); }
+.ofs-kpi-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px; margin-bottom:8px; }
+.ofs-kpi-val { font-size:24px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1.1; }
+.ofs-kpi-lbl { font-size:10px; color:var(--tx3); text-transform:uppercase; letter-spacing:.06em; font-weight:600; margin-top:3px; }
+.ofs-grid2 { display:grid; grid-template-columns:1.4fr 1fr; gap:14px; margin-bottom:14px; }
+.ofs-grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px; }
+.ofs-cw { position:relative; height:clamp(200px,26vh,300px); }
+.ofs-cw.sm { height:clamp(140px,18vh,200px); }
+.ofs-tcard { background:var(--surface); border:.5px solid var(--bd); border-radius:var(--rl); padding:14px; transition:.15s; }
+.ofs-tcard:hover { border-color:var(--teal); box-shadow:var(--shadow-sm); }
+.ofs-tc-head { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:12px; }
+.ofs-tc-name { font-weight:600; font-size:13px; line-height:1.3; }
+.ofs-tc-rank { font-size:11px; color:var(--tx3); background:var(--surface2); padding:2px 7px; border-radius:6px; border:.5px solid var(--bd); flex-shrink:0; }
+.ofs-tc-stats { display:flex; gap:12px; margin-bottom:12px; }
+.ofs-tc-stat .sn { font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1; }
+.ofs-tc-stat .sl { font-size:10px; color:var(--tx3); text-transform:uppercase; letter-spacing:.04em; margin-top:2px; }
+.ofs-taxa-pill { font-size:12px; font-weight:700; padding:2px 8px; border-radius:7px; }
+.ofs-sbar { display:flex; height:6px; border-radius:4px; overflow:hidden; margin:8px 0 6px; background:var(--surface2); }
+.ofs-sbar i { display:block; height:100%; }
+.ofs-leg { display:flex; flex-wrap:wrap; gap:6px; font-size:10px; color:var(--tx3); }
+.ofs-leg span { display:inline-flex; align-items:center; gap:3px; }
+.ofs-leg i { width:7px; height:7px; border-radius:2px; display:inline-block; flex-shrink:0; }
+.ofs-tipos { margin-top:10px; padding-top:10px; border-top:.5px solid var(--bd); }
+.ofs-tipo-row { display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; color:var(--tx3); }
+.ofs-tipo-row b { color:var(--tx2); font-weight:600; }
+.ofs-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.ofs-period { display:inline-flex; align-items:center; gap:6px; background:var(--surface); border:.5px solid var(--bd); padding:6px 12px; border-radius:99px; font-size:12px; color:var(--tx3); font-weight:600; }
+.ofs-period b { color:#f97316; }
+.ofs-period .dot { width:7px; height:7px; border-radius:50%; background:#f97316; box-shadow:0 0 8px #f97316; flex-shrink:0; }
+.ofs-hrow { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:18px; }
+.ofs-htitle { font-size:18px; font-weight:700; line-height:1.2; }
+.ofs-htitle span { color:#f97316; }
+.ofs-hsub { font-size:12px; color:var(--tx3); margin-top:3px; }
+@media(max-width:900px){.ofs-kpis{grid-template-columns:repeat(3,1fr)}.ofs-grid2,.ofs-grid3{grid-template-columns:1fr}.ofs-cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.ofs-kpis,.ofs-cards{grid-template-columns:1fr 1fr}}
 #panel-whatsapp { padding: 0; }
 #panel-whatsapp.active { display: flex; flex-direction: column; }
 .wpp-topbar { display: flex; align-items: center; justify-content: flex-end; padding: 5px 12px; background: var(--surface); border-bottom: .5px solid var(--bd); flex-shrink: 0; gap: 8px; font-size: 11px; color: var(--tx3); }
@@ -799,6 +846,7 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
 <input type="file" id="file-ab" accept=".xlsx,.xls" style="display:none">
 <input type="file" id="file-enc" accept=".xlsx,.xls" style="display:none">
 <input type="file" id="file-fuel" accept=".csv" style="display:none">
+<input type="file" id="file-ofs" accept=".xlsx,.xls,.csv" style="display:none">
 <div class="login-screen" id="login-screen">
   <form class="login-card" onsubmit="loginUser(event)">
     <img class="login-logo" src="assets/mcll-logo.png" alt="MCLL Monitoramento B2B">
@@ -894,6 +942,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     <button class="ntab" id="ntab-rede" onclick="switchTab('rede')"><i class="ti ti-router"></i> Rede</button>
     <button class="ntab" id="ntab-fuel" onclick="switchTab('combustivel')"><i class="ti ti-gas-station"></i> Combustíveis</button>
     <button class="ntab" id="ntab-wpp" onclick="switchTab('whatsapp')"><i class="ti ti-brand-whatsapp"></i> WhatsApp<span class="ntab-badge nb-wpp" id="nb-wpp" style="display:none">0</span></button>
+    <button class="ntab" id="ntab-ofs" onclick="switchTab('ofs')"><i class="ti ti-chart-bar"></i> Produt. OFS<span class="ntab-badge nb-ofs" id="nb-ofs" style="display:none">0</span></button>
   </div>
 
   <div class="nav-right">
@@ -909,6 +958,11 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     <div class="nav-btn" id="clear-ab-btn" onclick="clearAb()" title="Limpar base B2B Abertos" style="display:none;color:var(--red)"><i class="ti ti-trash"></i></div>
     <div class="nav-btn" id="clear-enc-btn" onclick="clearEnc()" title="Limpar base B2B Encerrados" style="display:none;color:var(--red)"><i class="ti ti-trash"></i></div>
     <div class="nav-btn" id="clear-rede-btn" onclick="clearRede()" title="Recarregar painel Rede" style="display:none;color:var(--orange)"><i class="ti ti-refresh"></i></div>
+    <div id="up-ofs" style="display:none;flex-direction:column;align-items:center;gap:1px">
+      <label class="upload-pill" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.3)" for="file-ofs"><i class="ti ti-upload"></i>OFS</label>
+      <span id="ts-ofs" style="font-size:9px;color:var(--tx3);white-space:nowrap;line-height:1.2;min-height:12px"></span>
+    </div>
+    <div class="nav-btn" id="clear-ofs-btn" onclick="clearOfs()" title="Limpar base OFS" style="display:none;color:var(--red)"><i class="ti ti-trash"></i></div>
     <div class="nav-btn admin-only" onclick="openUserPanel()" title="Usuários"><i class="ti ti-users"></i></div>
     <div class="nav-btn" onclick="toggleTheme()" title="Tema"><i class="ti ti-moon" id="ti-icon"></i></div>
     <div class="nav-btn" onclick="logoutUser()" title="Sair"><i class="ti ti-logout"></i></div>
@@ -1261,6 +1315,85 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     </div>
     <div class="wpp-iframe-wrap">
       <iframe class="wpp-iframe" id="wpp-frame" src="about:blank" title="Monitoramento WhatsApp" allow="fullscreen; clipboard-read; clipboard-write; microphone; camera; notifications"></iframe>
+    </div>
+  </div>
+
+  <!-- ── PAINEL PRODUTIVIDADE OFS ── -->
+  <div class="panel" id="panel-ofs">
+    <div id="ofs-empty" class="empty">
+      <div class="empty-icon"><i class="ti ti-chart-bar"></i></div>
+      <h2>Base OFS não carregada</h2>
+      <p>Faça upload do arquivo XLSX com o cronograma de recursos para visualizar a produtividade por técnico.</p>
+      <label class="empty-btn" for="file-ofs" style="background:#f97316;color:#fff;border-color:#f97316"><i class="ti ti-upload" style="font-size:14px"></i> Carregar Base OFS</label>
+    </div>
+    <div id="ofs-dash" style="display:none">
+      <div class="ofs-hrow">
+        <div>
+          <div class="ofs-htitle">Produtividade <span>OFS</span></div>
+          <div class="ofs-hsub">Reparo B2B e Rede · exclui Almoço e Checklist · <span id="ofs-fname" style="color:var(--tx2)"></span></div>
+        </div>
+        <div class="ofs-period"><span class="ofs-period dot"></span>Período&nbsp;<b id="ofs-periodo"></b></div>
+      </div>
+      <div class="ofs-kpis" id="ofs-kpis"></div>
+      <div class="ofs-grid2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title"><i class="ti ti-trophy" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:#f97316"></i>Ranking de Produtividade</span></div>
+          <div class="pdesc" style="margin-left:0;margin-bottom:12px;font-size:11.5px;color:var(--tx3)">Total de atividades produtivas · cor indica taxa de conclusão</div>
+          <div class="ofs-cw"><canvas id="ofs-chRank"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title"><i class="ti ti-chart-donut" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--blue)"></i>Status Geral</span></div>
+          <div class="pdesc" style="margin-left:0;margin-bottom:12px;font-size:11.5px;color:var(--tx3)">Distribuição das atividades produtivas</div>
+          <div class="ofs-cw"><canvas id="ofs-chStatus"></canvas></div>
+        </div>
+      </div>
+      <div class="ofs-grid2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title"><i class="ti ti-percentage" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--green-dk)"></i>Taxa de Conclusão por Técnico</span></div>
+          <div class="pdesc" style="margin-left:0;margin-bottom:12px;font-size:11.5px;color:var(--tx3)">% de atividades concluídas sobre o total produtivo</div>
+          <div class="ofs-cw"><canvas id="ofs-chTaxa"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title"><i class="ti ti-list" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--purple)"></i>Tipos de Atividade</span></div>
+          <div class="pdesc" style="margin-left:0;margin-bottom:12px;font-size:11.5px;color:var(--tx3)">Composição do trabalho realizado no período</div>
+          <div class="ofs-cw"><canvas id="ofs-chTipo"></canvas></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><span class="card-title"><i class="ti ti-chart-line" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--teal)"></i>Volume Diário de Atividades</span></div>
+        <div class="pdesc" style="margin-left:0;margin-bottom:12px;font-size:11.5px;color:var(--tx3)">Atividades produtivas ao longo do período</div>
+        <div class="ofs-cw sm"><canvas id="ofs-chDia"></canvas></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+          <span style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em">Detalhar técnico:</span>
+          <select class="fsel" id="ofs-selTec" onchange="ofsRenderCards()"></select>
+          <span id="ofs-tecInfo" style="font-size:11px;color:#f97316"></span>
+        </div>
+        <div class="ofs-cards" id="ofs-cards"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title"><i class="ti ti-table" style="font-size:12px;vertical-align:-1px;margin-right:4px"></i>Tabela Consolidada</span></div>
+        <div class="pdesc" style="margin-left:0;margin-bottom:12px;font-size:11.5px;color:var(--tx3)">Clique nos cabeçalhos para ordenar</div>
+        <div style="overflow-x:auto">
+          <table id="ofs-tbl" style="width:100%;border-collapse:collapse;font-size:12.5px">
+            <thead><tr id="ofs-thead">
+              <th onclick="ofsSortTable('nome')" style="text-align:left;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none">Técnico</th>
+              <th onclick="ofsSortTable('total')" style="text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;font-variant-numeric:tabular-nums">Total</th>
+              <th onclick="ofsSortTable('concluido')" style="text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;font-variant-numeric:tabular-nums">Concl.</th>
+              <th onclick="ofsSortTable('taxa')" style="text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;font-variant-numeric:tabular-nums">Taxa %</th>
+              <th onclick="ofsSortTable('pendente')" style="text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;font-variant-numeric:tabular-nums">Pend.</th>
+              <th onclick="ofsSortTable('nconc')" style="text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;font-variant-numeric:tabular-nums">N/Concl.</th>
+              <th onclick="ofsSortTable('susp')" style="text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;font-variant-numeric:tabular-nums">Susp.</th>
+              <th onclick="ofsSortTable('canc')" style="text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;font-variant-numeric:tabular-nums">Canc.</th>
+              <th onclick="ofsSortTable('dias')" style="text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;font-variant-numeric:tabular-nums">Dias</th>
+              <th onclick="ofsSortTable('media_dia')" style="text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;font-variant-numeric:tabular-nums">Méd/dia</th>
+            </tr></thead>
+            <tbody id="ofs-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="pfooter">Direitos reservados a Wanderson Marcellus Penha Costa · <span id="ft-ofs"></span></div>
     </div>
   </div>
 
@@ -1805,6 +1938,7 @@ function restoreState(){
   }catch(e){console.warn('Não foi possível restaurar as bases salvas:',e)}
 }
 function restoreActiveTab(){
+  restoreOfsState();
   const saved=localStorage.getItem(ACTIVE_TAB_KEY)||activeTab||'abertos';
   switchTab(saved,false);
 }
@@ -1889,13 +2023,15 @@ function updateUploadTimes(){
   const se=document.getElementById('ts-enc');if(se)se.textContent=lastEncAt?'Anexado '+lastEncAt:'';
 }
 function updateClearBtns(){
-  const isAb=activeTab==='abertos',isEnc=activeTab==='encerrados',isRep=activeTab==='repetidos',isRede=activeTab==='rede';
+  const isAb=activeTab==='abertos',isEnc=activeTab==='encerrados',isRep=activeTab==='repetidos',isRede=activeTab==='rede',isOfs=activeTab==='ofs';
   const bAb=document.getElementById('clear-ab-btn');
   const bEnc=document.getElementById('clear-enc-btn');
   const bRede=document.getElementById('clear-rede-btn');
+  const bOfs=document.getElementById('clear-ofs-btn');
   if(bAb)bAb.style.display=isAb&&dAb.length?'flex':'none';
   if(bEnc)bEnc.style.display=(isEnc||isRep)&&dEnc.length?'flex':'none';
   if(bRede)bRede.style.display=isRede?'flex':'none';
+  if(bOfs)bOfs.style.display=isOfs&&ofsRows.length?'flex':'none';
 }
 /* ─── MODAL ADICIONAR CHAMADO ─── */
 function openModalAb(){
@@ -3143,14 +3279,257 @@ window.addEventListener('message',function(e){
     }else{wppInitialized=true;}
   }
 });
+/* ─── PRODUTIVIDADE OFS ─── */
+const OFS_KEY='atrix:painel:ofs:v1';
+let ofsRows=[], ofsMeta={fname:'',periodo:'',loaded:false};
+let ofsChRank=null,ofsChStatus=null,ofsChTaxa=null,ofsChTipo=null,ofsChDia=null;
+let ofsSortCol='total',ofsSortAsc=false;
+const OFS_STATUS_COLORS={
+  'concluído':'#22c55e','concluido':'#22c55e',
+  'iniciado':'#3b82f6',
+  'pendente':'#f59e0b',
+  'não concluído':'#ef4444','nao concluido':'#ef4444',
+  'suspenso':'#8b5cf6',
+  'cancelado':'#6b7280',
+  'sem status':'#94a3b8'
+};
+const OFS_EXCLUDED=['almoço','almoco','checklist'];
+function isOfsExcluded(tipo){return OFS_EXCLUDED.some(e=>String(tipo||'').toLowerCase().includes(e));}
+function normOfsStatus(s){return String(s||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
+function ofsStatusKey(s){
+  const n=normOfsStatus(s);
+  if(n==='concluido'||n==='concluído'||n.includes('conclu')&&!n.includes('nao')&&!n.includes('não'))return'concluído';
+  if(n.includes('inici'))return'iniciado';
+  if(n.includes('pend'))return'pendente';
+  if(n.includes('nao conclu')||n.includes('não conclu')||n.includes('n conclu'))return'não concluído';
+  if(n.includes('susp'))return'suspenso';
+  if(n.includes('cancel'))return'cancelado';
+  return'sem status';
+}
+function procOfs(raw,fname){
+  const wb=XLSX.read(raw,{type:'array',cellDates:true});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+  const out=[];
+  for(const r of rows){
+    const vals=Object.values(r);
+    const tecnico=String(r['Técnico']||r['TECNICO']||r['tecnico']||r['Recurso']||r['RECURSO']||r['recurso']||vals[1]||'').trim();
+    const tipo=String(r['Tipo de Atividade']||r['TIPO_ATIVIDADE']||r['tipo_atividade']||r['Atividade']||r['ATIVIDADE']||r['atividade']||vals[2]||'').trim();
+    const status=String(r['Status']||r['STATUS']||r['status']||r['Situação']||r['SITUACAO']||vals[3]||'').trim();
+    const dtRaw=r['Data']||r['DATA']||r['data']||r['Data de Início']||r['DATA_INICIO']||vals[0]||'';
+    if(!tecnico||isOfsExcluded(tipo))continue;
+    let dt=null;
+    if(dtRaw instanceof Date)dt=dtRaw;
+    else if(typeof dtRaw==='number'&&dtRaw>10000){const d=XLSX.SSF.parse_date_code(dtRaw);if(d)dt=new Date(d.y,d.m-1,d.d);}
+    else if(dtRaw){const p=String(dtRaw).trim();const m=p.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);if(m){const y=m[3].length===2?2000+parseInt(m[3]):parseInt(m[3]);dt=new Date(y,parseInt(m[2])-1,parseInt(m[1]));}}
+    const dtStr=dt?`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`:'';
+    out.push({tecnico,tipo,status:ofsStatusKey(status),dtStr});
+  }
+  ofsRows=out;
+  const dates=out.filter(r=>r.dtStr).map(r=>r.dtStr).sort();
+  ofsMeta={fname,periodo:dates.length?`${dates[0].split('-').reverse().join('/')} – ${dates[dates.length-1].split('-').reverse().join('/')}`:'-',loaded:true};
+  saveOfsState();
+  renderOfs();
+  document.getElementById('nb-ofs').textContent=out.length;
+  document.getElementById('nb-ofs').style.display=out.length?'':'none';
+}
+function saveOfsState(){
+  try{localStorage.setItem(OFS_KEY,JSON.stringify({rows:ofsRows,meta:ofsMeta}));}catch(e){}
+}
+function restoreOfsState(){
+  try{
+    const raw=localStorage.getItem(OFS_KEY);if(!raw)return;
+    const s=JSON.parse(raw);
+    if(s.rows&&Array.isArray(s.rows)){ofsRows=s.rows;ofsMeta=s.meta||ofsMeta;}
+    const nb=document.getElementById('nb-ofs');
+    if(nb){nb.textContent=ofsRows.length;nb.style.display=ofsRows.length?'':'none';}
+  }catch(e){}
+}
+function clearOfs(){
+  ofsRows=[];ofsMeta={fname:'',periodo:'',loaded:false};
+  try{localStorage.removeItem(OFS_KEY);}catch(e){}
+  [ofsChRank,ofsChStatus,ofsChTaxa,ofsChTipo,ofsChDia].forEach(c=>{try{if(c)c.destroy();}catch(e){}});
+  ofsChRank=ofsChStatus=ofsChTaxa=ofsChTipo=ofsChDia=null;
+  const nb=document.getElementById('nb-ofs');if(nb){nb.textContent='0';nb.style.display='none';}
+  renderOfs();updateClearBtns();
+}
+function ofsCalcTecnicos(){
+  const map=new Map();
+  for(const r of ofsRows){
+    if(!map.has(r.tecnico))map.set(r.tecnico,{nome:r.tecnico,total:0,concluido:0,iniciado:0,pendente:0,nconc:0,susp:0,canc:0,semStatus:0,dias:new Set(),tipos:{}});
+    const t=map.get(r.tecnico);
+    t.total++;
+    if(r.status==='concluído')t.concluido++;
+    else if(r.status==='iniciado')t.iniciado++;
+    else if(r.status==='pendente')t.pendente++;
+    else if(r.status==='não concluído')t.nconc++;
+    else if(r.status==='suspenso')t.susp++;
+    else if(r.status==='cancelado')t.canc++;
+    else t.semStatus++;
+    if(r.dtStr)t.dias.add(r.dtStr);
+    t.tipos[r.tipo]=(t.tipos[r.tipo]||0)+1;
+  }
+  return Array.from(map.values()).map(t=>({...t,dias:t.dias.size,taxa:t.total?Math.round(t.concluido/t.total*100):0,media_dia:t.dias.size?+(t.total/t.dias.size).toFixed(1):0}));
+}
+function ofsDestroyChart(ref){try{if(ref)ref.destroy();}catch(e){}}
+function renderOfs(){
+  const empty=document.getElementById('ofs-empty');
+  const dash=document.getElementById('ofs-dash');
+  if(!empty||!dash)return;
+  if(!ofsRows.length){empty.style.display='';dash.style.display='none';updateClearBtns();return;}
+  empty.style.display='none';dash.style.display='';
+  document.getElementById('ofs-fname').textContent=ofsMeta.fname||'';
+  document.getElementById('ofs-periodo').textContent=ofsMeta.periodo||'-';
+  const ft=document.getElementById('ft-ofs');if(ft)ft.textContent=new Date().toLocaleString('pt-BR');
+  const tecs=ofsCalcTecnicos();
+  const total=ofsRows.length;
+  const concl=ofsRows.filter(r=>r.status==='concluído').length;
+  const pend=ofsRows.filter(r=>r.status==='pendente').length;
+  const inic=ofsRows.filter(r=>r.status==='iniciado').length;
+  const nconc=ofsRows.filter(r=>r.status==='não concluído').length;
+  const taxa=total?Math.round(concl/total*100):0;
+  const dias=new Set(ofsRows.filter(r=>r.dtStr).map(r=>r.dtStr)).size;
+  const kpiData=[
+    {label:'Total de Atividades',val:total,icon:'ti-list-check',color:'#f97316'},
+    {label:'Concluídas',val:concl,icon:'ti-circle-check',color:'#22c55e'},
+    {label:'Taxa Conclusão',val:taxa+'%',icon:'ti-percentage',color:'#3b82f6'},
+    {label:'Pendentes',val:pend,icon:'ti-clock',color:'#f59e0b'},
+    {label:'Não Concluídas',val:nconc,icon:'ti-x',color:'#ef4444'},
+    {label:'Dias de Operação',val:dias,icon:'ti-calendar',color:'#8b5cf6'}
+  ];
+  const kEl=document.getElementById('ofs-kpis');
+  kEl.innerHTML=kpiData.map(k=>`<div class="ofs-kpi"><div class="ofs-kpi-icon" style="color:${k.color};background:${k.color}18"><i class="ti ${k.icon}"></i></div><div class="ofs-kpi-val">${k.val}</div><div class="ofs-kpi-lbl">${k.label}</div></div>`).join('');
+  const sorted=[...tecs].sort((a,b)=>b.total-a.total);
+  const RANK_COLORS=['#f97316','#22c55e','#3b82f6','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#10b981','#6366f1','#14b8a6'];
+  ofsDestroyChart(ofsChRank);
+  const ctxRank=document.getElementById('ofs-chRank')?.getContext('2d');
+  if(ctxRank){
+    ofsChRank=new Chart(ctxRank,{type:'bar',data:{labels:sorted.map(t=>t.nome.split(' ')[0]),datasets:[{data:sorted.map(t=>t.total),backgroundColor:sorted.map((t,i)=>RANK_COLORS[i%RANK_COLORS.length]+'cc'),borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw} atividades`}}},scales:{x:{grid:{color:'rgba(128,128,128,.1)'},ticks:{color:'var(--tx2)',font:{size:10}}},y:{grid:{display:false},ticks:{color:'var(--tx2)',font:{size:11}}}}}});
+  }
+  const statusCounts={};for(const r of ofsRows){statusCounts[r.status]=(statusCounts[r.status]||0)+1;}
+  const statusKeys=Object.keys(statusCounts);
+  ofsDestroyChart(ofsChStatus);
+  const ctxSt=document.getElementById('ofs-chStatus')?.getContext('2d');
+  if(ctxSt){
+    ofsChStatus=new Chart(ctxSt,{type:'doughnut',data:{labels:statusKeys.map(s=>s.charAt(0).toUpperCase()+s.slice(1)),datasets:[{data:statusKeys.map(s=>statusCounts[s]),backgroundColor:statusKeys.map(s=>OFS_STATUS_COLORS[s]||'#94a3b8'),borderWidth:2,borderColor:'transparent'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'var(--tx2)',font:{size:11},boxWidth:11,padding:8}},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/total*100)}%)`}}}}});
+  }
+  ofsDestroyChart(ofsChTaxa);
+  const ctxTx=document.getElementById('ofs-chTaxa')?.getContext('2d');
+  if(ctxTx){
+    const taxaSorted=[...sorted].sort((a,b)=>b.taxa-a.taxa);
+    ofsChTaxa=new Chart(ctxTx,{type:'bar',data:{labels:taxaSorted.map(t=>t.nome.split(' ')[0]),datasets:[{data:taxaSorted.map(t=>t.taxa),backgroundColor:taxaSorted.map(t=>t.taxa>=80?'#22c55ecc':t.taxa>=60?'#f59e0bcc':'#ef4444cc'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`Taxa: ${ctx.raw}%`}}},scales:{x:{grid:{display:false},ticks:{color:'var(--tx2)',font:{size:10}}},y:{grid:{color:'rgba(128,128,128,.1)'},max:100,ticks:{color:'var(--tx2)',font:{size:10},callback:v=>v+'%'}}}}});
+  }
+  const tipoMap={};for(const r of ofsRows){tipoMap[r.tipo]=(tipoMap[r.tipo]||0)+1;}
+  const tipoSorted=Object.entries(tipoMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  ofsDestroyChart(ofsChTipo);
+  const ctxTp=document.getElementById('ofs-chTipo')?.getContext('2d');
+  if(ctxTp){
+    ofsChTipo=new Chart(ctxTp,{type:'bar',data:{labels:tipoSorted.map(([k])=>k.length>22?k.slice(0,20)+'…':k),datasets:[{data:tipoSorted.map(([,v])=>v),backgroundColor:'#8b5cf6cc',borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw} atividades`}}},scales:{x:{grid:{color:'rgba(128,128,128,.1)'},ticks:{color:'var(--tx2)',font:{size:10}}},y:{grid:{display:false},ticks:{color:'var(--tx2)',font:{size:10}}}}}});
+  }
+  const diaMap={};for(const r of ofsRows){if(r.dtStr)diaMap[r.dtStr]=(diaMap[r.dtStr]||0)+1;}
+  const diaKeys=Object.keys(diaMap).sort();
+  ofsDestroyChart(ofsChDia);
+  const ctxDia=document.getElementById('ofs-chDia')?.getContext('2d');
+  if(ctxDia){
+    ofsChDia=new Chart(ctxDia,{type:'line',data:{labels:diaKeys.map(d=>{const p=d.split('-');return`${p[2]}/${p[1]}`;}),datasets:[{data:diaKeys.map(d=>diaMap[d]),borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.12)',fill:true,tension:0.4,pointRadius:3,pointHoverRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw} atividades`}}},scales:{x:{grid:{color:'rgba(128,128,128,.1)'},ticks:{color:'var(--tx2)',font:{size:10}}},y:{grid:{color:'rgba(128,128,128,.1)'},ticks:{color:'var(--tx2)',font:{size:10}}}}}});
+  }
+  const selTec=document.getElementById('ofs-selTec');
+  if(selTec){
+    const prev=selTec.value;
+    selTec.innerHTML='<option value="">Todos os técnicos</option>'+sorted.map(t=>`<option value="${t.nome}">${t.nome}</option>`).join('');
+    if(prev&&sorted.find(t=>t.nome===prev))selTec.value=prev;
+  }
+  ofsRenderCards();
+  ofsRenderTable(tecs);
+  updateClearBtns();
+}
+function ofsRenderCards(){
+  const sel=document.getElementById('ofs-selTec')?.value||'';
+  const tecs=ofsCalcTecnicos();
+  const list=sel?tecs.filter(t=>t.nome===sel):tecs;
+  const cards=document.getElementById('ofs-cards');
+  if(!cards)return;
+  const info=document.getElementById('ofs-tecInfo');
+  if(info)info.textContent=sel?`${list[0]?.total||0} atividades`:` ${tecs.length} técnicos`;
+  if(!list.length){cards.innerHTML='<p style="color:var(--tx3);font-size:12px">Nenhum técnico encontrado.</p>';return;}
+  cards.innerHTML=list.sort((a,b)=>b.total-a.total).map((t,i)=>{
+    const taxa=t.total?Math.round(t.concluido/t.total*100):0;
+    const barItems=[
+      {s:'concluído',v:t.concluido},{s:'iniciado',v:t.iniciado},{s:'pendente',v:t.pendente},
+      {s:'não concluído',v:t.nconc},{s:'suspenso',v:t.susp},{s:'cancelado',v:t.canc}
+    ].filter(x=>x.v>0);
+    const bar=barItems.map(x=>`<div style="width:${Math.round(x.v/t.total*100)}%;background:${OFS_STATUS_COLORS[x.s]||'#94a3b8'};height:100%;transition:width .3s" title="${x.s}: ${x.v}"></div>`).join('');
+    return`<div class="ofs-tcard">
+      <div class="ofs-tc-head">
+        <div class="ofs-tc-rank">#${i+1}</div>
+        <div>
+          <div class="ofs-tc-name">${t.nome}</div>
+          <div style="font-size:10px;color:var(--tx3)">${t.dias} dias · ${t.media_dia} /dia</div>
+        </div>
+        <div class="ofs-taxa-pill" style="background:${taxa>=80?'rgba(34,197,94,.15)':taxa>=60?'rgba(245,158,11,.15)':'rgba(239,68,68,.15)'};color:${taxa>=80?'#22c55e':taxa>=60?'#f59e0b':'#ef4444'}">${taxa}%</div>
+      </div>
+      <div class="ofs-tc-stats">
+        <div><span style="color:#22c55e;font-weight:700">${t.concluido}</span><br><span style="font-size:9px;color:var(--tx3)">Concl.</span></div>
+        <div><span style="color:#f59e0b;font-weight:700">${t.pendente}</span><br><span style="font-size:9px;color:var(--tx3)">Pend.</span></div>
+        <div><span style="color:#3b82f6;font-weight:700">${t.iniciado}</span><br><span style="font-size:9px;color:var(--tx3)">Inic.</span></div>
+        <div><span style="color:#ef4444;font-weight:700">${t.nconc}</span><br><span style="font-size:9px;color:var(--tx3)">N/Concl.</span></div>
+        <div><span style="font-weight:700">${t.total}</span><br><span style="font-size:9px;color:var(--tx3)">Total</span></div>
+      </div>
+      <div class="ofs-sbar">${bar}</div>
+      <div class="ofs-leg">${barItems.map(x=>`<span style="color:${OFS_STATUS_COLORS[x.s]||'#94a3b8'}">&bull;</span> ${x.s.charAt(0).toUpperCase()+x.s.slice(1)} (${x.v})`).join(' &nbsp;')}</div>
+    </div>`;
+  }).join('');
+}
+function ofsRenderTable(tecs){
+  const tbody=document.getElementById('ofs-tbody');if(!tbody)return;
+  const sorted=[...tecs].sort((a,b)=>{
+    const av=a[ofsSortCol],bv=b[ofsSortCol];
+    if(typeof av==='string')return ofsSortAsc?av.localeCompare(bv):bv.localeCompare(av);
+    return ofsSortAsc?av-bv:bv-av;
+  });
+  tbody.innerHTML=sorted.map((t,i)=>{
+    const taxa=t.taxa;
+    const tc=taxa>=80?'#22c55e':taxa>=60?'#f59e0b':'#ef4444';
+    return`<tr style="border-bottom:.5px solid var(--bd)${i%2?';background:rgba(128,128,128,.03)':''}">
+      <td style="padding:8px 10px;color:var(--tx1);font-weight:500">${t.nome}</td>
+      <td style="padding:8px 10px;text-align:right;font-variant-numeric:tabular-nums">${t.total}</td>
+      <td style="padding:8px 10px;text-align:right;color:#22c55e;font-variant-numeric:tabular-nums">${t.concluido}</td>
+      <td style="padding:8px 10px;text-align:right;color:${tc};font-weight:700;font-variant-numeric:tabular-nums">${taxa}%</td>
+      <td style="padding:8px 10px;text-align:right;color:#f59e0b;font-variant-numeric:tabular-nums">${t.pendente}</td>
+      <td style="padding:8px 10px;text-align:right;color:#ef4444;font-variant-numeric:tabular-nums">${t.nconc}</td>
+      <td style="padding:8px 10px;text-align:right;color:#8b5cf6;font-variant-numeric:tabular-nums">${t.susp}</td>
+      <td style="padding:8px 10px;text-align:right;color:#6b7280;font-variant-numeric:tabular-nums">${t.canc}</td>
+      <td style="padding:8px 10px;text-align:right;color:var(--tx2);font-variant-numeric:tabular-nums">${t.dias}</td>
+      <td style="padding:8px 10px;text-align:right;color:var(--tx2);font-variant-numeric:tabular-nums">${t.media_dia}</td>
+    </tr>`;
+  }).join('');
+}
+function ofsSortTable(col){
+  if(ofsSortCol===col)ofsSortAsc=!ofsSortAsc;
+  else{ofsSortCol=col;ofsSortAsc=col==='nome';}
+  ofsRenderTable(ofsCalcTecnicos());
+  document.querySelectorAll('#ofs-tbl th').forEach(th=>{
+    th.style.color=th.getAttribute('onclick')?.includes(col)?'var(--tx1)':'var(--tx3)';
+  });
+}
+document.getElementById('file-ofs').addEventListener('change',function(e){
+  const f=e.target.files[0];if(!f)return;
+  const ts=new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+  document.getElementById('ts-ofs').textContent='Anexado '+ts;
+  const rd=new FileReader();
+  rd.onload=ev=>procOfs(new Uint8Array(ev.target.result),f.name);
+  rd.readAsArrayBuffer(f);
+  this.value='';
+});
+
 /* ─── NAV & THEME ─── */
 function switchTab(tab,persist=true){
-  if(!['abertos','encerrados','rede','combustivel','repetidos','whatsapp'].includes(tab))tab='abertos';
+  if(!['abertos','encerrados','rede','combustivel','repetidos','whatsapp','ofs'].includes(tab))tab='abertos';
   activeTab=tab;
   if(persist)localStorage.setItem(ACTIVE_TAB_KEY,tab);
-  const isAb=tab==='abertos',isEnc=tab==='encerrados',isRede=tab==='rede',isFuel=tab==='combustivel',isRep=tab==='repetidos',isWpp=tab==='whatsapp';
+  const isAb=tab==='abertos',isEnc=tab==='encerrados',isRede=tab==='rede',isFuel=tab==='combustivel',isRep=tab==='repetidos',isWpp=tab==='whatsapp',isOfs=tab==='ofs';
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
-  const tabId='ntab-'+(isAb?'ab':isEnc?'enc':isRede?'rede':isFuel?'fuel':isWpp?'wpp':'rep');
+  const tabId='ntab-'+(isAb?'ab':isEnc?'enc':isRede?'rede':isFuel?'fuel':isWpp?'wpp':isOfs?'ofs':'rep');
   const tabEl=document.getElementById(tabId);if(tabEl)tabEl.classList.add('active');
   document.getElementById('panel-abertos').classList.toggle('active',isAb);
   document.getElementById('panel-encerrados').classList.toggle('active',isEnc);
@@ -3158,15 +3537,18 @@ function switchTab(tab,persist=true){
   document.getElementById('panel-combustivel').classList.toggle('active',isFuel);
   document.getElementById('panel-repetidos').classList.toggle('active',isRep);
   document.getElementById('panel-whatsapp').classList.toggle('active',isWpp);
+  document.getElementById('panel-ofs').classList.toggle('active',isOfs);
   const showEncControls=isEnc&&dEnc.length>0;
   const encSubbar=document.getElementById('enc-subbar');
   if(encSubbar)encSubbar.classList.toggle('visible',showEncControls);
-  const upAb=document.getElementById('up-ab'),upEnc=document.getElementById('up-enc'),upFuel=document.getElementById('up-fuel');
+  const upAb=document.getElementById('up-ab'),upEnc=document.getElementById('up-enc'),upFuel=document.getElementById('up-fuel'),upOfs=document.getElementById('up-ofs');
   if(upAb)upAb.style.display=isAb?'flex':'none';
   if(upEnc)upEnc.style.display=(isEnc||isRep)?'flex':'none';
   if(upFuel)upFuel.style.display=isFuel?'':'none';
+  if(upOfs)upOfs.style.display=isOfs?'flex':'none';
   if(isFuel){renderFuel();setTimeout(initFuelSplit,80);}
   if(isRep)renderPanelRepetidos();
+  if(isOfs)renderOfs();
   if(isWpp){wppUnreadCount=0;updateWppBadge();const f=document.getElementById('wpp-frame');if(f&&f.src==='about:blank')f.src='https://mcll-painel-acionamentos-production.up.railway.app/painel';}
   updateClearBtns();
 }
