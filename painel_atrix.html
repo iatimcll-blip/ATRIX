@@ -210,7 +210,7 @@ body {
 #ofs-detail.open { display:block; animation:fadeIn .2s ease; }
 #ofs-modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:0 0 12px; border-bottom:.5px solid var(--bd); }
 #ofs-modal-title { font-size:15px; font-weight:700; color:var(--tx1); }
-#ofs-modal-sub { font-size:11px; color:var(--tx3); margin-top:3px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+#ofs-modal-sub { font-size:11px; color:var(--tx3); margin-top:3px; }
 #ofs-modal-close { width:28px; height:28px; border-radius:8px; border:.5px solid var(--bd); background:none; cursor:pointer; color:var(--tx3); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px; transition:.15s; }
 #ofs-modal-close:hover { background:var(--surface2); color:var(--tx1); }
 #ofs-modal-filters { display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:10px 0; border-bottom:.5px solid var(--bd); }
@@ -3762,12 +3762,31 @@ function ofsOpenTec(nome){
   const tec=ofsCalcTecnicos(rows).find(t=>t.nome===nome)||{};
   const isMop=(tec.grupo||'').includes('MOP');
   const taxa=tec.total?Math.round(tec.concluido/tec.total*100):0;
+  const tc=taxa>=80?'#22c55e':taxa>=60?'#f59e0b':'#ef4444';
   document.getElementById('ofs-modal-title').textContent=nome;
+  const _st=(lbl,val,color)=>`<div style="padding:5px 12px;text-align:center;border-right:.5px solid var(--bd)">
+    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:${color};white-space:nowrap">${lbl}</div>
+    <div style="font-size:14px;font-weight:700;color:${color};font-variant-numeric:tabular-nums">${val??'—'}</div></div>`;
   document.getElementById('ofs-modal-sub').innerHTML=
-    `<span class="ofs-uf-tag ${tec.uf||'MA'}">${tec.uf||'MA'}</span>`+
-    `<span class="ofs-gp-tag ${isMop?'MOP':'EPS'}" style="margin-left:2px">${isMop?'MOP GIGA+':'EPS SLN MA'}</span>`+
-    `&nbsp;<b style="color:#f97316">${rows.length}</b> atividades &nbsp;·&nbsp; Taxa: <b style="color:${taxa>=80?'#22c55e':taxa>=60?'#f59e0b':'#ef4444'}">${taxa}%</b>`+
-    `&nbsp;·&nbsp; ${tec.dias||0} dias &nbsp;·&nbsp; ${tec.media_dia||0}/dia`;
+    `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px">
+      <span class="ofs-uf-tag ${tec.uf||'MA'}">${tec.uf||'MA'}</span>
+      <span class="ofs-gp-tag ${isMop?'MOP':'EPS'}">${isMop?'MOP GIGA+':'EPS SLN MA'}</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;border:.5px solid var(--bd);border-radius:10px;overflow:hidden;margin-top:10px;background:var(--surface2)">
+      ${_st('Total',tec.total,'var(--tx1)')}
+      ${_st('Concl.',tec.concluido,'#22c55e')}
+      ${_st('Taxa%',taxa+'%',tc)}
+      ${_st('Pend.',tec.pendente||0,'#f59e0b')}
+      ${_st('Inic.',tec.iniciado||0,'#3b82f6')}
+      ${_st('N/Concl.',tec.nconc||0,'#ef4444')}
+      ${_st('Susp.',tec.susp||0,'#8b5cf6')}
+      ${_st('Canc.',tec.canc||0,'#6b7280')}
+      ${_st('Dias',tec.dias||0,'var(--tx2)')}
+      <div style="padding:5px 12px;text-align:center">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);white-space:nowrap">Méd/Dia</div>
+        <div style="font-size:14px;font-weight:700;color:var(--tx2);font-variant-numeric:tabular-nums">${tec.media_dia||0}</div>
+      </div>
+    </div>`;
   document.querySelectorAll('#ofs-modal-filters .ofs-mf-btn').forEach(b=>b.classList.toggle('on',b.dataset.st==='all'));
   ofsModalRender();
   // destaca card selecionado
