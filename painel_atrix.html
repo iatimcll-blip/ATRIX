@@ -1288,8 +1288,8 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       <!-- Filtros -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:var(--surface);border-radius:var(--rl);box-shadow:var(--shadow-sm);border:.5px solid var(--bd);margin-bottom:14px">
         <span style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-right:2px">Filtros</span>
-        <select class="fsel" id="rep-f-mes" onchange="renderPanelRepetidos()"><option value="">Todos os meses</option></select>
-        <select class="fsel" id="rep-f-semana" onchange="renderPanelRepetidos()"><option value="">Todas semanas</option></select>
+        <select class="fsel" id="rep-f-mes" onchange="onRepMesChange()"><option value="">Todos os meses</option></select>
+        <select class="fsel" id="rep-f-semana" onchange="onRepSemanaChange()"><option value="">Todas semanas</option></select>
         <select class="fsel" id="rep-f-cluster" onchange="renderPanelRepetidos()"><option value="">Todos clusters</option></select>
         <select class="fsel" id="rep-f-causa" onchange="renderPanelRepetidos()"><option value="">Todas causas</option></select>
         <select class="fsel" id="rep-f-seg" onchange="renderPanelRepetidos()"><option value="">Todos segmentos</option></select>
@@ -2019,9 +2019,18 @@ function procEnc(raw,fname){
 }
 
 /* ─── WEEK / CLUSTER SELECTORS ─── */
-function fillWeekSelector(){
-  const semanas=[...new Set(dEnc.map(d=>d.semana).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
-  const sel=document.getElementById('week-selector');
+/* helpers: semanas disponíveis para um mês; mês correspondente a uma semana */
+function encWeeksForMes(mes){
+  return[...new Set(dEnc.filter(d=>!mes||d.mes===mes).map(d=>d.semana).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+}
+function encMesForWeek(sem){
+  if(!sem)return'';
+  const m=[...new Set(dEnc.filter(d=>d.semana===sem).map(d=>d.mes).filter(Boolean))];
+  return m.length===1?m[0]:'';
+}
+function fillWeekSelector(mes){
+  const semanas=encWeeksForMes(mes||selMes);
+  const sel=document.getElementById('week-selector');if(!sel)return;
   sel.innerHTML='<option value="">Todas as semanas</option>'+semanas.map(s=>`<option value="${s}">${s}</option>`).join('');
   selWeek='';
 }
@@ -2040,13 +2049,43 @@ function fillMesSelector(){
 }
 function onMesChange(){
   selMes=document.getElementById('mes-selector').value;
+  /* filtra semanas ao mês selecionado */
+  const weeks=encWeeksForMes(selMes);
+  const wSel=document.getElementById('week-selector');
+  if(wSel){
+    const prev=wSel.value;
+    wSel.innerHTML='<option value="">Todas as semanas</option>'+weeks.map(s=>`<option value="${s}">${s}</option>`).join('');
+    selWeek=weeks.includes(prev)?prev:'';
+    wSel.value=selWeek;
+  }
   renderAllEnc();
   saveState();
 }
 function onWeekChange(){
   selWeek=document.getElementById('week-selector').value;
+  /* auto-seleciona o mês correspondente à semana */
+  const mes=encMesForWeek(selWeek);
+  if(mes){selMes=mes;const mSel=document.getElementById('mes-selector');if(mSel)mSel.value=selMes;}
   renderAllEnc();
   saveState();
+}
+/* ─── Repetidos: Mês ↔ Semana vinculados ─── */
+function onRepMesChange(){
+  const mes=document.getElementById('rep-f-mes')?.value||'';
+  const weeks=encWeeksForMes(mes);
+  const sSel=document.getElementById('rep-f-semana');
+  if(sSel){
+    const prev=sSel.value;
+    sSel.innerHTML='<option value="">Todas semanas</option>'+weeks.map(s=>`<option value="${eh(s)}">${eh(s)}</option>`).join('');
+    sSel.value=weeks.includes(prev)?prev:'';
+  }
+  renderPanelRepetidos();
+}
+function onRepSemanaChange(){
+  const sem=document.getElementById('rep-f-semana')?.value||'';
+  const mes=encMesForWeek(sem);
+  if(mes){const mSel=document.getElementById('rep-f-mes');if(mSel)mSel.value=mes;}
+  renderPanelRepetidos();
 }
 function onClusterChange(){
   selCluster=document.getElementById('cluster-selector').value;
@@ -2832,8 +2871,9 @@ function buildRepMap(data){
   return[...map.values()].filter(v=>v.records.length>=2).sort((a,b)=>b.records.length-a.records.length);
 }
 function fillRepFilters(){
+  const curMes=document.getElementById('rep-f-mes')?.value||'';
   const mes=[...new Set(dEnc.map(d=>d.mes).filter(Boolean))].sort();
-  const sem=[...new Set(dEnc.map(d=>d.semana).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  const sem=encWeeksForMes(curMes);
   const cl=CLUSTER_ORDER.filter(c=>dEnc.some(d=>d.cluster===c));
   const ca=[...new Set(dEnc.map(d=>repText(repCausa(d.causaRaiz))).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   const sg=[...new Set(dEnc.map(d=>repText(d.segmento)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
