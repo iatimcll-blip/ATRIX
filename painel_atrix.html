@@ -1622,7 +1622,8 @@ function cnt(arr,key){const r={};arr.forEach(d=>{if(d[key])r[d[key]]=(r[d[key]]|
 function se(obj){return Object.entries(obj).sort((a,b)=>b[1]-a[1])}
 function now2(){const n=new Date();return n.toLocaleDateString('pt-BR')+' '+n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
 function normCluster(c){return(c==='AM INT'||c==='AP'||c==='AP / AM'||c==='AP/AM')?'AM/AP':c}
-function calcSemana(d){if(!d||isNaN(d))return'';const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));dt.setUTCDate(dt.getUTCDate()+4-(dt.getUTCDay()||7));const y0=new Date(Date.UTC(dt.getUTCFullYear(),0,1));return'S'+Math.ceil((((dt-y0)/86400000)+1)/7)}
+function calcSemana(d){if(!d||isNaN(d))return'';const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));dt.setUTCDate(dt.getUTCDate()+4-(dt.getUTCDay()||7));const y0=new Date(Date.UTC(dt.getUTCFullYear(),0,1));return'S'+String(Math.ceil((((dt-y0)/86400000)+1)/7)).padStart(2,'0')}
+function normSemana(s){return s?s.replace(/^[Ss](\d+)$/,(_,n)=>'S'+String(n).padStart(2,'0')):s}
 function normClusterByCity(uf,cidade){
   const u=String(uf||'').toUpperCase().trim(),c=nk(cidade);
   if(u==='MA'){return(c.includes('SAOLUIS')||c.includes('PACODOLUMIAR')||c.includes('RIBAMAR'))?'MA CAP':'MA INT'}
@@ -1995,7 +1996,7 @@ function procEnc(raw,fname){
     const dataAbertura=gv(r,['data_abertura','Data Abertura','Data de Abertura','abertura']);
     const dataFechamento=gv(r,['data_fechamento','Data Fechamento','Data de Fechamento','fechamento','encerramento','Data_Fechamento','DATA FECHAMENTO','data fechamento'])||String(_vals[13]||'');
     const dataFechamentoParsed=parseOpeningDate(dataFechamento);
-    const semana=calcSemana(dataFechamentoParsed)||String(r['semana']||'').trim();
+    const semana=calcSemana(dataFechamentoParsed)||normSemana(String(r['semana']||'').trim());
     const numplan=String(gv(r,['numplan','NUMPLAN','Num Plan','num_plan','NumPlan','num plan'])||'').trim();
     const clienteId=String(gv(r,['cliente_id','CLIENTE_ID','cliente id','ID Cliente','clienteid','ClienteId'])||'').trim();
     const titulo=String(colVal(r,2,['titulo','TITULO','Título','nome_cliente','NOME_CLIENTE','Nome Cliente','razao_social','Razao Social','plano','PLANO','nome_plano','Nome Plano','nome_titulo','Nome Titulo'])||'').trim();
