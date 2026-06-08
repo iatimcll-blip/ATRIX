@@ -1481,23 +1481,22 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         <div class="ofs-cards" id="ofs-cards"></div>
       </div>
       <div class="card">
-        <div class="card-hd"><span class="card-title"><i class="ti ti-table" style="font-size:12px;vertical-align:-1px;margin-right:4px"></i>Tabela Consolidada</span></div>
-        <div class="pdesc" style="margin-left:0;margin-bottom:12px;font-size:11.5px;color:var(--tx3)">Clique nos cabeçalhos para ordenar</div>
+        <div class="card-hd"><span class="card-title"><i class="ti ti-alert-triangle" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:#f59e0b"></i>Alertas e Riscos</span></div>
+        <div class="pdesc" style="margin-left:0;margin-bottom:12px;font-size:11.5px;color:var(--tx3)">Técnicos que necessitam atenção · ordenados por nível de risco · clique para ver detalhes</div>
+        <div id="ofs-alert-kpis" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"></div>
         <div style="overflow-x:auto">
-          <table id="ofs-tbl" style="width:100%;border-collapse:collapse;font-size:12px">
-            <thead><tr id="ofs-thead">
-              <th onclick="ofsSortTable('nome')" style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">Técnico</th>
-              <th onclick="ofsSortTable('grupo')" style="padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">Grupo</th>
-              <th onclick="ofsSortTable('total')" style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap;font-variant-numeric:tabular-nums">Total</th>
-              <th onclick="ofsSortTable('concluido')" style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#22c55e;border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">Concl.</th>
-              <th onclick="ofsSortTable('taxa')" style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">Taxa%</th>
-              <th onclick="ofsSortTable('pendente')" style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#f59e0b;border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">Pend.</th>
-              <th onclick="ofsSortTable('iniciado')" style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#3b82f6;border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">Inic.</th>
-              <th onclick="ofsSortTable('nconc')" style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#ef4444;border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">N/Concl.</th>
-              <th onclick="ofsSortTable('susp')" style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#8b5cf6;border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">Susp.</th>
-              <th onclick="ofsSortTable('canc')" style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">Canc.</th>
-              <th onclick="ofsSortTable('dias')" style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">Dias</th>
-              <th onclick="ofsSortTable('media_dia')" style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">Méd/dia</th>
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="border-bottom:.5px solid var(--bd)">
+              <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);font-weight:700;white-space:nowrap">Técnico</th>
+              <th style="padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);font-weight:700;white-space:nowrap">Grupo</th>
+              <th style="padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);font-weight:700;white-space:nowrap">Nível</th>
+              <th style="padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);font-weight:700;white-space:nowrap">Taxa%</th>
+              <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);font-weight:700">Motivo do Alerta</th>
+              <th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#f59e0b;font-weight:700;white-space:nowrap">Pend.+Inic.</th>
+              <th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#ef4444;font-weight:700;white-space:nowrap">N/Concl.</th>
+              <th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#8b5cf6;font-weight:700;white-space:nowrap">Susp.</th>
+              <th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx2);font-weight:700;white-space:nowrap">Dias</th>
+              <th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx2);font-weight:700;white-space:nowrap">Méd/Dia</th>
             </tr></thead>
             <tbody id="ofs-tbody"></tbody>
           </table>
@@ -3673,7 +3672,7 @@ function renderOfs(){
   if(ctxDia){ofsChDia=new Chart(ctxDia,{type:'line',plugins:DL?[DL]:[],data:{labels:diaK.map(d=>{const p=d.split('-');return`${p[2]}/${p[1]}`;}),datasets:[{data:diaK.map(d=>diaMap[d]),borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.12)',fill:true,tension:0.4,pointRadius:4,pointHoverRadius:6,clip:false}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:24,right:10,bottom:4}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw} atividades`}},datalabels:DL?{anchor:'top',align:'top',color:'var(--tx2)',font:{size:9,weight:'600'},formatter:v=>v,clip:false}:{display:false}},scales:{x:{grid:{color:'rgba(128,128,128,.1)'},ticks:{color:'var(--tx2)',font:{size:10}}},y:{grid:{color:'rgba(128,128,128,.1)'},ticks:{color:'var(--tx2)',font:{size:10}}}}}})}
   const selTec=document.getElementById('ofs-selTec');
   if(selTec){const prev=selTec.value;selTec.innerHTML='<option value="">Todos os técnicos</option>'+sorted.map(t=>`<option value="${t.nome}">${t.nome} [${t.uf}]</option>`).join('');if(prev&&sorted.find(t=>t.nome===prev))selTec.value=prev;}
-  ofsRenderCards(rows);ofsRenderTable(tecs);updateClearBtns();
+  ofsRenderCards(rows);ofsRenderAlerts(tecs);updateClearBtns();
 }
 function ofsRenderCards(rows){
   if(!rows)rows=ofsFilteredRows();
@@ -3722,56 +3721,59 @@ function ofsRenderCards(rows){
     </div>`;
   }).join('');
 }
-function ofsRenderTable(tecs){
+function _ofsRisk(t){
+  const ab=(t.pendente||0)+(t.iniciado||0);
+  if(t.taxa<60)return{ord:0,level:'critico',label:'Crítico',color:'#ef4444',bg:'rgba(239,68,68,.1)',motivo:`Taxa baixa (${t.taxa}%)`};
+  if(t.nconc>3)return{ord:0,level:'critico',label:'Crítico',color:'#ef4444',bg:'rgba(239,68,68,.1)',motivo:`${t.nconc} não concluídos`};
+  if(t.taxa<80)return{ord:1,level:'atencao',label:'Atenção',color:'#f59e0b',bg:'rgba(245,158,11,.1)',motivo:`Taxa abaixo de 80% (${t.taxa}%)`};
+  if(ab>5)return{ord:1,level:'atencao',label:'Atenção',color:'#f59e0b',bg:'rgba(245,158,11,.1)',motivo:`${ab} atividades em aberto`};
+  if(t.susp>2)return{ord:1,level:'atencao',label:'Atenção',color:'#f59e0b',bg:'rgba(245,158,11,.1)',motivo:`${t.susp} suspensas`};
+  return{ord:2,level:'ok',label:'No esperado',color:'#22c55e',bg:'rgba(34,197,94,.1)',motivo:'Dentro do esperado'};
+}
+function ofsRenderAlerts(tecs){
   const tbody=document.getElementById('ofs-tbody');if(!tbody)return;
-  const sorted=[...tecs].sort((a,b)=>{
-    const av=a[ofsSortCol],bv=b[ofsSortCol];
-    if(typeof av==='string')return ofsSortAsc?av.localeCompare(bv):bv.localeCompare(av);
-    return ofsSortAsc?av-bv:bv-av;
-  });
-  const hasSemSt=sorted.some(t=>t.semStatus>0);
-  // sync thead: show S/St col only when at least one row has unknown status
-  const thead=document.getElementById('ofs-thead');
-  if(thead){
-    const existing=thead.querySelector('th[data-col="semStatus"]');
-    if(hasSemSt&&!existing){
-      const th=document.createElement('th');
-      th.setAttribute('data-col','semStatus');
-      th.setAttribute('onclick',"ofsSortTable('semStatus')");
-      th.style.cssText='text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap';
-      th.textContent='S/Status';
-      th.title='Status não reconhecido na base';
-      const diasTh=thead.querySelector('th[onclick*="dias"]');
-      if(diasTh)thead.querySelector('tr').insertBefore(th,diasTh);
-      else thead.querySelector('tr').appendChild(th);
-    }else if(!hasSemSt&&existing){existing.remove();}
-  }
-  tbody.innerHTML=sorted.map((t,i)=>{
-    const taxa=t.taxa,tc=taxa>=80?'#22c55e':taxa>=60?'#f59e0b':'#ef4444';
+  const scored=tecs.map(t=>({...t,_r:_ofsRisk(t)}));
+  scored.sort((a,b)=>a._r.ord-b._r.ord||b.total-a.total);
+  const critico=scored.filter(t=>t._r.level==='critico').length;
+  const atencao=scored.filter(t=>t._r.level==='atencao').length;
+  const ok=scored.filter(t=>t._r.level==='ok').length;
+  const kpis=document.getElementById('ofs-alert-kpis');
+  if(kpis)kpis.innerHTML=[
+    {n:critico,label:'Crítico',color:'#ef4444',bg:'rgba(239,68,68,.1)',icon:'ti-alert-circle'},
+    {n:atencao,label:'Atenção',color:'#f59e0b',bg:'rgba(245,158,11,.1)',icon:'ti-alert-triangle'},
+    {n:ok,label:'No esperado',color:'#22c55e',bg:'rgba(34,197,94,.1)',icon:'ti-circle-check'},
+  ].map(k=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:${k.bg};border-radius:8px;border:.5px solid ${k.color}55">
+    <i class="ti ${k.icon}" style="color:${k.color};font-size:15px"></i>
+    <span style="font-size:19px;font-weight:700;color:${k.color};font-variant-numeric:tabular-nums">${k.n}</span>
+    <span style="font-size:11px;color:${k.color};font-weight:600">${k.label}</span>
+  </div>`).join('');
+  tbody.innerHTML=scored.map((t,i)=>{
+    const r=t._r;
     const isMop=(t.grupo||'').includes('MOP');
-    const semSt=t.semStatus||0;
-    return`<tr style="border-bottom:.5px solid var(--bd)${i%2?';background:rgba(128,128,128,.03)':''};cursor:pointer" data-tec="${t.nome.replace(/"/g,'&quot;')}" onclick="ofsOpenTec(this.dataset.tec)" title="Ver chamados de ${t.nome}">
+    const tc=t.taxa>=80?'#22c55e':t.taxa>=60?'#f59e0b':'#ef4444';
+    const ab=(t.pendente||0)+(t.iniciado||0);
+    const barW=Math.max(2,Math.min(100,t.taxa));
+    const bg=i%2?'background:rgba(128,128,128,.025);':'';
+    return`<tr style="${bg}border-bottom:.5px solid var(--bd);cursor:pointer" data-tec="${t.nome.replace(/"/g,'&quot;')}" onclick="ofsOpenTec(this.dataset.tec)" title="Ver detalhes de ${t.nome}">
       <td style="padding:7px 10px;color:var(--tx1);font-weight:500;white-space:nowrap">${t.nome} <span class="ofs-uf-tag ${t.uf||'MA'}">${t.uf||'MA'}</span></td>
       <td style="padding:7px 10px;white-space:nowrap"><span class="ofs-gp-tag ${isMop?'MOP':'EPS'}">${isMop?'MOP':'EPS'}</span></td>
-      <td style="padding:7px 10px;text-align:right;font-variant-numeric:tabular-nums">${t.total}</td>
-      <td style="padding:7px 10px;text-align:right;color:#22c55e;font-variant-numeric:tabular-nums">${t.concluido}</td>
-      <td style="padding:7px 10px;text-align:right;color:${tc};font-weight:700;font-variant-numeric:tabular-nums">${taxa}%</td>
-      <td style="padding:7px 10px;text-align:right;color:#f59e0b;font-variant-numeric:tabular-nums">${t.pendente}</td>
-      <td style="padding:7px 10px;text-align:right;color:#3b82f6;font-variant-numeric:tabular-nums">${t.iniciado}</td>
-      <td style="padding:7px 10px;text-align:right;color:#ef4444;font-variant-numeric:tabular-nums">${t.nconc}</td>
-      <td style="padding:7px 10px;text-align:right;color:#8b5cf6;font-variant-numeric:tabular-nums">${t.susp}</td>
-      <td style="padding:7px 10px;text-align:right;color:#6b7280;font-variant-numeric:tabular-nums">${t.canc}</td>
-      ${hasSemSt?`<td style="padding:7px 10px;text-align:right;color:#94a3b8;font-variant-numeric:tabular-nums" title="Status não reconhecido">${semSt||0}</td>`:''}
+      <td style="padding:7px 10px;white-space:nowrap"><span class="ofs-st-pill" style="color:${r.color};background:${r.bg}">${r.label}</span></td>
+      <td style="padding:7px 10px;white-space:nowrap;min-width:110px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;min-width:40px">
+            <div style="height:100%;width:${barW}%;background:${tc};border-radius:3px"></div>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:${tc};font-variant-numeric:tabular-nums">${t.taxa}%</span>
+        </div>
+      </td>
+      <td style="padding:7px 10px;font-size:11px;color:var(--tx2)">${r.motivo}</td>
+      <td style="padding:7px 10px;text-align:right;color:#f59e0b;font-variant-numeric:tabular-nums;font-weight:${ab>5?700:400}">${ab}</td>
+      <td style="padding:7px 10px;text-align:right;color:#ef4444;font-variant-numeric:tabular-nums;font-weight:${t.nconc>3?700:400}">${t.nconc}</td>
+      <td style="padding:7px 10px;text-align:right;color:#8b5cf6;font-variant-numeric:tabular-nums">${t.susp||0}</td>
       <td style="padding:7px 10px;text-align:right;color:var(--tx2);font-variant-numeric:tabular-nums">${t.dias}</td>
       <td style="padding:7px 10px;text-align:right;color:var(--tx2);font-variant-numeric:tabular-nums">${t.media_dia}</td>
     </tr>`;
   }).join('');
-}
-function ofsSortTable(col){
-  if(ofsSortCol===col)ofsSortAsc=!ofsSortAsc;
-  else{ofsSortCol=col;ofsSortAsc=col==='nome'||col==='grupo';}
-  ofsRenderTable(ofsCalcTecnicos());
-  document.querySelectorAll('#ofs-tbl th').forEach(th=>{th.style.color=th.getAttribute('onclick')?.includes(col)?'var(--tx1)':null;});
 }
 document.getElementById('file-ofs').addEventListener('change',function(e){
   const f=e.target.files[0];if(!f)return;
