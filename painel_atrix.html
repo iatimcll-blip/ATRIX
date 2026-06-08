@@ -205,6 +205,28 @@ body {
 @media(max-width:1100px){.ofs-kpis{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:900px){.ofs-kpis{grid-template-columns:repeat(3,1fr)}.ofs-grid2,.ofs-grid3,.ofs-sum-grid{grid-template-columns:1fr}.ofs-cards{grid-template-columns:repeat(2,1fr)}.ofs-cw{height:clamp(180px,24vh,280px)}}
 @media(max-width:560px){.ofs-kpis,.ofs-cards{grid-template-columns:1fr 1fr}.ofs-cw{height:clamp(160px,22vh,240px)}}
+/* ── OFS MODAL TÉCNICO ── */
+#ofs-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:900; display:none; align-items:center; justify-content:center; padding:16px; }
+#ofs-modal-overlay.open { display:flex; animation:fadeIn .15s ease; }
+#ofs-modal-box { background:var(--surface); border:.5px solid var(--bd); border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.22); width:100%; max-width:820px; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; }
+#ofs-modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 20px 12px; border-bottom:.5px solid var(--bd); flex-shrink:0; }
+#ofs-modal-title { font-size:15px; font-weight:700; color:var(--tx1); }
+#ofs-modal-sub { font-size:11px; color:var(--tx3); margin-top:3px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+#ofs-modal-close { width:28px; height:28px; border-radius:8px; border:.5px solid var(--bd); background:none; cursor:pointer; color:var(--tx3); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px; transition:.15s; }
+#ofs-modal-close:hover { background:var(--surface2); color:var(--tx1); }
+#ofs-modal-filters { display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:10px 20px; border-bottom:.5px solid var(--bd); flex-shrink:0; }
+.ofs-mf-btn { font-size:11px; font-weight:600; padding:3px 10px; border-radius:6px; border:.5px solid var(--bd); background:none; color:var(--tx3); cursor:pointer; font-family:inherit; transition:.15s; }
+.ofs-mf-btn.on { background:rgba(249,115,22,.13); color:#f97316; border-color:rgba(249,115,22,.4); }
+#ofs-modal-body { overflow-y:auto; flex:1; }
+#ofs-modal-tbl { width:100%; border-collapse:collapse; font-size:12px; }
+#ofs-modal-tbl th { position:sticky; top:0; background:var(--surface); padding:8px 14px; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--tx3); font-weight:700; text-align:left; border-bottom:.5px solid var(--bd); white-space:nowrap; cursor:pointer; user-select:none; z-index:1; }
+#ofs-modal-tbl th:hover { color:var(--tx1); }
+#ofs-modal-tbl td { padding:8px 14px; border-bottom:.5px solid var(--bd); vertical-align:middle; }
+#ofs-modal-tbl tr:hover td { background:rgba(249,115,22,.04); }
+.ofs-st-pill { display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:5px; white-space:nowrap; }
+#ofs-modal-footer { padding:10px 20px; border-top:.5px solid var(--bd); font-size:11px; color:var(--tx3); flex-shrink:0; display:flex; justify-content:space-between; align-items:center; }
+.ofs-tcard { cursor:pointer; }
+.ofs-tcard:hover { border-color:rgba(249,115,22,.5) !important; box-shadow:0 0 0 2px rgba(249,115,22,.12); }
 #panel-whatsapp { padding: 0; }
 #panel-whatsapp.active { display: flex; flex-direction: column; }
 .wpp-topbar { display: flex; align-items: center; justify-content: flex-end; padding: 5px 12px; background: var(--surface); border-bottom: .5px solid var(--bd); flex-shrink: 0; gap: 8px; font-size: 11px; color: var(--tx3); }
@@ -1482,6 +1504,43 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         </div>
       </div>
       <div class="pfooter">Direitos reservados a Wanderson Marcellus Penha Costa · <span id="ft-ofs"></span></div>
+    </div>
+  </div>
+
+  <!-- ── MODAL CHAMADOS DO TÉCNICO (OFS) ── -->
+  <div id="ofs-modal-overlay" onclick="ofsModalClose(event)">
+    <div id="ofs-modal-box">
+      <div id="ofs-modal-head">
+        <div>
+          <div id="ofs-modal-title">Técnico</div>
+          <div id="ofs-modal-sub"></div>
+        </div>
+        <button id="ofs-modal-close" onclick="ofsModalClose()" title="Fechar"><i class="ti ti-x"></i></button>
+      </div>
+      <div id="ofs-modal-filters">
+        <span style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em">Filtrar:</span>
+        <button class="ofs-mf-btn on" data-st="all" onclick="ofsModalFilter(this,'all')">Todos</button>
+        <button class="ofs-mf-btn" data-st="concluído" onclick="ofsModalFilter(this,'concluído')">Concluído</button>
+        <button class="ofs-mf-btn" data-st="iniciado" onclick="ofsModalFilter(this,'iniciado')">Iniciado</button>
+        <button class="ofs-mf-btn" data-st="pendente" onclick="ofsModalFilter(this,'pendente')">Pendente</button>
+        <button class="ofs-mf-btn" data-st="não concluído" onclick="ofsModalFilter(this,'não concluído')">N/Concluído</button>
+        <button class="ofs-mf-btn" data-st="suspenso" onclick="ofsModalFilter(this,'suspenso')">Suspenso</button>
+        <button class="ofs-mf-btn" data-st="cancelado" onclick="ofsModalFilter(this,'cancelado')">Cancelado</button>
+      </div>
+      <div id="ofs-modal-body">
+        <table id="ofs-modal-tbl">
+          <thead><tr>
+            <th onclick="ofsModalSort('dtStr')">Data</th>
+            <th onclick="ofsModalSort('tipo')">Tipo de Atividade</th>
+            <th onclick="ofsModalSort('status')">Status</th>
+          </tr></thead>
+          <tbody id="ofs-modal-tbody"></tbody>
+        </table>
+      </div>
+      <div id="ofs-modal-footer">
+        <span id="ofs-modal-count"></span>
+        <span style="font-size:10px;opacity:.5">Clique fora ou ESC para fechar</span>
+      </div>
     </div>
   </div>
 
@@ -3610,7 +3669,7 @@ function ofsRenderCards(rows){
     const bar=barItems.map(x=>`<div style="width:${Math.round(x.v/t.total*100)}%;background:${OFS_STATUS_COLORS[x.s]||'#94a3b8'};height:100%;transition:width .3s" title="${x.s}: ${x.v}"></div>`).join('');
     const isMop=(t.grupo||'').includes('MOP');
     const semSt=t.semStatus||0;
-    return`<div class="ofs-tcard">
+    return`<div class="ofs-tcard" onclick="ofsOpenTec(${JSON.stringify(t.nome)})" title="Clique para ver os chamados de ${t.nome}">
       <div class="ofs-tc-head">
         <div class="ofs-tc-rank">#${i+1}</div>
         <div style="flex:1;min-width:0">
@@ -3666,7 +3725,7 @@ function ofsRenderTable(tecs){
     const taxa=t.taxa,tc=taxa>=80?'#22c55e':taxa>=60?'#f59e0b':'#ef4444';
     const isMop=(t.grupo||'').includes('MOP');
     const semSt=t.semStatus||0;
-    return`<tr style="border-bottom:.5px solid var(--bd)${i%2?';background:rgba(128,128,128,.03)':''}">
+    return`<tr style="border-bottom:.5px solid var(--bd)${i%2?';background:rgba(128,128,128,.03)':''};cursor:pointer" onclick="ofsOpenTec(${JSON.stringify(t.nome)})" title="Ver chamados de ${t.nome}">
       <td style="padding:7px 10px;color:var(--tx1);font-weight:500;white-space:nowrap">${t.nome} <span class="ofs-uf-tag ${t.uf||'MA'}">${t.uf||'MA'}</span></td>
       <td style="padding:7px 10px;white-space:nowrap"><span class="ofs-gp-tag ${isMop?'MOP':'EPS'}">${isMop?'MOP':'EPS'}</span></td>
       <td style="padding:7px 10px;text-align:right;font-variant-numeric:tabular-nums">${t.total}</td>
@@ -3696,6 +3755,62 @@ document.getElementById('file-ofs').addEventListener('change',function(e){
   rd.readAsArrayBuffer(f);this.value='';
 });
 
+/* ─── OFS MODAL TÉCNICO ─── */
+let _ofsMdRows=[],_ofsMdSort={col:'dtStr',asc:true},_ofsMdFilter='all';
+function ofsOpenTec(nome){
+  const rows=ofsFilteredRows().filter(r=>r.tecnico===nome).sort((a,b)=>a.dtStr.localeCompare(b.dtStr));
+  if(!rows.length)return;
+  _ofsMdRows=rows;_ofsMdSort={col:'dtStr',asc:true};_ofsMdFilter='all';
+  const tec=ofsCalcTecnicos(rows).find(t=>t.nome===nome)||{};
+  const isMop=(tec.grupo||'').includes('MOP');
+  const taxa=tec.total?Math.round(tec.concluido/tec.total*100):0;
+  document.getElementById('ofs-modal-title').textContent=nome;
+  document.getElementById('ofs-modal-sub').innerHTML=
+    `<span class="ofs-uf-tag ${tec.uf||'MA'}">${tec.uf||'MA'}</span>`+
+    `<span class="ofs-gp-tag ${isMop?'MOP':'EPS'}" style="margin-left:2px">${isMop?'MOP GIGA+':'EPS SLN MA'}</span>`+
+    `&nbsp;<b style="color:#f97316">${rows.length}</b> atividades &nbsp;·&nbsp; Taxa: <b style="color:${taxa>=80?'#22c55e':taxa>=60?'#f59e0b':'#ef4444'}">${taxa}%</b>`+
+    `&nbsp;·&nbsp; ${tec.dias||0} dias &nbsp;·&nbsp; ${tec.media_dia||0}/dia`;
+  document.querySelectorAll('#ofs-modal-filters .ofs-mf-btn').forEach(b=>b.classList.toggle('on',b.dataset.st==='all'));
+  ofsModalRender();
+  document.getElementById('ofs-modal-overlay').classList.add('open');
+  document.addEventListener('keydown',_ofsMdKey);
+}
+function ofsModalClose(e){
+  if(e&&e.target!==document.getElementById('ofs-modal-overlay')&&e.type!=='click')return;
+  if(e&&e.currentTarget===document.getElementById('ofs-modal-overlay')&&e.target!==e.currentTarget)return;
+  document.getElementById('ofs-modal-overlay').classList.remove('open');
+  document.removeEventListener('keydown',_ofsMdKey);
+}
+function _ofsMdKey(e){if(e.key==='Escape')ofsModalClose();}
+function ofsModalFilter(btn,st){
+  _ofsMdFilter=st;
+  document.querySelectorAll('#ofs-modal-filters .ofs-mf-btn').forEach(b=>b.classList.toggle('on',b===btn));
+  ofsModalRender();
+}
+function ofsModalSort(col){
+  if(_ofsMdSort.col===col)_ofsMdSort.asc=!_ofsMdSort.asc;
+  else{_ofsMdSort.col=col;_ofsMdSort.asc=col==='dtStr'||col==='tipo';}
+  ofsModalRender();
+}
+function ofsModalRender(){
+  let rows=_ofsMdFilter==='all'?_ofsMdRows:_ofsMdRows.filter(r=>r.status===_ofsMdFilter);
+  const {col,asc}=_ofsMdSort;
+  rows=[...rows].sort((a,b)=>{const va=a[col]||'',vb=b[col]||'';return asc?va.localeCompare(vb):vb.localeCompare(va);});
+  const tbody=document.getElementById('ofs-modal-tbody');
+  if(!tbody)return;
+  tbody.innerHTML=rows.map((r,i)=>{
+    const dt=r.dtStr?r.dtStr.split('-').reverse().join('/'):'—';
+    const sc=OFS_STATUS_COLORS[r.status]||'#94a3b8';
+    const bg=sc+'1a';
+    return`<tr>
+      <td style="font-size:12px;color:var(--tx2);white-space:nowrap;font-variant-numeric:tabular-nums">${dt}</td>
+      <td style="color:var(--tx1)">${r.tipo||'—'}</td>
+      <td><span class="ofs-st-pill" style="color:${sc};background:${bg}">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</span></td>
+    </tr>`;
+  }).join('');
+  const tot=_ofsMdRows.length,vis=rows.length;
+  document.getElementById('ofs-modal-count').textContent=vis===tot?`${tot} atividades`:`${vis} de ${tot} atividades`;
+}
 /* ─── NAV & THEME ─── */
 function switchTab(tab,persist=true){
   if(!['abertos','encerrados','rede','combustivel','repetidos','whatsapp','ofs'].includes(tab))tab='abertos';
