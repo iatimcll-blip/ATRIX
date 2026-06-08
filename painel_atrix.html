@@ -4193,6 +4193,18 @@ async function saveToGoogleSheets(manual=false){
 function openReportModal(){document.getElementById('modal-report').style.display='flex';}
 function closeReportModal(){document.getElementById('modal-report').style.display='none';}
 
+/* captura e sanitiza um elemento do DOM para o relatório */
+function _rptCap(id){
+  const el=document.getElementById(id);
+  if(!el||!el.innerHTML.trim())return '';
+  const cl=el.cloneNode(true);
+  cl.querySelectorAll('button,select,input,label,.admin-only,.card-action,.tsec-meta,.fbar,.pfooter,.quick-mop,.mop-ref-card,details,.lbtn,a.lbtn').forEach(e=>e.remove());
+  cl.querySelectorAll('.substatus-cell').forEach(e=>{const rd=e.querySelector('.substatus-readonly');e.innerHTML=`<span style="font-size:11px;color:#636366">${rd?rd.textContent:''}</span>`;});
+  cl.querySelectorAll('*').forEach(e=>{['onclick','onchange','oninput','ondblclick'].forEach(a=>e.removeAttribute(a));if(e.style)e.style.cursor='';});
+  cl.querySelectorAll('a').forEach(a=>{a.removeAttribute('href');a.removeAttribute('target');a.style.textDecoration='none';a.style.color='inherit';});
+  return cl.innerHTML;
+}
+
 function _rI(chart,title){
   if(!chart)return '';
   try{const src=chart.toBase64Image('image/png',1);
@@ -4200,169 +4212,182 @@ function _rI(chart,title){
   catch(e){return '';}
 }
 function _rK(label,val,sub,color){
-  return `<div class="kpi-box"><div class="lbl">${label}</div><div class="val"${color?` style="color:${color}"`:''}>${val}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`;
+  return `<div class="kpi-box"><div class="klbl">${label}</div><div class="kval"${color?` style="color:${color}"`:''}>${val}</div>${sub?`<div class="ksb">${sub}</div>`:''}</div>`;
 }
 function _rT(heads,rows,mxH){
-  if(!rows.length)return '<p style="color:#8e8e93;font-size:12px;padding:8px 0">Sem dados carregados para esta seção.</p>';
+  if(!rows||!rows.length)return '<p style="color:#8e8e93;font-size:12px;padding:8px 0">Sem dados.</p>';
   const st=mxH?`style="overflow-x:auto;max-height:${mxH};overflow-y:auto"`:'style="overflow-x:auto"';
   return `<div ${st}><table class="rpt-table"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
 }
 function _rSec(icon,title,badge,body,pg){
-  return `${pg?'<div class="page-break"></div>':''}<div class="rpt-section"><div class="rpt-section-title">${icon} ${title}${badge?` <span class="badge">${badge}</span>`:''}</div>${body}</div>`;
+  return `${pg?'<div class="page-break"></div>':''}<div class="rpt-section"><div class="rpt-section-title">${icon} ${title}${badge?`<span class="rpt-badge">${badge}</span>`:''}</div>${body}</div>`;
 }
+function _rCard(title,inner){return `<div class="rcard"><div class="rcardtit">${title}</div>${inner}</div>`;}
+function _rCap(id){const h=_rptCap(id);return h?`<div class="rpt-dom-cap">${h}</div>`:'';}
+
 
 function rptBuildAbertos(){
   if(!dAb.length)return '';
-  const data=gFAb(),total=dAb.length,fil=data.length;
-  const venc=data.filter(d=>d.statusSla==='FORA DO PRAZO').length,prazo=fil-venc;
-  const byMop={};data.forEach(d=>{byMop[d.mop||'?']=(byMop[d.mop||'?']||0)+1;});
-  const mopRows=Object.entries(byMop).sort((a,b)=>b[1]-a[1])
-    .map(([k,v])=>`<tr><td>${k}</td><td style="text-align:right;font-weight:700">${v}</td><td style="text-align:right;color:#8e8e93">${(v/fil*100).toFixed(1)}%</td></tr>`);
-  const kpis=`<div class="kpi-grid">${_rK('Total abertos',total)+''+
-    _rK('Fora do prazo',venc,`${(venc/Math.max(fil,1)*100).toFixed(1)}% da base`,'#ef4444')+
-    _rK('No prazo',prazo,`${(prazo/Math.max(fil,1)*100).toFixed(1)}% da base`,'#22c55e')+
-    _rK('MOP/EPS',Object.keys(byMop).length,'distintos')}</div>`;
-  const tRows=data.slice(0,300).map(d=>`<tr>
-    <td style="font-family:monospace;font-size:11px">${d.id||'—'}</td>
-    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.cliente||'—'}</td>
-    <td>${d.mop||'—'}</td>
-    <td>${d.uf||''}/${d.cidade||'—'}</td>
-    <td>${fd(d.slaH)}</td>
-    <td>${d.faixa||'—'}</td>
-    <td style="color:${d.statusSla==='FORA DO PRAZO'?'#ef4444':'#22c55e'};font-weight:600">${d.statusSla||'—'}</td>
+  const data=gFAb(),total=dAb.length;
+  const tRows=data.slice(0,500).map(d=>`<tr>
+    <td style="font-family:monospace;font-size:11px;white-space:nowrap">${d.id||'—'}</td>
+    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">${d.cliente||'—'}</td>
+    <td style="white-space:nowrap">${d.mop||'—'}</td>
+    <td style="white-space:nowrap">${d.uf||''}/${d.cidade||'—'}</td>
+    <td style="color:${d.slaH>24?'#ef4444':d.slaH>8?'#f59e0b':'#22c55e'};font-weight:600;white-space:nowrap">${fd(d.slaH)}</td>
+    <td style="white-space:nowrap">${d.faixa||'—'}</td>
+    <td style="color:${d.statusSla==='FORA DO PRAZO'?'#ef4444':'#22c55e'};font-weight:600;white-space:nowrap">${d.statusSla||'—'}</td>
     <td style="font-size:11px;color:#636366">${d.substatus||'—'}</td>
   </tr>`);
-  const body=`${kpis}
-  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-    <div style="flex:1;min-width:200px"><div class="subsec-title">Por MOP/EPS</div>${_rT(['MOP/EPS','Qtde','%'],mopRows,'')}</div>
+  const body=`
+  ${_rCap('mrow-ab')}
+  ${_rCap('prow-ab')}
+  <div class="g3r">
+    ${_rCard('Faixa de SLA',_rptCap('sla-ab'))}
+    ${_rCard('Por Região',_rptCap('reg-ab'))}
+    ${_rCard('Por MOP/EPS',_rptCap('mop-ab'))}
   </div>
-  <div class="subsec-title">Chamados em aberto ${fil<total?`(filtrado: ${fil} de ${total})`:`(${total})`}</div>
-  ${_rT(['ID Ticket','Cliente','MOP/EPS','UF/Cidade','SLA','Faixa','Status SLA','Substatus'],tRows,'350px')}
-  ${data.length>300?`<p style="color:#8e8e93;font-size:11px;margin-top:6px">Exibindo primeiros 300 de ${data.length} registros.</p>`:''}`;
+  ${_rCard('Por Substatus',_rptCap('sub-ab'))}
+  <div class="chart-grid" style="margin-top:12px">${_rI(chAb,'Distribuição por Faixa SLA')}</div>
+  <div class="stit">Chamados em aberto — ${data.length} de ${total} registros</div>
+  ${_rT(['ID Ticket','Cliente','MOP/EPS','UF/Cidade','SLA','Faixa','Status SLA','Substatus'],tRows,'400px')}
+  ${data.length>500?`<p style="color:#8e8e93;font-size:11px;margin-top:6px">Exibindo 500 de ${data.length} registros.</p>`:''}`;
   return _rSec('📋','B2B Chamados Abertos',`${total} chamados`,body,false);
 }
 
 function rptBuildEncerrados(){
   if(!dEnc.length)return '';
-  const d=encScope(),s=encRuleStats(d);
+  const d=encScope();
   const ctx=[selMes?fmtMesLabel(selMes):'',selWeek?'Semana '+selWeek:'',selCluster||''].filter(Boolean).join(' · ')||'Todos os períodos';
-  const kpis=`<div class="kpi-grid">${_rK('Total encerrados',d.length,ctx)+
-    _rK('Prazo ≤8h',s.prazo,pp(s.pPrazo)+'%','#22c55e')+
-    _rK('8h a 24h',s.intermediario,pp(s.pInter)+'%','#f59e0b')+
-    _rK('Outlier >24h',s.outlier,pp(s.pOut)+'%','#ef4444')+
-    _rK('Meta 8h',pp(s.pPrazo)+'%',s.pPrazo>=85?'✓ Atingida':'✗ Não atingida',s.pPrazo>=85?'#22c55e':'#ef4444')}</div>`;
-  const charts=`<div class="chart-grid">${_rI(chEnc,'Distribuição por Regra SLA')}${_rI(chSem,'Evolução por Semana')}</div>`;
-  const byCluster={};d.forEach(x=>{byCluster[x.cluster||'?']=(byCluster[x.cluster||'?']||0)+1;});
-  const clRows=Object.entries(byCluster).sort((a,b)=>b[1]-a[1])
-    .map(([k,v])=>`<tr><td>${k}</td><td style="text-align:right;font-weight:700">${v}</td><td style="text-align:right;color:#8e8e93">${(v/d.length*100).toFixed(1)}%</td></tr>`);
-  const tRows=d.slice(0,300).map(x=>`<tr>
-    <td style="font-family:monospace;font-size:11px">${x.protocolo||'—'}</td>
-    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.cliente||'—'}</td>
-    <td>${x.uf||''}/${x.cidade||'—'}</td>
-    <td>${x.cluster||'—'}</td>
-    <td>${fh(x.tempoTotal)}</td>
-    <td>${x.faixa||'—'}</td>
-    <td style="color:${x.dentro8h?'#22c55e':'#ef4444'}">${x.dentro8h?'Sim':'Não'}</td>
-    <td style="font-size:11px;color:#636366">${x.causaRaiz||'—'}</td>
-    <td>${x.semana||'—'}</td>
+  const exTxt=document.getElementById('exec-report-text');
+  const execHtml=exTxt&&exTxt.textContent.trim()?`<div class="rcard" style="margin-bottom:12px"><div class="rcardtit">Relatório Executivo Automático</div><pre class="exec-pre">${exTxt.textContent}</pre></div>`:'';
+  const tRows=d.slice(0,500).map(x=>`<tr>
+    <td style="font-family:monospace;font-size:11px;white-space:nowrap">${x.protocolo||'—'}</td>
+    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">${x.cliente||'—'}</td>
+    <td style="white-space:nowrap">${x.uf||''}/${x.cidade||'—'}</td>
+    <td style="white-space:nowrap">${x.cluster||'—'}</td>
+    <td style="color:${x.tempoTotal>24?'#ef4444':x.tempoTotal>8?'#f59e0b':'#22c55e'};font-weight:600;white-space:nowrap">${fh(x.tempoTotal)}</td>
+    <td style="white-space:nowrap">${x.faixa||'—'}</td>
+    <td style="color:${x.dentro8h?'#22c55e':'#ef4444'};font-weight:600">${x.dentro8h?'Sim':'Não'}</td>
+    <td style="color:${x.outlier24h?'#ef4444':'#636366'};font-weight:600">${x.outlier24h?'Sim':'—'}</td>
+    <td style="font-size:11px;color:#636366;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.causaRaiz||'—'}</td>
+    <td style="white-space:nowrap">${x.semana||'—'}</td>
   </tr>`);
-  const body=`<div style="font-size:12px;color:#636366;margin-bottom:12px">Período: <strong>${ctx}</strong></div>
-  ${kpis}${charts}
-  <div style="flex:1;min-width:160px"><div class="subsec-title">Por Cluster</div>${_rT(['Cluster','Qtde','%'],clRows,'')}</div>
-  <div class="subsec-title" style="margin-top:14px">Chamados encerrados</div>
-  ${_rT(['Protocolo','Cliente','UF/Cidade','Cluster','Tempo SLA','Faixa','Dentro 8h','Causa Raiz','Semana'],tRows,'350px')}
-  ${d.length>300?`<p style="color:#8e8e93;font-size:11px;margin-top:6px">Exibindo primeiros 300 de ${d.length} registros.</p>`:''}`;
-  return _rSec('✅','B2B Chamados Encerrados',`${d.length} chamados`,body,true);
+  const body=`
+  <p style="font-size:12px;color:#636366;margin-bottom:10px">Período: <strong>${ctx}</strong></p>
+  ${_rCap('mrow-enc')}
+  ${_rCap('prow-enc')}
+  <div class="stit">Performance por Cluster</div>
+  <div class="cluster-grid">${_rptCap('cluster-cards')}</div>
+  <div class="g3r">
+    ${_rCard('Faixa de SLA (aging CCS)',_rptCap('sla-enc'))}
+    ${_rCard('Causa Raiz',_rptCap('causa-enc'))}
+    ${_rCard('Por Segmento',_rptCap('seg-enc'))}
+  </div>
+  <div class="g2r">
+    ${_rCard('Análise Prazo / Outlier',_rptCap('meta8-enc'))}
+    ${_rCard('Por UF',_rptCap('uf-enc'))}
+  </div>
+  <div class="chart-grid">${_rI(chEnc,'Distribuição por Regra SLA')}${_rI(chSem,'Evolução por Semana')}</div>
+  ${execHtml}
+  <div class="stit">Chamados encerrados — ${d.length} registros</div>
+  ${_rT(['Protocolo','Cliente','UF/Cidade','Cluster','Tempo SLA','Faixa','Dentro 8h','Outlier >24h','Causa Raiz','Semana'],tRows,'400px')}
+  ${d.length>500?`<p style="color:#8e8e93;font-size:11px;margin-top:6px">Exibindo 500 de ${d.length} registros.</p>`:''}`;
+  return _rSec('✅','B2B Chamados Encerrados',`${d.length} chamados · ${ctx}`,body,true);
 }
 
 function rptBuildRepetidos(){
   const data=repScope();if(!data.length)return '';
   const all=buildRepMap(data),totalRep=all.reduce((s,v)=>s+v.records.length,0);
   const pct=data.length?totalRep/data.length*100:0;
-  const kpis=`<div class="kpi-grid">${_rK('Clientes repetidos',all.length,'com ≥2 chamados','#af52de')+
-    _rK('Chamados repetidos',totalRep,pct.toFixed(1)+'% da base filtrada','#ff9500')+
-    _rK('Maior recorrência',all[0]?all[0].records.length:0,all[0]?all[0].nome.slice(0,24):'')+
-    _rK('Dentro 8h',all.reduce((s,v)=>s+v.dentro8h,0),'','#22c55e')+
-    _rK('Outlier >24h',all.reduce((s,v)=>s+v.outlier,0),'','#ef4444')}</div>`;
-  const charts=`<div class="chart-grid">${_rI(chRepClients,'Top Clientes Repetidos')}${_rI(chRepCausas,'Causas Raiz')}</div>
-  <div class="chart-grid">${_rI(chRepSemana,'Evolução Semanal')}${_rI(chRepSLA,'Distribuição SLA')}</div>`;
-  const topRows=all.slice(0,50).map(v=>`<tr>
-    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">${v.nome||'—'}</td>
+  const tRows=all.flatMap(v=>v.records.map(r=>`<tr>
+    <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.nome||'—'}</td>
     <td style="text-align:center;font-weight:700;color:#af52de">${v.records.length}</td>
-    <td>${v.titulo||'—'}</td>
-    <td style="text-align:center;color:#22c55e;font-weight:600">${v.dentro8h}</td>
-    <td style="text-align:center;color:#ef4444;font-weight:600">${v.outlier}</td>
-  </tr>`);
-  const body=`${kpis}${charts}
-  <div class="subsec-title">Top 50 clientes mais recorrentes</div>
-  ${_rT(['Cliente','Chamados','MOP/EPS','Dentro 8h','Outlier >24h'],topRows,'300px')}`;
-  return _rSec('🔁','B2B Chamados Repetidos',`${all.length} clientes · ${totalRep} chamados`,body,true);
+    <td style="font-family:monospace;font-size:11px;white-space:nowrap">${r.protocolo||'—'}</td>
+    <td style="white-space:nowrap">${r.uf||''}/${r.cidade||'—'}</td>
+    <td style="white-space:nowrap">${r.cluster||'—'}</td>
+    <td style="color:${r.tempoTotal>24?'#ef4444':r.tempoTotal>8?'#f59e0b':'#22c55e'};font-weight:600;white-space:nowrap">${fh(r.tempoTotal)}</td>
+    <td style="color:${r.dentro8h?'#22c55e':'#ef4444'};font-weight:600">${r.dentro8h?'Sim':'Não'}</td>
+    <td style="color:${r.outlier24h?'#ef4444':'#636366'};font-weight:600">${r.outlier24h?'Sim':'—'}</td>
+    <td style="font-size:11px;color:#636366;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.causaRaiz||'—'}</td>
+    <td style="white-space:nowrap">${r.semana||'—'}</td>
+  </tr>`)).slice(0,500);
+  const body=`
+  ${_rCap('rep-mrow')}
+  ${_rCap('rep-prow')}
+  <div class="chart-grid">${_rI(chRepClients,'Top Clientes Repetidos')}${_rI(chRepCausas,'Causas Raiz')}</div>
+  <div class="chart-grid">${_rI(chRepSemana,'Evolução Semanal')}${_rI(chRepSLA,'Distribuição SLA')}</div>
+  <div class="stit">Detalhamento — ${totalRep} chamados de ${all.length} clientes recorrentes (${pct.toFixed(1)}%)</div>
+  ${_rT(['Cliente','Qtde Chamados','Protocolo','UF/Cidade','Cluster','Tempo SLA','Dentro 8h','Outlier >24h','Causa Raiz','Semana'],tRows,'420px')}
+  ${totalRep>500?`<p style="color:#8e8e93;font-size:11px;margin-top:6px">Exibindo 500 de ${totalRep} registros.</p>`:''}`;
+  return _rSec('🔁','B2B Chamados Repetidos',`${all.length} clientes · ${pct.toFixed(1)}% recorrência`,body,true);
 }
 
 function rptBuildCombustiveis(){
   const bal=fuelBalance(),active=dFuelVehicles.filter(v=>v.status==='Ativo');
   if(!dFuelRequests.length&&!active.length)return '';
-  const kpis=`<div class="kpi-grid">${_rK('Saldo total do ciclo',brl(bal.total))+
-    _rK('Gasto no ciclo',brl(bal.spent),bal.total?(bal.spent/bal.total*100).toFixed(1)+'% utilizado':'','#ef4444')+
-    _rK('Saldo disponível',brl(bal.available),'','#22c55e')+
-    _rK('Veículos ativos',active.length,'de '+dFuelVehicles.length+' total')+
-    _rK('Abastecimentos',dFuelRequests.length,'no ciclo')}</div>`;
-  const charts=`<div class="chart-grid">${_rI(chFuel,'Consumo por Condutor')}${_rI(chFuelTop,'Ranking Maiores Consumos')}${_rI(chFuelProj,'Projeção Mês Atual × Próximo')}</div>`;
   const vRows=active.map(v=>`<tr>
-    <td style="font-weight:700;font-family:monospace">${v.placa||'—'}</td>
+    <td style="font-weight:700;font-family:monospace;white-space:nowrap">${v.placa||'—'}</td>
     <td>${v.modelo||'—'}</td>
     <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.condutor||'—'}</td>
     <td>${v.setor||'—'}</td>
+    <td>${v.superior||'—'}</td>
     <td style="color:#22c55e;font-weight:600">${v.status}</td>
   </tr>`);
-  const rRows=dFuelRequests.slice(0,100).map(r=>`<tr>
-    <td>${r.data||'—'}</td>
-    <td style="font-family:monospace;font-weight:700">${r.placa||'—'}</td>
-    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.condutor||'—'}</td>
-    <td style="text-align:right;font-weight:700;color:#ef4444">${brl(r.valor)}</td>
+  const rRows=dFuelRequests.slice(0,300).map(r=>`<tr>
+    <td style="white-space:nowrap">${r.data||'—'}</td>
+    <td style="font-family:monospace;font-weight:700;white-space:nowrap">${r.placa||'—'}</td>
+    <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.condutor||'—'}</td>
+    <td style="text-align:right;font-weight:700;color:#ef4444;white-space:nowrap">${brl(r.valor)}</td>
     <td style="font-size:11px;color:#636366">${r.obs||'—'}</td>
   </tr>`);
-  const wRows=dFuelWithdrawals.slice(0,50).map(r=>`<tr>
-    <td>${r.data||'—'}</td>
-    <td style="text-align:right;font-weight:700;color:#f59e0b">${brl(r.valor)}</td>
+  const wRows=dFuelWithdrawals.slice(0,200).map(r=>`<tr>
+    <td style="white-space:nowrap">${r.data||'—'}</td>
+    <td style="text-align:right;font-weight:700;color:#f59e0b;white-space:nowrap">${brl(r.valor)}</td>
     <td style="font-size:11px;color:#636366">${r.reason||'—'}</td>
   </tr>`);
-  const body=`${kpis}${charts}
-  <div class="subsec-title">Frota ativa (${active.length} veículos)</div>
-  ${_rT(['Placa','Modelo','Condutor','Setor','Status'],vRows,'')}
-  <div class="subsec-title" style="margin-top:14px">Abastecimentos (${dFuelRequests.length})</div>
-  ${_rT(['Data','Placa','Condutor','Valor','Observação'],rRows,'280px')}
-  ${dFuelWithdrawals.length?`<div class="subsec-title" style="margin-top:14px">Retiradas de saldo (${dFuelWithdrawals.length})</div>${_rT(['Data','Valor','Motivo/Destino'],wRows,'180px')}`:''}`;
-  return _rSec('⛽','Combustíveis',`${dFuelRequests.length} abastecimentos`,body,true);
+  const body=`
+  ${_rCap('fuel-balance-summary')}
+  ${_rCap('fuel-extra-projection')}
+  ${_rCap('mrow-fuel')}
+  ${_rCap('prow-fuel')}
+  <div class="chart-grid">${_rI(chFuel,'Consumo por Condutor')}</div>
+  <div class="chart-grid">${_rI(chFuelTop,'Ranking Maiores Consumos')}${_rI(chFuelProj,'Projeção Mês Atual × Próximo')}</div>
+  ${_rCard('Resumo por Status de Frota',_rptCap('fuel-status'))}
+  <div class="stit" style="margin-top:14px">Frota ativa — ${active.length} de ${dFuelVehicles.length} veículos</div>
+  ${_rT(['Placa','Modelo','Condutor','Setor','Superior','Status'],vRows,'')}
+  <div class="stit" style="margin-top:14px">Abastecimentos — ${dFuelRequests.length} registros</div>
+  ${_rT(['Data','Placa','Condutor','Valor','Observação'],rRows,'300px')}
+  ${dFuelRequests.length>300?`<p style="color:#8e8e93;font-size:11px;margin-top:6px">Exibindo 300 de ${dFuelRequests.length} registros.</p>`:''}
+  ${dFuelWithdrawals.length?`<div class="stit" style="margin-top:14px">Retiradas de saldo — ${dFuelWithdrawals.length} registros</div>${_rT(['Data','Valor','Motivo/Destino'],wRows,'180px')}`:''}`;
+  return _rSec('⛽','Combustíveis',`${dFuelRequests.length} abastecimentos · ${active.length} veículos ativos`,body,true);
 }
 
 function rptBuildOfs(){
   if(!ofsRows.length)return '';
   const rows=ofsFilteredRows(),tecs=ofsCalcTecnicos(rows),total=rows.length;
-  const conc=rows.filter(r=>r.status==='concluído').length;
-  const taxa=total?Math.round(conc/total*100):0;
-  const taxaMax=tecs.length?Math.max(...tecs.map(t=>t.taxa)):0;
-  const kpis=`<div class="kpi-grid">${_rK('Total atividades',total)+
-    _rK('Técnicos ativos',tecs.length)+
-    _rK('Concluídas',conc,taxa+'% do total','#22c55e')+
-    _rK('Taxa média',taxa+'%','melhor: '+taxaMax+'%',taxa>=80?'#22c55e':taxa>=60?'#f59e0b':'#ef4444')}</div>`;
-  const charts=`<div class="chart-grid">${_rI(ofsChRank,'Ranking por Técnico')}${_rI(ofsChStatus,'Distribuição por Status')}${_rI(ofsChTaxa,'Taxa de Conclusão')}${_rI(ofsChTipo,'Por Tipo de Atividade')}</div>
-  ${ofsChDia?`<div class="chart-grid">${_rI(ofsChDia,'Atividades por Dia')}</div>`:''}`;
   const scored=tecs.map(t=>({...t,_r:_ofsRisk(t)})).sort((a,b)=>a._r.ord-b._r.ord||b.total-a.total);
   const tecRows=scored.map(t=>`<tr>
-    <td style="font-weight:600">${t.nome}</td>
-    <td>${t.uf||'MA'}</td>
-    <td>${(t.grupo||'').includes('MOP')?'MOP':'EPS'}</td>
-    <td style="color:${t._r.color};font-weight:700">${t._r.label}</td>
-    <td style="text-align:right">${t.total}</td>
+    <td style="font-weight:600;white-space:nowrap">${t.nome}</td>
+    <td style="white-space:nowrap">${t.uf||'MA'}</td>
+    <td style="white-space:nowrap">${(t.grupo||'').includes('MOP')?'MOP':'EPS'}</td>
+    <td style="color:${t._r.color};font-weight:700;white-space:nowrap">${t._r.label}</td>
+    <td style="text-align:right;font-weight:700">${t.total}</td>
     <td style="text-align:right;color:#22c55e;font-weight:700">${t.concluido}</td>
-    <td style="text-align:right;color:#ef4444">${t.nconc}</td>
+    <td style="text-align:right;color:#f59e0b">${t.pendente||0}</td>
+    <td style="text-align:right;color:#3b82f6">${t.iniciado||0}</td>
+    <td style="text-align:right;color:#ef4444;font-weight:700">${t.nconc}</td>
+    <td style="text-align:right;color:#8b5cf6">${t.susp||0}</td>
     <td style="text-align:right;font-weight:700;color:${t.taxa>=80?'#22c55e':t.taxa>=60?'#f59e0b':'#ef4444'}">${t.taxa}%</td>
     <td style="font-size:11px;color:#636366">${t._r.motivo}</td>
   </tr>`);
-  const body=`${kpis}${charts}
-  <div class="subsec-title">Análise de risco por técnico</div>
-  ${_rT(['Técnico','UF','Grupo','Nível de Risco','Total','Concluídas','N/Concl.','Taxa','Observação'],tecRows,'')}`;
+  const body=`
+  <div class="ofs-kpis-wrap">${_rptCap('ofs-kpis')}</div>
+  <div class="chart-grid">${_rI(ofsChRank,'Ranking por Técnico')}${_rI(ofsChStatus,'Distribuição por Status')}</div>
+  <div class="chart-grid">${_rI(ofsChTaxa,'Taxa de Conclusão')}${_rI(ofsChTipo,'Por Tipo de Atividade')}</div>
+  ${ofsChDia?`<div class="chart-grid">${_rI(ofsChDia,'Atividades por Dia')}</div>`:''}
+  <div class="stit">Análise de Risco por Técnico — ${tecs.length} técnicos · ${total} atividades</div>
+  ${_rT(['Técnico','UF','Grupo','Nível','Total','Concl.','Pend.','Inic.','N/Concl.','Susp.','Taxa','Observação'],tecRows,'')}`;
   return _rSec('📊','Produtividade OFS',`${total} atividades · ${tecs.length} técnicos`,body,true);
 }
 
@@ -4375,60 +4400,154 @@ function generateReport(scope){
   const title=titles[scope]||scope;
   const user=currentUser&&(currentUser.name||currentUser.username)||'';
   let sections='';
-  const add=fn=>{const s=fn();if(s)sections+=s;};
+  const add=fn=>{try{const s=fn();if(s)sections+=s;}catch(e){console.warn('rpt section err',e);}};
   if(scope==='all'||scope==='abertos')add(rptBuildAbertos);
   if(scope==='all'||scope==='encerrados')add(rptBuildEncerrados);
   if(scope==='all'||scope==='repetidos')add(rptBuildRepetidos);
   if(scope==='all'||scope==='combustivel')add(rptBuildCombustiveis);
   if(scope==='all'||scope==='ofs')add(rptBuildOfs);
   if(!sections){alert('Nenhum dado disponível. Carregue a base do painel antes de gerar o relatório.');return;}
-  const html=`<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Relatório ATRIX — ${dateStr}</title>
-<style>
+  const css=`
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#eeeef3;color:#1c1c1e;font-size:13px;line-height:1.4}
-.rpt-wrap{max-width:1080px;margin:0 auto;padding:24px 16px 100px}
-.rpt-cover{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%);color:#fff;border-radius:16px;padding:28px 32px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#eeeef3;color:#1c1c1e;font-size:13px;line-height:1.5}
+/* ─ layout ─ */
+.rpt-wrap{max-width:1100px;margin:0 auto;padding:24px 16px 100px}
+.rpt-cover{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%);color:#fff;border-radius:16px;padding:28px 32px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px}
 .rpt-cover h1{font-size:24px;font-weight:700;letter-spacing:-.5px}
-.rpt-cover .sub{font-size:12px;color:rgba(255,255,255,.55);margin-top:5px}
-.rpt-cover .meta{font-size:11.5px;color:rgba(255,255,255,.55);text-align:right}
-.rpt-cover .meta b{color:#fff}
+.rpt-cover .csub{font-size:12px;color:rgba(255,255,255,.55);margin-top:5px}
+.rpt-cover .cmeta{font-size:11.5px;color:rgba(255,255,255,.55);text-align:right}
+.rpt-cover .cmeta b{color:#fff}
 .rpt-section{background:#fff;border-radius:14px;padding:20px;margin-bottom:12px;border:.5px solid rgba(0,0,0,.07)}
-.rpt-section-title{font-size:14px;font-weight:700;color:#1c1c1e;margin-bottom:14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0f0f2;padding-bottom:10px}
-.badge{font-size:10px;font-weight:600;background:#f0f0f5;color:#636366;padding:2px 8px;border-radius:20px;margin-left:4px}
-.kpi-grid{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-.kpi-box{background:#f5f5f7;border-radius:10px;padding:10px 14px;flex:1;min-width:110px}
-.lbl{font-size:9.5px;color:#636366;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
-.val{font-size:19px;font-weight:700;line-height:1.1}
-.sub{font-size:10px;color:#8e8e93;margin-top:3px}
-.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:10px;margin-bottom:12px}
+.rpt-section-title{font-size:14px;font-weight:700;color:#1c1c1e;margin-bottom:14px;display:flex;align-items:center;gap:8px;border-bottom:1.5px solid #f0f0f2;padding-bottom:10px;flex-wrap:wrap}
+.rpt-badge{font-size:10px;font-weight:600;background:#f0f0f5;color:#636366;padding:2px 9px;border-radius:20px;margin-left:4px}
+.stit{font-size:10.5px;font-weight:700;color:#8e8e93;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px}
+.rcard{background:#f5f5f7;border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.rcardtit{font-size:10px;font-weight:700;color:#8e8e93;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.g3r{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+.g2r{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:10px}
+.rpt-dom-cap{margin-bottom:10px}
+/* ─ charts ─ */
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;margin-bottom:12px}
 .chart-box{background:#f5f5f7;border-radius:10px;padding:12px}
 .ctit{font-size:10px;font-weight:700;color:#636366;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
 .chart-box img{width:100%;height:auto;border-radius:6px;display:block}
+/* ─ report table ─ */
 .rpt-table{width:100%;border-collapse:collapse;font-size:11.5px}
-.rpt-table th{background:#f5f5f7;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:#8e8e93;font-weight:700;padding:6px 10px;text-align:left;border-bottom:1px solid #e5e5ea;white-space:nowrap;position:sticky;top:0}
-.rpt-table td{padding:5px 10px;border-bottom:.5px solid #f0f0f2;color:#1c1c1e;white-space:nowrap}
+.rpt-table th{background:#f5f5f7;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:#8e8e93;font-weight:700;padding:6px 10px;text-align:left;border-bottom:1px solid #e5e5ea;white-space:nowrap;position:sticky;top:0;z-index:1}
+.rpt-table td{padding:5px 10px;border-bottom:.5px solid #f0f0f2;color:#1c1c1e}
 .rpt-table tr:last-child td{border-bottom:none}
 .rpt-table tr:nth-child(even) td{background:#fafafa}
-.subsec-title{font-size:10.5px;font-weight:700;color:#8e8e93;text-transform:uppercase;letter-spacing:.05em;margin:12px 0 8px}
+/* ─ KPI boxes (standalone) ─ */
+.kpi-grid{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.kpi-box{background:#f5f5f7;border-radius:10px;padding:10px 14px;flex:1;min-width:110px}
+.klbl{font-size:9.5px;color:#636366;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.kval{font-size:19px;font-weight:700;line-height:1.1}
+.ksb{font-size:10px;color:#8e8e93;margin-top:3px}
+/* ─ mrow / mc ─ */
+.mrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.mc{background:#f5f5f7;border-radius:10px;padding:10px 14px;flex:1;min-width:110px}
+.mc-label{font-size:9.5px;color:#8e8e93;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;font-weight:600}
+.mc-val{font-size:19px;font-weight:700;line-height:1.1;color:#1c1c1e}
+.mc-sub{font-size:10px;color:#8e8e93;margin-top:2px}
+.c-blue{color:#007aff}.c-green{color:#34c759}.c-red{color:#ff3b30}.c-orange{color:#ff9500}.c-purple{color:#af52de}
+/* ─ prow / pc / pills ─ */
+.prow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.pc{display:inline-flex;align-items:center;gap:6px;background:#f5f5f7;border-radius:20px;padding:5px 10px 5px 6px;font-size:11.5px}
+.pico{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;flex-shrink:0;font-weight:700}
+.pv{font-weight:700;color:#1c1c1e}
+.ps{color:#8e8e93;font-size:10.5px}
+.pi-r .pico{background:#ff3b30}.pi-g .pico{background:#34c759}.pi-b .pico{background:#007aff}.pi-o .pico{background:#ff9500}.pi-p .pico{background:#af52de}
+/* ─ bar rows (brow) ─ */
+.brow{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11.5px}
+.blbl{flex:0 0 130px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#3a3a3c;font-weight:500}
+.btrk{flex:1;background:rgba(0,0,0,.06);border-radius:4px;height:6px;overflow:hidden;min-width:40px}
+.bfil{height:100%;background:#007aff;border-radius:4px}
+.bn{flex:0 0 36px;text-align:right;font-weight:700;color:#1c1c1e;font-size:11px}
+/* ─ list rows (lrow) ─ */
+.lrow{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11.5px;padding:2px 0}
+.ll{flex:0 0 130px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#3a3a3c;font-weight:500}
+.ldot{width:8px;height:8px;border-radius:50%;background:#007aff;flex-shrink:0}
+.lc{font-weight:700;color:#1c1c1e;margin-left:auto;padding-left:8px}
+/* ─ cluster cards ─ */
+.cluster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:14px}
+.cc{background:#f5f5f7;border-radius:12px;padding:12px 12px 12px 16px;position:relative;overflow:hidden}
+.cc-stripe{position:absolute;top:0;left:0;width:4px;height:100%;border-radius:4px 0 0 4px}
+.cc-name{font-size:12px;font-weight:700;margin-bottom:1px;color:#1c1c1e;padding-left:0}
+.cc-desc{font-size:10px;color:#8e8e93;margin-bottom:8px}
+.cc-pct{font-size:22px;font-weight:700;color:#1c1c1e;line-height:1.1}
+.cc-bar-bg{height:4px;background:rgba(0,0,0,.06);border-radius:4px;margin:6px 0}
+.cc-bar-fill{height:100%;border-radius:4px}
+.cc-info{font-size:10px;color:#8e8e93;display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.cc-out{font-size:10.5px;color:#636366;margin-top:3px}
+.cc.met .cc-stripe,.cc.met .cc-bar-fill{background:#22c55e}
+.cc.warn .cc-stripe,.cc.warn .cc-bar-fill{background:#f59e0b}
+.cc.unmet .cc-stripe,.cc.unmet .cc-bar-fill{background:#ef4444}
+/* ─ ofs kpis ─ */
+.ofs-kpis,.ofs-kpis-wrap{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.ofs-kpi{background:#f5f5f7;border-radius:12px;padding:12px 16px;flex:1;min-width:130px;display:flex;gap:10px;align-items:flex-start}
+.ofs-kpi-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ofs-kpi-val,.kval{font-size:20px;font-weight:700;line-height:1.1;color:#1c1c1e}
+.ofs-kpi-lbl,.klab{font-size:9.5px;color:#8e8e93;text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+.ksub{font-size:10px;color:#8e8e93;margin-top:2px}
+.ofs-kpi.b .ofs-kpi-icon{background:rgba(0,122,255,.12);color:#007aff}
+.ofs-kpi.g .ofs-kpi-icon{background:rgba(34,197,94,.12);color:#22c55e}
+.ofs-kpi.w .ofs-kpi-icon{background:rgba(245,158,11,.12);color:#f59e0b}
+.ofs-kpi.p .ofs-kpi-icon{background:rgba(139,92,246,.12);color:#8b5cf6}
+/* ─ meta8 ─ */
+.meta-wrap{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;padding:4px 0}
+.meta-circle{width:64px;height:64px;border-radius:50%;border:4px solid #007aff;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.meta-num{font-size:18px;font-weight:700;line-height:1.1;color:#007aff}
+.meta-lbl{font-size:8px;color:#8e8e93;text-transform:uppercase;letter-spacing:.04em}
+.meta-detail{flex:1;min-width:140px}
+.meta-tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:2px 8px;border-radius:12px;font-weight:600;margin:2px 2px 2px 0}
+.meta-tag.green{background:rgba(34,197,94,.12);color:#22c55e}
+.meta-tag.red{background:rgba(239,68,68,.12);color:#ef4444}
+.meta-tag.orange{background:rgba(245,158,11,.12);color:#f59e0b}
+/* ─ tags / badges ─ */
+.tag,.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;white-space:nowrap;line-height:1.4}
+.tag-red,.b-red{background:rgba(239,68,68,.12);color:#ef4444}
+.tag-green,.b-green,.b-in{background:rgba(34,197,94,.12);color:#22c55e}
+.tag-orange,.b-orange{background:rgba(255,149,0,.12);color:#ff9500}
+.b-blue{background:rgba(0,122,255,.12);color:#007aff}
+.b-yellow{background:rgba(255,204,0,.15);color:#9a7d00}
+.b-teal{background:rgba(0,199,190,.12);color:#00b8ae}
+.b-out{background:rgba(239,68,68,.12);color:#ef4444}
+/* ─ fuel ─ */
+.fuel-balance-summary,.fuel-extra-projection{background:#f5f5f7;border-radius:12px;padding:14px 16px;margin-bottom:10px}
+/* ─ exec report ─ */
+.exec-pre{font-size:11.5px;white-space:pre-wrap;line-height:1.7;color:#3a3a3c;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;padding:4px 0}
+/* ─ misc ─ */
 .page-break{page-break-before:always}
 .no-print{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;gap:8px;flex-direction:column;align-items:flex-end}
 .no-print button{border:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.18)}
 .btn-p{background:#007aff;color:#fff}
 .btn-c{background:#e5e5ea;color:#1c1c1e}
+/* ─ hide all interactive elements ─ */
+button,select,input,textarea,.card-action,.admin-only,.tsec-meta,.fbar,.pfooter,
+.quick-mop,.mop-ref-card,details,.lbtn,.sla-pulse,.nav-btn,.nav-bar,
+.tab-bar,.tab-btn,.modal-overlay,.notif-bar{display:none!important}
 @media print{
   body{background:#fff}
   .no-print{display:none!important}
   .rpt-cover{background:#1a1a2e!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .rpt-section{break-inside:avoid;border:.5px solid #e5e5ea}
   .page-break{page-break-before:always}
-  .chart-box img{max-height:280px;object-fit:contain}
+  .chart-box img{max-height:260px;object-fit:contain}
+  .g3r{grid-template-columns:repeat(3,1fr)}
+  .g2r{grid-template-columns:repeat(2,1fr)}
 }
-</style>
+@media(max-width:700px){
+  .g3r{grid-template-columns:1fr}
+  .g2r{grid-template-columns:1fr}
+  .cluster-grid{grid-template-columns:1fr 1fr}
+}`;
+  const html=`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Relatório ATRIX — ${dateStr}</title>
+<style>${css}</style>
 </head>
 <body>
 <div class="rpt-wrap">
@@ -4436,9 +4555,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div>
       <div style="font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Painel ATRIX — Relatório Gerencial</div>
       <h1>${title}</h1>
-      <div class="sub">${scope==='all'?'Consolidado — todas as abas do painel':'Dados da aba selecionada'}</div>
+      <div class="csub">${scope==='all'?'Consolidado — todas as abas do painel':'Dados da aba selecionada'}</div>
     </div>
-    <div class="meta">
+    <div class="cmeta">
       <div>Gerado em <b>${dateStr}</b></div>
       <div>às <b>${timeStr}</b></div>
       ${user?`<div style="margin-top:6px">por <b>${user}</b></div>`:''}
@@ -4452,7 +4571,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 </div>
 </body>
 </html>`;
-  const w=window.open('','_blank','width=1180,height=940,toolbar=0,menubar=0,scrollbars=1,resizable=1');
+  const w=window.open('','_blank','width=1200,height=960,toolbar=0,menubar=0,scrollbars=1,resizable=1');
   if(!w){alert('Permita pop-ups neste site para gerar o relatório.');return;}
   w.document.open();w.document.write(html);w.document.close();
 }
