@@ -737,6 +737,8 @@ tbody tr.row-pending-client:hover td { background: rgba(255,149,0,.18); }
 @media (max-width: 680px){ .user-form { grid-template-columns: 1fr; } .user-form button { height: 34px; } }
 .admin-only { display: none; }
 body.is-admin .admin-only { display: flex; }
+body.is-admin th.admin-only,
+body.is-admin td.admin-only { display: table-cell; }
 
 /* ─── MODAL ─── */
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px}
@@ -1282,7 +1284,8 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         <input class="finput" id="fuel-withdraw-date" type="date">
         <input class="finput" id="fuel-withdraw-value" type="number" step="0.01" min="0" placeholder="Valor R$">
         <input class="finput" id="fuel-withdraw-reason" placeholder="Motivo / destino">
-        <span class="card-action" onclick="addFuelWithdrawal()">Registrar retirada</span>
+        <span class="card-action" id="fuel-withdraw-action" onclick="addFuelWithdrawal()">Registrar retirada</span>
+        <span class="card-action" id="fuel-withdraw-cancel" style="display:none" onclick="clearFuelWithdrawalForm()">Cancelar</span>
       </div>
     </div>
 
@@ -1350,7 +1353,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     <!-- 11. Histórico de retiradas -->
     <div class="tsec">
       <div class="tsec-hd"><span class="tsec-title">Histórico de retiradas do saldo</span><span id="cnt-fuel-w" style="color:var(--tx3)"></span></div>
-      <div class="tw"><table><thead><tr><th>Data</th><th>Valor</th><th>Motivo / destino</th></tr></thead><tbody id="tb-fuel-w"></tbody></table></div>
+      <div class="tw"><table><thead><tr><th>Data</th><th>Valor</th><th>Motivo / destino</th><th class="admin-only">Ações</th></tr></thead><tbody id="tb-fuel-w"></tbody></table></div>
     </div>
 
     <div class="pfooter">Direitos reservados a Wanderson Marcellus Penha Costa · <span id="ft-fuel"></span></div>
@@ -1757,7 +1760,7 @@ const CLUSTER_ORDER=['MA CAP','MA INT','PA CAP','PA INT','PI CAP','PI INT','AM/A
 
 let dAb=[],dEnc=[];
 let dFuelVehicles=[],dFuelRequests=[],dFuelWithdrawals=[],fuelBalanceTotal=0,fuelCardBalance=null,fuelCycleStartDay=16,fuelCycleEndDay=15,fuelCycleStartDate='',fuelCycleEndDate='',fuelCalendarEditing=false;
-let editingFuelPlate='',editingFuelRequestId='',selectedFuelDriver='';
+let editingFuelPlate='',editingFuelRequestId='',editingFuelWithdrawalId='',selectedFuelDriver='';
 let scAb='slaH',sdAb=-1,scEnc='tempoTotal',sdEnc=-1;
 let chAb=null,chEnc=null,chSem=null,chFuel=null,chFuelProj=null,chFuelTop=null;
 let selWeek='';
@@ -1990,7 +1993,7 @@ function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
 function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,selMes,selRepMes,selRepSemana,selRepCluster,selRepCausa,selRepSeg,selRepSrch,activeTab,lastAbAt,lastEncAt,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>{const mop=normMopByCity(d.uf,d.cidade)||fmtMop(d.mop);return{...d,rowKey:d.rowKey??i,mop,assunto:d.assunto||'',substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}})}
-function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>{let mes=d.mes||'';if(!mes&&d.dataFechamento){const m=String(d.dataFechamento).match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)mes=`${m[3]}-${m[2]}`}const cidade=titleCasePT(repairPtBR(d.cidade||d.cidadeRaw||''));const mop=normMopByCity(d.uf,cidade)||d.mop||'';const cluster=d.cluster||normClusterByCity(d.uf,cidade)||'';const faixa=cf(d.tempoTotal||0);const semana=calcSemana(parseOpeningDate(d.dataFechamento))||d.semana||'';return{...d,cidade,mes,mop,cluster,faixa,semana,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}})}
+function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>{let mes=d.mes||'';if(!mes&&d.dataFechamento){const m=String(d.dataFechamento).match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)mes=`${m[3]}-${m[2]}`}const cidade=titleCasePT(repairPtBR(d.cidade||d.cidadeRaw||''));const mop=normMopByCity(d.uf,cidade)||d.mop||'';const cluster=d.cluster||normClusterByCity(d.uf,cidade)||'';const faixa=d.faixa&&SLA_ORDER.includes(d.faixa)?d.faixa:cf(d.tempoTotal||0);const semana=d.semana||calcSemana(parseOpeningDate(d.dataFechamento))||'';const dentro8h=d.dentro8h!==undefined?d.dentro8h:encBucket(d.tempoTotal)==='prazo';const outlier24h=d.outlier24h!==undefined?d.outlier24h:encBucket(d.tempoTotal)==='outlier';return{...d,cidade,mes,mop,cluster,faixa,semana,dentro8h,outlier24h}})}
 function repairPtBR(s){
   if(!s)return s;
   s=String(s);
@@ -2308,7 +2311,8 @@ function procEnc(raw,fname){
     const dataAbertura=gv(r,['data_abertura','Data Abertura','Data de Abertura','abertura']);
     const dataFechamento=gv(r,['data_fechamento','Data Fechamento','Data de Fechamento','fechamento','encerramento','Data_Fechamento','DATA FECHAMENTO','data fechamento'])||String(_vals[13]||'');
     const dataFechamentoParsed=parseOpeningDate(dataFechamento);
-    const semana=calcSemana(dataFechamentoParsed)||normSemana(String(r['semana']||'').trim());
+    const semanaBase=normSemana(String(gv(r,['semana','Semana','SEMANA','semana_calc','SEMANA_CALC','semana_ccs'])||'').trim());
+    const semana=semanaBase||calcSemana(dataFechamentoParsed)||'';
     const numplan=String(gv(r,['numplan','NUMPLAN','Num Plan','num_plan','NumPlan','num plan'])||'').trim();
     const clienteId=String(gv(r,['cliente_id','CLIENTE_ID','cliente id','ID Cliente','clienteid','ClienteId'])||'').trim();
     const titulo=String(colVal(r,2,['titulo','TITULO','Título','nome_cliente','NOME_CLIENTE','Nome Cliente','razao_social','Razao Social','plano','PLANO','nome_plano','Nome Plano','nome_titulo','Nome Titulo'])||'').trim();
@@ -2912,7 +2916,10 @@ function addFuelRequest(){
 }
 function setFuelBalance(){if(!canEdit())return;fuelBalanceTotal=Number(document.getElementById('fuel-balance-total').value||0);document.getElementById('fuel-balance-total').value='';renderFuel();saveState()}
 function setFuelCardBalance(){if(!canEdit())return;fuelCardBalance=Number(document.getElementById('fuel-card-balance').value||0);document.getElementById('fuel-card-balance').value='';renderFuel();saveState()}
-function addFuelWithdrawal(){if(!canEdit())return;const valor=Number(document.getElementById('fuel-withdraw-value').value||0);if(!valor){alert('Informe o valor da retirada.');return}dFuelWithdrawals.push({id:'WDR'+Date.now(),data:document.getElementById('fuel-withdraw-date').value||new Date().toISOString().slice(0,10),valor,reason:document.getElementById('fuel-withdraw-reason').value.trim()});reduceFuelCardBalance(valor);document.getElementById('fuel-withdraw-value').value='';document.getElementById('fuel-withdraw-reason').value='';renderFuel();saveState()}
+function clearFuelWithdrawalForm(){editingFuelWithdrawalId='';document.getElementById('fuel-withdraw-date').value='';document.getElementById('fuel-withdraw-value').value='';document.getElementById('fuel-withdraw-reason').value='';const act=document.getElementById('fuel-withdraw-action');if(act)act.textContent='Registrar retirada';const can=document.getElementById('fuel-withdraw-cancel');if(can)can.style.display='none'}
+function editFuelWithdrawal(id){if(!canEdit())return;const r=dFuelWithdrawals.find(x=>x.id===id);if(!r)return;editingFuelWithdrawalId=id;document.getElementById('fuel-withdraw-date').value=r.data;document.getElementById('fuel-withdraw-value').value=r.valor;document.getElementById('fuel-withdraw-reason').value=r.reason||'';const act=document.getElementById('fuel-withdraw-action');if(act)act.textContent='Salvar edição';const can=document.getElementById('fuel-withdraw-cancel');if(can)can.style.display='';document.getElementById('fuel-withdraw-date').scrollIntoView({behavior:'smooth',block:'nearest'})}
+function deleteFuelWithdrawal(id){if(!canEdit())return;if(!confirm('Excluir esta retirada?'))return;const old=dFuelWithdrawals.find(r=>r.id===id);restoreFuelCardBalance(old&&old.valor);dFuelWithdrawals=dFuelWithdrawals.filter(r=>r.id!==id);if(editingFuelWithdrawalId===id)clearFuelWithdrawalForm();renderFuel();saveState()}
+function addFuelWithdrawal(){if(!canEdit())return;const valor=Number(document.getElementById('fuel-withdraw-value').value||0);if(!valor){alert('Informe o valor da retirada.');return}const item={id:editingFuelWithdrawalId||('WDR'+Date.now()),data:document.getElementById('fuel-withdraw-date').value||new Date().toISOString().slice(0,10),valor,reason:document.getElementById('fuel-withdraw-reason').value.trim()};if(editingFuelWithdrawalId){const idx=dFuelWithdrawals.findIndex(r=>r.id===editingFuelWithdrawalId);if(idx>=0){const prev=Number(dFuelWithdrawals[idx].valor||0);dFuelWithdrawals[idx]=item;reduceFuelCardBalance(valor-prev)}}else{dFuelWithdrawals.push(item);reduceFuelCardBalance(valor)}clearFuelWithdrawalForm();renderFuel();saveState()}
 function csvSplit(line){
   const out=[];let cur='',q=false;
   for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){cur+='"';i++}else q=!q}else if(c===';'&&!q){out.push(cur);cur=''}else cur+=c}
@@ -3097,7 +3104,7 @@ function renderFuel(){
   document.getElementById('cnt-fuel-r').textContent=validRequests.length+' solicitações'+(showAlelo?'':` (${displayRequests.length} manuais, ${validRequests.length-displayRequests.length} Alelo ocultos)`);
   document.getElementById('tb-fuel-r').innerHTML=displayRequests.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td class="tid">${eh(r.placa)}</td><td>${eh(r.condutor||fuelVehicleByPlate(r.placa).condutor||'-')}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(repairPtBR(r.obs||''))}</td><td class="admin-only"><span class="card-action" onclick="editFuelRequest('${eh(r.id)}')">Editar</span><span class="card-action" onclick="deleteFuelRequest('${eh(r.id)}')">Excluir</span></td></tr>`).join('')||'<tr><td colspan="6" class="nores">Nenhuma solicitação registrada</td></tr>';
   document.getElementById('cnt-fuel-w').textContent=dFuelWithdrawals.length+' retiradas';
-  document.getElementById('tb-fuel-w').innerHTML=dFuelWithdrawals.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(r.reason||'')}</td></tr>`).join('')||'<tr><td colspan="3" class="nores">Nenhuma retirada registrada</td></tr>';
+  document.getElementById('tb-fuel-w').innerHTML=dFuelWithdrawals.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(r.reason||'')}</td><td class="admin-only"><span class="card-action" onclick="editFuelWithdrawal('${eh(r.id)}')">Editar</span><span class="card-action" onclick="deleteFuelWithdrawal('${eh(r.id)}')">Excluir</span></td></tr>`).join('')||'<tr><td colspan="4" class="nores">Nenhuma retirada registrada</td></tr>';
   renderFuelChart();
   const ftf=document.getElementById('ft-fuel');if(ftf)ftf.textContent='Atualizado em '+now2();
 }
