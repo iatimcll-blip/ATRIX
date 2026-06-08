@@ -3602,9 +3602,14 @@ function ofsRenderCards(rows){
   if(!list.length){cards.innerHTML='<p style="color:var(--tx3);font-size:12px">Nenhum técnico encontrado.</p>';return;}
   cards.innerHTML=list.sort((a,b)=>b.total-a.total).map((t,i)=>{
     const taxa=t.total?Math.round(t.concluido/t.total*100):0;
-    const barItems=[{s:'concluído',v:t.concluido},{s:'iniciado',v:t.iniciado},{s:'pendente',v:t.pendente},{s:'não concluído',v:t.nconc},{s:'suspenso',v:t.susp},{s:'cancelado',v:t.canc}].filter(x=>x.v>0);
+    const barItems=[
+      {s:'concluído',v:t.concluido},{s:'iniciado',v:t.iniciado},{s:'pendente',v:t.pendente},
+      {s:'não concluído',v:t.nconc},{s:'suspenso',v:t.susp},{s:'cancelado',v:t.canc},
+      {s:'sem status',v:t.semStatus||0}
+    ].filter(x=>x.v>0);
     const bar=barItems.map(x=>`<div style="width:${Math.round(x.v/t.total*100)}%;background:${OFS_STATUS_COLORS[x.s]||'#94a3b8'};height:100%;transition:width .3s" title="${x.s}: ${x.v}"></div>`).join('');
     const isMop=(t.grupo||'').includes('MOP');
+    const semSt=t.semStatus||0;
     return`<div class="ofs-tcard">
       <div class="ofs-tc-head">
         <div class="ofs-tc-rank">#${i+1}</div>
@@ -3625,6 +3630,7 @@ function ofsRenderCards(rows){
         <div><span style="color:#ef4444;font-weight:700">${t.nconc}</span><br><span style="font-size:9px;color:var(--tx3)">N/Concl.</span></div>
         <div><span style="color:#8b5cf6;font-weight:700">${t.susp}</span><br><span style="font-size:9px;color:var(--tx3)">Susp.</span></div>
         <div><span style="color:#6b7280;font-weight:700">${t.canc}</span><br><span style="font-size:9px;color:var(--tx3)">Canc.</span></div>
+        ${semSt?`<div title="Status não reconhecido na base"><span style="color:#94a3b8;font-weight:700">${semSt}</span><br><span style="font-size:9px;color:var(--tx3)">S/Status</span></div>`:''}
         <div><span style="font-weight:700">${t.total}</span><br><span style="font-size:9px;color:var(--tx3)">Total</span></div>
       </div>
       <div class="ofs-sbar">${bar}</div>
@@ -3639,9 +3645,27 @@ function ofsRenderTable(tecs){
     if(typeof av==='string')return ofsSortAsc?av.localeCompare(bv):bv.localeCompare(av);
     return ofsSortAsc?av-bv:bv-av;
   });
+  const hasSemSt=sorted.some(t=>t.semStatus>0);
+  // sync thead: show S/St col only when at least one row has unknown status
+  const thead=document.getElementById('ofs-thead');
+  if(thead){
+    const existing=thead.querySelector('th[data-col="semStatus"]');
+    if(hasSemSt&&!existing){
+      const th=document.createElement('th');
+      th.setAttribute('data-col','semStatus');
+      th.setAttribute('onclick',"ofsSortTable('semStatus')");
+      th.style.cssText='text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;border-bottom:.5px solid var(--bd);font-weight:700;cursor:pointer;user-select:none;white-space:nowrap';
+      th.textContent='S/Status';
+      th.title='Status não reconhecido na base';
+      const diasTh=thead.querySelector('th[onclick*="dias"]');
+      if(diasTh)thead.querySelector('tr').insertBefore(th,diasTh);
+      else thead.querySelector('tr').appendChild(th);
+    }else if(!hasSemSt&&existing){existing.remove();}
+  }
   tbody.innerHTML=sorted.map((t,i)=>{
     const taxa=t.taxa,tc=taxa>=80?'#22c55e':taxa>=60?'#f59e0b':'#ef4444';
     const isMop=(t.grupo||'').includes('MOP');
+    const semSt=t.semStatus||0;
     return`<tr style="border-bottom:.5px solid var(--bd)${i%2?';background:rgba(128,128,128,.03)':''}">
       <td style="padding:7px 10px;color:var(--tx1);font-weight:500;white-space:nowrap">${t.nome} <span class="ofs-uf-tag ${t.uf||'MA'}">${t.uf||'MA'}</span></td>
       <td style="padding:7px 10px;white-space:nowrap"><span class="ofs-gp-tag ${isMop?'MOP':'EPS'}">${isMop?'MOP':'EPS'}</span></td>
@@ -3653,6 +3677,7 @@ function ofsRenderTable(tecs){
       <td style="padding:7px 10px;text-align:right;color:#ef4444;font-variant-numeric:tabular-nums">${t.nconc}</td>
       <td style="padding:7px 10px;text-align:right;color:#8b5cf6;font-variant-numeric:tabular-nums">${t.susp}</td>
       <td style="padding:7px 10px;text-align:right;color:#6b7280;font-variant-numeric:tabular-nums">${t.canc}</td>
+      ${hasSemSt?`<td style="padding:7px 10px;text-align:right;color:#94a3b8;font-variant-numeric:tabular-nums" title="Status não reconhecido">${semSt||0}</td>`:''}
       <td style="padding:7px 10px;text-align:right;color:var(--tx2);font-variant-numeric:tabular-nums">${t.dias}</td>
       <td style="padding:7px 10px;text-align:right;color:var(--tx2);font-variant-numeric:tabular-nums">${t.media_dia}</td>
     </tr>`;
