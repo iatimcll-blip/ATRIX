@@ -3669,7 +3669,7 @@ function ofsRenderCards(rows){
     const bar=barItems.map(x=>`<div style="width:${Math.round(x.v/t.total*100)}%;background:${OFS_STATUS_COLORS[x.s]||'#94a3b8'};height:100%;transition:width .3s" title="${x.s}: ${x.v}"></div>`).join('');
     const isMop=(t.grupo||'').includes('MOP');
     const semSt=t.semStatus||0;
-    return`<div class="ofs-tcard" onclick="ofsOpenTec(${JSON.stringify(t.nome)})" title="Clique para ver os chamados de ${t.nome}">
+    return`<div class="ofs-tcard" data-tec="${t.nome.replace(/"/g,'&quot;')}" onclick="ofsOpenTec(this.dataset.tec)" title="Clique para ver os chamados de ${t.nome}">
       <div class="ofs-tc-head">
         <div class="ofs-tc-rank">#${i+1}</div>
         <div style="flex:1;min-width:0">
@@ -3725,7 +3725,7 @@ function ofsRenderTable(tecs){
     const taxa=t.taxa,tc=taxa>=80?'#22c55e':taxa>=60?'#f59e0b':'#ef4444';
     const isMop=(t.grupo||'').includes('MOP');
     const semSt=t.semStatus||0;
-    return`<tr style="border-bottom:.5px solid var(--bd)${i%2?';background:rgba(128,128,128,.03)':''};cursor:pointer" onclick="ofsOpenTec(${JSON.stringify(t.nome)})" title="Ver chamados de ${t.nome}">
+    return`<tr style="border-bottom:.5px solid var(--bd)${i%2?';background:rgba(128,128,128,.03)':''};cursor:pointer" data-tec="${t.nome.replace(/"/g,'&quot;')}" onclick="ofsOpenTec(this.dataset.tec)" title="Ver chamados de ${t.nome}">
       <td style="padding:7px 10px;color:var(--tx1);font-weight:500;white-space:nowrap">${t.nome} <span class="ofs-uf-tag ${t.uf||'MA'}">${t.uf||'MA'}</span></td>
       <td style="padding:7px 10px;white-space:nowrap"><span class="ofs-gp-tag ${isMop?'MOP':'EPS'}">${isMop?'MOP':'EPS'}</span></td>
       <td style="padding:7px 10px;text-align:right;font-variant-numeric:tabular-nums">${t.total}</td>
