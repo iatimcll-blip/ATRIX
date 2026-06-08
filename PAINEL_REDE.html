@@ -483,10 +483,12 @@ function applyRedeRows(rows,fileName){
   rows.forEach(x=>{const it=rowToRede(x.row,x.sheet);(it.kind==='ac'?ac:bb).push(it.row)});
   if(!bb.length&&!ac.length)throw new Error('Nenhuma linha reconhecida para Backbone ou Acesso.');
   if(bb.length)BD=bb;if(ac.length)AD=ac;
+  const _now=new Date();
   localStorage.setItem(REDE_STORAGE,JSON.stringify({version:3,BD,AD,fileName,
     M:{mes:[...M.mes],ml:[...M.ml],sem:[...M.sem],sl:[...M.sl],ca:[...M.ca],mo:[...M.mo]},
-    at:new Date().toISOString()}));
+    at:_now.toISOString()}));
   document.getElementById('base-status').textContent=`Base ${fileName}: ${bb.length} backbone · ${ac.length} acesso`;
+  document.getElementById('ts-label').textContent='Anexado '+_now.toLocaleDateString('pt-BR')+' '+_now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   selMonth='';selWeek='';modo='m';buildPeriodSelects();render();
 }
 function hasRedeDetail(rows,idx){return Array.isArray(rows)&&rows.some(r=>r&&r[idx]&&typeof r[idx]==='object'&&String(r[idx].os||r[idx].id||'').trim())}
@@ -510,6 +512,7 @@ function restoreRedeBase(){
     if(Array.isArray(st.BD)&&st.BD.length)BD=st.BD;
     if(Array.isArray(st.AD)&&st.AD.length)AD=st.AD;
     document.getElementById('base-status').textContent=st.fileName?'Base restaurada: '+st.fileName:'Base restaurada';
+    if(st.at){const d=new Date(st.at);document.getElementById('ts-label').textContent='Anexado '+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
   }catch(e){console.warn('Não foi possível restaurar base de rede',e)}
 }
 function saveRedeUI(){try{localStorage.setItem(REDE_UI_KEY,JSON.stringify({selMonth,selWeek,modo,activeView}));}catch(e){}}
@@ -532,8 +535,7 @@ document.getElementById('rede-file').addEventListener('change',e=>{
   rd.readAsArrayBuffer(f);e.target.value='';
 });
 
-// Timestamp
-(function(){const now=new Date();document.getElementById('ts-label').textContent=now.toLocaleDateString('pt-BR')+" "+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});})();
+// Timestamp: shown only after base is uploaded/restored — not updated on page load
 
 function pkeys(){return modo==='m'?M.mes:M.sem;}
 function plbls(){return modo==='m'?M.ml:M.sl;}
