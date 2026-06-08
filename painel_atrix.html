@@ -1594,11 +1594,11 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         <span style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-right:2px">Filtros</span>
         <select class="fsel" id="rep-f-mes" onchange="onRepMesChange()"><option value="">Todos os meses</option></select>
         <select class="fsel" id="rep-f-semana" onchange="onRepSemanaChange()"><option value="">Todas semanas</option></select>
-        <select class="fsel" id="rep-f-cluster" onchange="renderPanelRepetidos()"><option value="">Todos clusters</option></select>
-        <select class="fsel" id="rep-f-causa" onchange="renderPanelRepetidos()"><option value="">Todas causas</option></select>
-        <select class="fsel" id="rep-f-seg" onchange="renderPanelRepetidos()"><option value="">Todos segmentos</option></select>
-        <input class="finput" id="rep-srch" placeholder="Buscar cliente…" oninput="renderPanelRepetidos()" style="min-width:180px">
-        <span class="card-action" onclick="document.getElementById('rep-f-mes').value='';document.getElementById('rep-f-semana').value='';document.getElementById('rep-f-cluster').value='';document.getElementById('rep-f-causa').value='';document.getElementById('rep-f-seg').value='';document.getElementById('rep-srch').value='';renderPanelRepetidos()">Limpar filtros</span>
+        <select class="fsel" id="rep-f-cluster" onchange="onRepFilterChange()"><option value="">Todos clusters</option></select>
+        <select class="fsel" id="rep-f-causa" onchange="onRepFilterChange()"><option value="">Todas causas</option></select>
+        <select class="fsel" id="rep-f-seg" onchange="onRepFilterChange()"><option value="">Todos segmentos</option></select>
+        <input class="finput" id="rep-srch" placeholder="Buscar cliente…" oninput="onRepFilterChange()" style="min-width:180px">
+        <span class="card-action" onclick="clearRepFilters()">Limpar filtros</span>
       </div>
       <!-- Métricas -->
       <div class="mrow" id="rep-mrow"></div>
@@ -1763,6 +1763,7 @@ let chAb=null,chEnc=null,chSem=null,chFuel=null,chFuelProj=null,chFuelTop=null;
 let selWeek='';
 let selCluster='';
 let selMes='';
+let selRepMes='',selRepSemana='',selRepCluster='',selRepCausa='',selRepSeg='',selRepSrch='';
 let activeTab='abertos';
 let lastAbAt='',lastEncAt='';
 let wppUnreadCount=0,wppInitialized=false;
@@ -1987,7 +1988,7 @@ function startRefresh(){
 function stopRefresh(){if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;}}
 function applyTicketLinks(raw,ws){if(!ws||!raw.length||!XLSX.utils.decode_range)return raw;const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');let idCol=-1;for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:range.s.r,c})];if(cell&&nk(cell.v)===nk('ID Ticket')){idCol=c;break}}if(idCol<0)return raw;raw.forEach((row,i)=>{const cell=ws[XLSX.utils.encode_cell({r:range.s.r+i+1,c:idCol})];const target=cell&&cell.l&&cell.l.Target;if(target&&!gv(row,['Link Atrix','LINK','Link','Ticket Bdesk']))row['Link Atrix']=target});return raw}
 function serializeAb(){return dAb.map(d=>({...d,openedAt:d.openedAt?d.openedAt.toISOString():'',pauseStart:d.pauseStart?d.pauseStart.toISOString():''}))}
-function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,selMes,activeTab,lastAbAt,lastEncAt,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
+function buildState(){return{version:6,dAb:serializeAb(),dEnc,dFuelVehicles,dFuelRequests,dFuelWithdrawals,fuelBalanceTotal,fuelCardBalance,fuelCycleStartDay,fuelCycleEndDay,fuelCycleStartDate,fuelCycleEndDate,users:getUsers(),selWeek,selCluster,selMes,selRepMes,selRepSemana,selRepCluster,selRepCausa,selRepSeg,selRepSrch,activeTab,lastAbAt,lastEncAt,savedAt:new Date().toISOString(),savedBy:currentUser&&currentUser.username||''}}
 function normalizeAbState(list){return(Array.isArray(list)?list:[]).map((d,i)=>{const mop=normMopByCity(d.uf,d.cidade)||fmtMop(d.mop);return{...d,rowKey:d.rowKey??i,mop,assunto:d.assunto||'',substatus:fmtSubstatus(d.substatus),openedAt:d.openedAt?new Date(d.openedAt):null,pauseStart:d.pauseStart?new Date(d.pauseStart):null,pausedBusinessH:Number(d.pausedBusinessH||0),slaLimitH:d.slaLimitH||0}})}
 function normalizeEncState(list){return(Array.isArray(list)?list:[]).map(d=>{let mes=d.mes||'';if(!mes&&d.dataFechamento){const m=String(d.dataFechamento).match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)mes=`${m[3]}-${m[2]}`}const cidade=titleCasePT(repairPtBR(d.cidade||d.cidadeRaw||''));const mop=normMopByCity(d.uf,cidade)||d.mop||'';const cluster=d.cluster||normClusterByCity(d.uf,cidade)||'';const faixa=cf(d.tempoTotal||0);const semana=calcSemana(parseOpeningDate(d.dataFechamento))||d.semana||'';return{...d,cidade,mes,mop,cluster,faixa,semana,dentro8h:encBucket(d.tempoTotal)==='prazo',outlier24h:encBucket(d.tempoTotal)==='outlier'}})}
 function repairPtBR(s){
@@ -2034,6 +2035,10 @@ function applyState(st,label){
     fillWeekSelector();
     const validWeeks=encWeeksForMes(selMes);
     if(st.selWeek&&validWeeks.includes(st.selWeek)){selWeek=st.selWeek;document.getElementById('week-selector').value=selWeek}else{selWeek=''}
+    /* restaura filtros do painel Repetidos — fillRepFilters() usará estes globais */
+    selRepMes=st.selRepMes||'';selRepSemana=st.selRepSemana||'';
+    selRepCluster=st.selRepCluster||'';selRepCausa=st.selRepCausa||'';
+    selRepSeg=st.selRepSeg||'';selRepSrch=st.selRepSrch||'';
     renderAllEnc();
     renderPanelRepetidos();
     document.getElementById('empty-enc').style.display=dEnc.length?'none':'block';
@@ -2387,23 +2392,41 @@ function onWeekChange(){
   renderAllEnc();
   saveState();
 }
-/* ─── Repetidos: Mês ↔ Semana vinculados ─── */
+/* ─── Repetidos: filtros com persistência ─── */
 function onRepMesChange(){
-  const mes=document.getElementById('rep-f-mes')?.value||'';
-  const weeks=encWeeksForMes(mes);
+  selRepMes=document.getElementById('rep-f-mes')?.value||'';
+  const weeks=encWeeksForMes(selRepMes);
   const sSel=document.getElementById('rep-f-semana');
   if(sSel){
     const prev=sSel.value;
     sSel.innerHTML='<option value="">Todas semanas</option>'+weeks.map(s=>`<option value="${eh(s)}">${eh(s)}</option>`).join('');
-    sSel.value=weeks.includes(prev)?prev:'';
+    selRepSemana=weeks.includes(prev)?prev:'';
+    sSel.value=selRepSemana;
   }
   renderPanelRepetidos();
+  saveState();
 }
 function onRepSemanaChange(){
-  const sem=document.getElementById('rep-f-semana')?.value||'';
-  const mes=encMesForWeek(sem);
-  if(mes){const mSel=document.getElementById('rep-f-mes');if(mSel)mSel.value=mes;}
+  selRepSemana=document.getElementById('rep-f-semana')?.value||'';
+  const mes=encMesForWeek(selRepSemana);
+  if(mes){selRepMes=mes;const mSel=document.getElementById('rep-f-mes');if(mSel)mSel.value=selRepMes;}
   renderPanelRepetidos();
+  saveState();
+}
+function onRepFilterChange(){
+  selRepCluster=document.getElementById('rep-f-cluster')?.value||'';
+  selRepCausa=document.getElementById('rep-f-causa')?.value||'';
+  selRepSeg=document.getElementById('rep-f-seg')?.value||'';
+  selRepSrch=document.getElementById('rep-srch')?.value||'';
+  renderPanelRepetidos();
+  saveState();
+}
+function clearRepFilters(){
+  selRepMes='';selRepSemana='';selRepCluster='';selRepCausa='';selRepSeg='';selRepSrch='';
+  ['rep-f-mes','rep-f-semana','rep-f-cluster','rep-f-causa','rep-f-seg'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const srch=document.getElementById('rep-srch');if(srch)srch.value='';
+  renderPanelRepetidos();
+  saveState();
 }
 function onClusterChange(){
   selCluster=document.getElementById('cluster-selector').value;
@@ -3189,14 +3212,20 @@ function buildRepMap(data){
   return[...map.values()].filter(v=>v.records.length>=2).sort((a,b)=>b.records.length-a.records.length);
 }
 function fillRepFilters(){
-  const curMes=document.getElementById('rep-f-mes')?.value||'';
+  /* usa globais como fonte de verdade — sobrevivem ao refresh */
+  const curMes=selRepMes||document.getElementById('rep-f-mes')?.value||'';
   const mes=[...new Set(dEnc.map(d=>d.mes).filter(Boolean))].sort();
   const sem=encWeeksForMes(curMes);
   const cl=CLUSTER_ORDER.filter(c=>dEnc.some(d=>d.cluster===c));
   const ca=[...new Set(dEnc.map(d=>repText(repCausa(d.causaRaiz))).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   const sg=[...new Set(dEnc.map(d=>repText(d.segmento)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-  const sel=(id,arr,lbl,labelFn)=>{const el=document.getElementById(id);if(!el)return;const v=el.value;el.innerHTML=`<option value="">${lbl}</option>`+arr.map(s=>`<option value="${eh(s)}">${eh(labelFn?labelFn(s):s)}</option>`).join('');el.value=[...el.options].some(o=>o.value===v)?v:''};
-  sel('rep-f-mes',mes,'Todos os meses',fmtMesLabel);sel('rep-f-semana',sem,'Todas semanas');sel('rep-f-cluster',cl,'Todos clusters');sel('rep-f-causa',ca,'Todas causas');sel('rep-f-seg',sg,'Todos segmentos');
+  const sel=(id,arr,lbl,labelFn,restore)=>{const el=document.getElementById(id);if(!el)return;const v=restore!==undefined?restore:el.value;el.innerHTML=`<option value="">${lbl}</option>`+arr.map(s=>`<option value="${eh(s)}">${eh(labelFn?labelFn(s):s)}</option>`).join('');el.value=[...el.options].some(o=>o.value===v)?v:''};
+  sel('rep-f-mes',mes,'Todos os meses',fmtMesLabel,selRepMes);
+  sel('rep-f-semana',sem,'Todas semanas',null,selRepSemana);
+  sel('rep-f-cluster',cl,'Todos clusters',null,selRepCluster);
+  sel('rep-f-causa',ca,'Todas causas',null,selRepCausa);
+  sel('rep-f-seg',sg,'Todos segmentos',null,selRepSeg);
+  const srch=document.getElementById('rep-srch');if(srch&&selRepSrch&&!srch.value)srch.value=selRepSrch;
 }
 function renderPanelRepetidos(){
   if(!dEnc.length){
