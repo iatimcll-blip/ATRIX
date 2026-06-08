@@ -2003,9 +2003,15 @@ function procEnc(raw,fname){
     const clientesAfetados=String(gv(r,['CLIENTES AFETADOS','clientes afetados','clientes','afetados'])||cliente||titulo||'').trim();
     const _tempoCCS=gv(r,['tempo_ccs','TEMPO CCS','Tempo CCS','TEMPOCCS','Tempo_CCS','tempo ccs','TEMPO_CCS','TempoCCS','Tempo CCS (h)'])||String(_vals[32]||'');
     const tempoTotal=ph(_tempoCCS||0);
-    const faixa=cf(tempoTotal);
-    const dentro8h=encBucket(tempoTotal)==='prazo';
-    const outlier24h=encBucket(tempoTotal)==='outlier';
+    /* faixa: usa campo pré-calculado da planilha (sla_ticket / aging_ccs) se disponível */
+    const _faixaRaw=String(gv(r,['sla_ticket','aging_ccs','AGING_CCS','faixa_sla','Faixa SLA','faixa'])||'').trim();
+    const faixa=SLA_ORDER.includes(_faixaRaw)?_faixaRaw:cf(tempoTotal);
+    /* dentro_8h / outlier_24h: usa coluna da planilha (0/1 ou Sim/Não) quando presente */
+    const _bl=v=>{if(v===''||v===null||v===undefined)return null;return v===1||v===true||['1','SIM','S','TRUE'].includes(String(v).toUpperCase().trim())};
+    const _d8=_bl(gv(r,['dentro_8h','DENTRO_8H','dentro 8h','Dentro 8h','dentro8h','PRAZO_SEM_PARADA_RELOGIO','no prazo','dentro prazo']));
+    const _o24=_bl(gv(r,['outlier_24h','OUTLIER_24H','outlier 24h','Outlier 24h','outlier24h','OUTLIER_SEM_PARADA_RELOGIO','fora outlier']));
+    const dentro8h=_d8!==null?_d8:encBucket(tempoTotal)==='prazo';
+    const outlier24h=_o24!==null?_o24:encBucket(tempoTotal)==='outlier';
     const mop=normMopByCity(uf,cidade);
     const mes=dataFechamentoParsed?`${dataFechamentoParsed.getFullYear()}-${String(dataFechamentoParsed.getMonth()+1).padStart(2,'0')}`:''
     return{protocolo,os,cliente,uf,cidade,cidadeRaw,mop,mes,cluster,clusterCalc,clusterNome,causaRaiz,semana,segmento,faixa,tempoTotal,dentro8h,outlier24h,numplan,clienteId,titulo,clientesAfetados,dataAbertura:fmtReportDate(dataAbertura),dataFechamento:fmtReportDate(dataFechamento),periodoAtendimento:`${fmtReportDate(dataAbertura)} - ${fmtReportDate(dataFechamento)}`};
