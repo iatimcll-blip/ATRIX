@@ -3826,8 +3826,11 @@ function ofsOpenTec(nome){
     const isSel=t.nome===nome;
     const tc2=t.taxa>=80?'#22c55e':t.taxa>=60?'#f59e0b':'#ef4444';
     const bg=isSel?'background:rgba(249,115,22,.08);':i%2?'background:rgba(128,128,128,.03);':'';
-    return`<tr style="${bg}border-bottom:.5px solid var(--bd)">
-      <td style="padding:6px 10px;white-space:nowrap;font-weight:${isSel?700:400};color:${isSel?'#f97316':'var(--tx1)'}">${isSel?'▶ ':''}${t.nome}</td>
+    return`<tr style="${bg}border-bottom:.5px solid var(--bd);cursor:pointer" data-tec-grp="${t.nome.replace(/"/g,'&quot;')}" data-exp-idx="${i}" onclick="ofsGrpExpand(this,${i})" title="Ver produções de ${t.nome}">
+      <td style="padding:6px 10px;white-space:nowrap;font-weight:${isSel?700:400};color:${isSel?'#f97316':'var(--tx1)'}">
+        ${isSel?'▶ ':''}<span>${t.nome}</span>
+        <i class="ti ti-chevron-down" id="ofs-gx-icon-${i}" style="font-size:10px;opacity:.4;margin-left:5px;transition:transform .2s"></i>
+      </td>
       <td style="padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums;color:var(--tx1)">${t.total}</td>
       <td style="padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums;color:#22c55e">${t.concluido}</td>
       <td style="padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums;color:${tc2}">${t.taxa}%</td>
@@ -3838,6 +3841,18 @@ function ofsOpenTec(nome){
       <td style="padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums;color:#6b7280">${t.canc||0}</td>
       <td style="padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums;color:var(--tx2)">${t.dias||0}</td>
       <td style="padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums;color:var(--tx2)">${t.media_dia||0}</td>
+    </tr>
+    <tr id="ofs-gx-${i}" style="display:none;background:rgba(249,115,22,.03)">
+      <td colspan="11" style="padding:0 0 0 28px">
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead><tr style="border-bottom:.5px solid var(--bd)">
+            <th style="padding:5px 8px;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);font-weight:700;text-align:left;white-space:nowrap">Data</th>
+            <th style="padding:5px 8px;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);font-weight:700;text-align:left">Tipo de Atividade</th>
+            <th style="padding:5px 8px;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);font-weight:700;text-align:left;white-space:nowrap">Status</th>
+          </tr></thead>
+          <tbody id="ofs-gx-tbody-${i}"></tbody>
+        </table>
+      </td>
     </tr>`;
   }).join('');
   // destaca card selecionado
@@ -3846,11 +3861,43 @@ function ofsOpenTec(nome){
   det.classList.add('open');
   setTimeout(()=>det.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
   document.addEventListener('keydown',_ofsMdKey);
+  // auto-expande técnico selecionado
+  const selTr=document.querySelector(`[data-tec-grp="${nome.replace(/"/g,'&quot;')}"]`);
+  if(selTr)ofsGrpExpand(selTr,parseInt(selTr.dataset.expIdx));
 }
 function ofsModalClose(){
   document.getElementById('ofs-detail').classList.remove('open');
   document.querySelectorAll('.ofs-tcard.selected').forEach(c=>c.classList.remove('selected'));
   document.removeEventListener('keydown',_ofsMdKey);
+}
+function ofsGrpExpand(tr,idx){
+  const nome=tr.dataset.tecGrp;
+  const expRow=document.getElementById('ofs-gx-'+idx);
+  if(!expRow)return;
+  const isOpen=expRow.style.display!=='none';
+  // fecha todos os outros
+  document.querySelectorAll('[id^="ofs-gx-"]').forEach(r=>{
+    if(/^ofs-gx-\d+$/.test(r.id))r.style.display='none';
+  });
+  document.querySelectorAll('[id^="ofs-gx-icon-"]').forEach(ic=>ic.style.transform='');
+  if(isOpen)return;
+  // popula atividades deste técnico
+  const rows=ofsFilteredRows().filter(r=>r.tecnico===nome).sort((a,b)=>a.dtStr.localeCompare(b.dtStr));
+  const tbody=document.getElementById('ofs-gx-tbody-'+idx);
+  if(tbody){
+    tbody.innerHTML=rows.map(r=>{
+      const dt=r.dtStr?r.dtStr.split('-').reverse().join('/'):'—';
+      const sc=OFS_STATUS_COLORS[r.status]||'#94a3b8';
+      return`<tr style="border-bottom:.5px solid var(--bd)">
+        <td style="padding:4px 8px;color:var(--tx2);white-space:nowrap">${dt}</td>
+        <td style="padding:4px 8px;color:var(--tx1)">${r.tipo||'—'}</td>
+        <td style="padding:4px 8px"><span class="ofs-st-pill" style="color:${sc};background:${sc}1a">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</span></td>
+      </tr>`;
+    }).join('')||`<tr><td colspan="3" style="padding:8px 8px;text-align:center;color:var(--tx3)">Sem atividades no filtro atual</td></tr>`;
+  }
+  expRow.style.display='';
+  const icon=document.getElementById('ofs-gx-icon-'+idx);
+  if(icon)icon.style.transform='rotate(180deg)';
 }
 function _ofsMdKey(e){if(e.key==='Escape')ofsModalClose();}
 function ofsModalFilter(btn,st){
