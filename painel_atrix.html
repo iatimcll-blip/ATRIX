@@ -1750,7 +1750,7 @@ function initAuth(){
   const user=users.find(u=>u.username===saved);
   if(!user){showLogin('');return}
   currentUser=user;
-  hideLogin();restoreState();applyPermissions();
+  hideLogin();restoreState();restoreActiveTab();applyPermissions();
 }
 function openUserPanel(){
   if(!canEdit())return;
