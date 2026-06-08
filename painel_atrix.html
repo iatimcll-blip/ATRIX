@@ -2043,7 +2043,7 @@ function startRefresh(){
   refreshTimer=setInterval(()=>{
     if(!dAb.length)return;
     refreshAbTimes();
-    if(document.activeElement&&document.activeElement.classList.contains('substatus-select'))return;
+    const ae=document.activeElement;if(ae&&(ae.classList.contains('substatus-select')||ae.classList.contains('ann-sel')||ae.classList.contains('ann-obs')))return;
     renderTAb();
   },1000);
 }
