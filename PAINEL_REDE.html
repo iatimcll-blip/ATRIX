@@ -482,20 +482,33 @@ function applyRedeRows(rows,fileName){
   rows.forEach(x=>{const it=rowToRede(x.row,x.sheet);(it.kind==='ac'?ac:bb).push(it.row)});
   if(!bb.length&&!ac.length)throw new Error('Nenhuma linha reconhecida para Backbone ou Acesso.');
   if(bb.length)BD=bb;if(ac.length)AD=ac;
-  localStorage.setItem(REDE_STORAGE,JSON.stringify({version:2,BD,AD,fileName,at:new Date().toISOString()}));
+  localStorage.setItem(REDE_STORAGE,JSON.stringify({version:3,BD,AD,fileName,
+    M:{mes:[...M.mes],ml:[...M.ml],sem:[...M.sem],sl:[...M.sl],ca:[...M.ca],mo:[...M.mo]},
+    at:new Date().toISOString()}));
   document.getElementById('base-status').textContent=`Base ${fileName}: ${bb.length} backbone · ${ac.length} acesso`;
   selMonth='';selWeek='';modo='m';buildPeriodSelects();render();
 }
 function hasRedeDetail(rows,idx){return Array.isArray(rows)&&rows.some(r=>r&&r[idx]&&typeof r[idx]==='object'&&String(r[idx].os||r[idx].id||'').trim())}
+function restoreM(saved){
+  if(!saved||typeof saved!=='object')return;
+  ['mes','ml','sem','sl','ca','mo'].forEach(k=>{
+    if(Array.isArray(saved[k])&&saved[k].length){M[k].length=0;saved[k].forEach(v=>M[k].push(v));}
+  });
+}
 function restoreRedeBase(){
   try{
     localStorage.removeItem('atrix:rede:bases:v1');
     const raw=localStorage.getItem(REDE_STORAGE);if(!raw)return;
     const st=JSON.parse(raw);
+    /* versão 2 (sem M) → migra: apaga e força reanexo */
+    if(st.version===2){localStorage.removeItem(REDE_STORAGE);document.getElementById('base-status').textContent='Cache de rede atualizado — reanexe a base somente se desejar substituir.';return}
     const okBD=!Array.isArray(st.BD)||!st.BD.length||hasRedeDetail(st.BD,7);
     const okAD=!Array.isArray(st.AD)||!st.AD.length||hasRedeDetail(st.AD,8);
-    if(st.version!==2||!okBD||!okAD){localStorage.removeItem(REDE_STORAGE);document.getElementById('base-status').textContent='Base interna atualizada. Reanexe a base somente se desejar substituir.';return}
-    if(Array.isArray(st.BD)&&st.BD.length)BD=st.BD;if(Array.isArray(st.AD)&&st.AD.length)AD=st.AD;document.getElementById('base-status').textContent=st.fileName?'Base restaurada: '+st.fileName:'Base restaurada'
+    if(st.version!==3||!okBD||!okAD){localStorage.removeItem(REDE_STORAGE);document.getElementById('base-status').textContent='Base interna atualizada. Reanexe a base somente se desejar substituir.';return}
+    restoreM(st.M);
+    if(Array.isArray(st.BD)&&st.BD.length)BD=st.BD;
+    if(Array.isArray(st.AD)&&st.AD.length)AD=st.AD;
+    document.getElementById('base-status').textContent=st.fileName?'Base restaurada: '+st.fileName:'Base restaurada';
   }catch(e){console.warn('Não foi possível restaurar base de rede',e)}
 }
 document.getElementById('rede-file').addEventListener('change',e=>{
@@ -517,8 +530,9 @@ function periodOptions(keys,labels,selected,allLabel){
 /* ─ helpers: vínculo Mês ↔ Semana ─ */
 function weeksForMonth(monthKey){
   const all=[...BD,...AD];
-  const idxs=monthKey?all.filter(r=>M.mes[r[1]]===monthKey).map(r=>r[2]):[...Array(M.sem.length).keys()];
-  return[...new Set(idxs)].sort((a,b)=>M.sem[a].localeCompare(M.sem[b])).map(i=>({key:M.sem[i],label:M.sl[i]||M.sem[i]}));
+  /* filtra apenas semanas que têm registros reais — nunca retorna semanas vazias */
+  const idxs=all.filter(r=>!monthKey||M.mes[r[1]]===monthKey).map(r=>r[2]);
+  return[...new Set(idxs)].filter(i=>M.sem[i]!==undefined).sort((a,b)=>M.sem[a].localeCompare(M.sem[b])).map(i=>({key:M.sem[i],label:M.sl[i]||M.sem[i]}));
 }
 function monthForWeek(weekKey){
   if(!weekKey)return'';

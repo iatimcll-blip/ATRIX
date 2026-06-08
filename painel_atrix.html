@@ -1721,10 +1721,14 @@ function applyState(st,label){
     dEnc=normalizeEncState(st.dEnc);
     document.getElementById('nb-enc').textContent=dEnc.length;
     if(st.lastEncAt)lastEncAt=st.lastEncAt;
-    fillFiltersEnc();fillWeekSelector();fillClusterSelector();fillMesSelector();
-    if(st.selWeek&&dEnc.some(d=>d.semana===st.selWeek)){selWeek=st.selWeek;document.getElementById('week-selector').value=selWeek}else if(!st.selWeek){selWeek=''}
-    if(st.selCluster&&dEnc.some(d=>d.cluster===st.selCluster)){selCluster=st.selCluster;document.getElementById('cluster-selector').value=selCluster}else if(!st.selCluster){selCluster=''}
+    /* 1. popula mês primeiro para que fillWeekSelector filtre corretamente */
+    fillFiltersEnc();fillMesSelector();fillClusterSelector();
     if(st.selMes&&dEnc.some(d=>d.mes===st.selMes)){selMes=st.selMes;const ms=document.getElementById('mes-selector');if(ms)ms.value=selMes}else{selMes=''}
+    if(st.selCluster&&dEnc.some(d=>d.cluster===st.selCluster)){selCluster=st.selCluster;document.getElementById('cluster-selector').value=selCluster}else if(!st.selCluster){selCluster=''}
+    /* 2. preenche semanas já filtradas pelo mês restaurado */
+    fillWeekSelector();
+    const validWeeks=encWeeksForMes(selMes);
+    if(st.selWeek&&validWeeks.includes(st.selWeek)){selWeek=st.selWeek;document.getElementById('week-selector').value=selWeek}else{selWeek=''}
     renderAllEnc();
     renderPanelRepetidos();
     document.getElementById('empty-enc').style.display=dEnc.length?'none':'block';
