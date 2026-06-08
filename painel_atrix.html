@@ -671,11 +671,14 @@ tbody tr.row-pending-client:hover td { background: rgba(255,149,0,.18); }
 }
 .ann-sel:focus { border-color: var(--blue); outline: none; }
 .ann-obs {
-  width: 100%; min-width: 160px; max-width: 260px;
+  width: 100%; min-width: 180px; max-width: 320px;
+  min-height: 32px;
   border: 1px solid var(--bd2); border-radius: 8px;
   background: var(--surface); color: var(--tx);
-  padding: 4px 9px; font-size: 11px; font-family: inherit;
-  outline: none; transition: border-color .13s;
+  padding: 5px 9px; font-size: 11px; font-family: inherit; line-height: 1.5;
+  outline: none; transition: border-color .13s, box-shadow .13s;
+  resize: vertical; overflow: hidden;
+  display: block; box-sizing: border-box;
 }
 .ann-obs:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,149,0,.12); }
 .ann-obs::placeholder { color: var(--tx3); }
@@ -2628,6 +2631,8 @@ function renderTAb(){
     const obsCell=canEdit()?abAnnObsInput(d.id):abAnnObsReadonly(d.id);
     return`<tr class="${rowCls}"><td class="tid">${idHtml}</td><td style="max-width:200px;white-space:normal;word-break:break-word;color:var(--tx);line-height:1.35;vertical-align:top">${clienteDisplay}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${MOP_CLR[d.mop]||'#8e8e93'};flex-shrink:0"></span>${eh(d.mop)}</span></td><td>${eh(d.cidade||'\u2014')}/${eh(d.uf)}</td><td style="${sc}"><span class="sla-clock">${fd(d.slaH)}</span></td><td><span class="badge ${bc}">${eh(d.faixa)}</span></td><td><span class="badge ${ss}">${eh(d.statusSla)}</span></td><td><span class="substatus-cell">${substatusLamp(d)}${subHtml}</span></td><td class="td-ann">${profCell}</td><td class="td-ann td-obs">${obsCell}</td><td>${lk}</td></tr>`;
   }).join('')||'<tr><td colspan="11" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
+  /* ajusta altura dos textareas com conteúdo já salvo */
+  requestAnimationFrame(()=>{document.querySelectorAll('#tb-ab .ann-obs').forEach(t=>{t.style.height='auto';t.style.height=t.scrollHeight+'px';});});
 }
 function sAb(c){scAb===c?sdAb*=-1:(scAb=c,sdAb=-1);renderTAb()}
 
@@ -3622,8 +3627,9 @@ function abAnnProfSelect(id){
 }
 function abAnnProfReadonly(id){const p=(abAnnotations[id]||{}).prof||'';return p?`<span class="ann-readonly">${eh(p)}</span>`:`<span class="ann-empty">—</span>`;}
 function abAnnObsInput(id){
-  const saved=eh((abAnnotations[id]||{}).obs||'');
-  return `<input class="ann-obs" type="text" placeholder="Anotações…" value="${saved}" title="${saved}" onclick="event.stopPropagation()" oninput="saveAbAnnotation('${eh(id)}','obs',this.value)">`;
+  const saved=(abAnnotations[id]||{}).obs||'';
+  const escaped=saved.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<textarea class="ann-obs" placeholder="Anotações…" rows="1" onclick="event.stopPropagation()" oninput="saveAbAnnotation('${eh(id)}','obs',this.value);this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escaped}</textarea>`;
 }
 function abAnnObsReadonly(id){const o=(abAnnotations[id]||{}).obs||'';return o?`<span class="ann-readonly" title="${eh(o)}">${eh(o.length>30?o.slice(0,29)+'…':o)}</span>`:`<span class="ann-empty">—</span>`;}
 const OFS_STATUS_COLORS={'concluído':'#22c55e','iniciado':'#3b82f6','pendente':'#f59e0b','não concluído':'#ef4444','suspenso':'#8b5cf6','cancelado':'#6b7280','sem status':'#94a3b8'};
