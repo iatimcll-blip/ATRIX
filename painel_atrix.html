@@ -2091,10 +2091,6 @@ let remoteSaveWarned=false;
 
 /* LOGIN E PERMISSOES */
 function encPass(v){return btoa(unescape(encodeURIComponent(String(v||''))))}
-const DEFAULT_USERS=[
-  {username:'admin', pass:()=>encPass('atrix@2026'), role:'admin'},
-  {username:'Moises', pass:()=>encPass('Alloha@2026'), role:'viewer'}
-];
 function normRole(role){return role==='admin'?'admin':'viewer'}
 function roleLabel(role){return normRole(role)==='admin'?'Admin - permissões totais':'Usuário - apenas leitura'}
 function getUsers(){
@@ -2102,10 +2098,12 @@ function getUsers(){
   try{users=JSON.parse(localStorage.getItem(USERS_KEY)||'[]')}catch{users=[]}
   if(!Array.isArray(users))users=[];
   users=users.map(u=>({...u,role:normRole(u.role)}));
-  DEFAULT_USERS.forEach(d=>{
-    if(!users.some(u=>u.username.toLowerCase()===d.username.toLowerCase()))
-      users.unshift({username:d.username,pass:d.pass(),role:d.role});
-  });
+  /* admin: senha fixa no código — sempre forçada para evitar que estado antigo bloqueie acesso */
+  const ai=users.findIndex(u=>u.username.toLowerCase()==='admin');
+  if(ai<0)users.unshift({username:'admin',pass:encPass('atrix@2026'),role:'admin'});
+  else users[ai]={...users[ai],username:'admin',pass:encPass('atrix@2026'),role:'admin'};
+  if(!users.some(u=>u.username.toLowerCase()==='moises'))
+    users.push({username:'Moises',pass:encPass('Alloha@2026'),role:'viewer'});
   saveUsers(users);
   return users;
 }
@@ -2133,7 +2131,7 @@ async function syncRemoteUsers(){
     const res=await fetch(REMOTE_STATE_API,{cache:'no-store'});
     if(!res.ok)return false;
     const data=await res.json();
-    if(data&&data.state&&Array.isArray(data.state.users)&&data.state.users.length){saveUsers(data.state.users);return true}
+    if(data&&data.state&&Array.isArray(data.state.users)&&data.state.users.length){saveUsers(data.state.users);getUsers();return true}
   }catch(e){console.warn('Não foi possível carregar usuários compartilhados:',e)}
   return false;
 }
@@ -2365,8 +2363,9 @@ function applyState(st,label){
   }
   if(Array.isArray(st.users)&&st.users.length){
     saveUsers(st.users);
+    const allUsers=getUsers(); /* normaliza: garante admin com senha correta */
     if(currentUser){
-      const fresh=getUsers().find(u=>u.username===currentUser.username);
+      const fresh=allUsers.find(u=>u.username===currentUser.username);
       if(fresh)currentUser=fresh;
     }
     if(document.getElementById('user-panel').style.display==='flex')renderUsers();
