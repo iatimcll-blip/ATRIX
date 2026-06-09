@@ -2091,7 +2091,10 @@ let remoteSaveWarned=false;
 
 /* LOGIN E PERMISSOES */
 function encPass(v){return btoa(unescape(encodeURIComponent(String(v||''))))}
-function defaultAdmin(){return{username:'admin',pass:encPass('atrix@2026'),role:'admin'}}
+const DEFAULT_USERS=[
+  {username:'admin', pass:()=>encPass('atrix@2026'), role:'admin'},
+  {username:'Moises', pass:()=>encPass('Alloha@2026'), role:'viewer'}
+];
 function normRole(role){return role==='admin'?'admin':'viewer'}
 function roleLabel(role){return normRole(role)==='admin'?'Admin - permissões totais':'Usuário - apenas leitura'}
 function getUsers(){
@@ -2099,7 +2102,10 @@ function getUsers(){
   try{users=JSON.parse(localStorage.getItem(USERS_KEY)||'[]')}catch{users=[]}
   if(!Array.isArray(users))users=[];
   users=users.map(u=>({...u,role:normRole(u.role)}));
-  if(!users.some(u=>u.username==='admin'))users.unshift(defaultAdmin());
+  DEFAULT_USERS.forEach(d=>{
+    if(!users.some(u=>u.username.toLowerCase()===d.username.toLowerCase()))
+      users.unshift({username:d.username,pass:d.pass(),role:d.role});
+  });
   saveUsers(users);
   return users;
 }
