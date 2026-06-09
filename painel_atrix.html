@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -1001,6 +1001,43 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
 .rede-did{font-weight:700;color:var(--blue)}
 .rede-dmuted{color:var(--tx3);text-align:center}
 @media(max-width:900px){.rede-krow{grid-template-columns:repeat(2,1fr)}.rede-sgrid{grid-template-columns:repeat(2,1fr)}.rede-c3{grid-template-columns:1fr}.rede-meta-info{grid-template-columns:1fr 1fr}.rede-meta-card.rede-meta-main{grid-column:1/-1}}
+/* ─── REDE v2 ─── */
+.rede-tabs-bar{display:flex;gap:8px;margin:14px 0 12px;flex-wrap:wrap}
+.rede-tab-btn{background:var(--surface2);border:.5px solid var(--bd);color:var(--tx2);padding:7px 20px;border-radius:12px;cursor:pointer;font-weight:600;font-size:11px;transition:.18s;font-family:inherit}
+.rede-tab-btn:hover{border-color:var(--blue);color:var(--blue)}
+.rede-tab-btn.on{color:#fff;border-color:rgba(0,122,255,.5);background:rgba(0,122,255,.22)}
+.rede-ctrlbar{background:var(--surface);border:.5px solid var(--bd);border-radius:var(--rl);padding:12px 14px;margin-bottom:14px}
+.rede-ctrlrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rede-ctrlrow+.rede-ctrlrow{margin-top:10px;padding-top:10px;border-top:.5px solid var(--bd)}
+.rede-clbl{color:var(--tx3);font-size:10px;text-transform:uppercase;letter-spacing:.06em;min-width:88px}
+.rede-seg{display:flex;gap:5px;flex-wrap:wrap}
+.rede-sgbtn{background:var(--surface2);border:.5px solid var(--bd);color:var(--tx2);padding:5px 12px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;transition:.15s;font-family:inherit}
+.rede-sgbtn:hover{border-color:var(--bd2);color:var(--tx)}
+.rede-sgbtn.on{background:rgba(0,122,255,.18);border-color:rgba(0,122,255,.5);color:var(--blue)}
+.rde-seg-periods .rede-sgbtn{padding:4px 10px;font-size:10px}
+.rede-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.rede-kpi-card{background:var(--surface);border:.5px solid var(--bd);border-radius:var(--rl);padding:16px}
+.rede-kpi-card .rkl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-bottom:4px}
+.rede-kpi-card .rkv{font-size:26px;font-weight:700;line-height:1;margin:4px 0 2px}
+.rede-kpi-card .rkv.ok{color:#34c759}.rede-kpi-card .rkv.wn{color:#ff9500}.rede-kpi-card .rkv.bd{color:#ff3b30}
+.rede-kpi-card .rkmeta{font-size:11px;color:var(--tx3)}
+.rede-kpi-card .rkgap{font-size:11px;font-weight:600;margin-top:6px}
+.rede-kpi-card .rkgap.ok{color:#34c759}.rede-kpi-card .rkgap.wn{color:#ff9500}.rede-kpi-card .rkgap.bd{color:#ff3b30}
+.rede-kpi-card .rkbar{height:5px;border-radius:99px;background:var(--surface2);margin-top:10px;overflow:hidden}
+.rede-kpi-card .rkfill{height:100%;border-radius:99px;transition:width .3s}
+.rede-section-title{font-size:13px;font-weight:700;margin:16px 0 4px;color:var(--tx)}
+.rede-charts-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
+.rede-chip{padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600}
+.rede-chip.ok{background:rgba(52,199,89,.12);color:#34c759}
+.rede-chip.wn{background:rgba(255,149,0,.12);color:#ff9500}
+.rede-chip.bd{background:rgba(255,59,48,.12);color:#ff3b30}
+.rede-num{text-align:right!important}
+.rede-report-box{background:var(--surface);border:.5px solid var(--bd);border-radius:var(--rl);padding:16px 18px;font-size:12px;line-height:1.8;color:var(--tx2);margin-top:4px}
+.rede-report-box .rr-title{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:8px;display:block}
+.rede-report-box .rr-para{margin-bottom:6px}
+.rede-report-box b{color:var(--tx)}
+.rr-ok{color:#34c759;font-weight:600}.rr-wn{color:#ff9500;font-weight:600}.rr-bd{color:#ff3b30;font-weight:600}
+@media(max-width:720px){.rede-kpi-grid{grid-template-columns:1fr}.rede-charts-2{grid-template-columns:1fr}}
 @media(max-width:600px){.rede-krow{grid-template-columns:1fr}.rede-sgrid{grid-template-columns:1fr}.rede-meta-info{grid-template-columns:1fr}}
 </style>
 </head>
@@ -1351,165 +1388,52 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <label class="upload-pill" for="file-rede" style="background:var(--blue-bg);color:var(--blue);border-color:var(--blue-lt)"><i class="ti ti-upload"></i> Atualizar base</label>
         </div>
       </div>
-      <!-- Toolbar -->
-      <div class="rede-toolbar">
-        <div class="rede-tgroup">
-          <span class="rede-tlbl">Visão</span>
-          <div class="rede-vtog">
-            <button class="rede-vbtn on" onclick="rdeSetView('bb')">Backbone</button>
-            <button class="rede-vbtn" onclick="rdeSetView('ac')">Acesso</button>
-            <button class="rede-vbtn" onclick="rdeSetView('all')">Backbone + Acesso</button>
+      <!-- ACESSO / BACKBONE tabs -->
+      <div class="rede-tabs-bar">
+        <button class="rede-tab-btn on" data-rdetab="ACESSO" onclick="rdeSetTab('ACESSO')">ACESSO</button>
+        <button class="rede-tab-btn" data-rdetab="BACKBONE" onclick="rdeSetTab('BACKBONE')">BACKBONE</button>
+      </div>
+      <!-- Control bar -->
+      <div class="rede-ctrlbar">
+        <div class="rede-ctrlrow">
+          <span class="rede-clbl">Granularidade</span>
+          <div class="rede-seg" id="rde-gran-seg">
+            <button class="rede-sgbtn on" data-g="all" onclick="rdeSetGran('all')">Acumulado</button>
+            <button class="rede-sgbtn" data-g="m" onclick="rdeSetGran('m')">Por mês</button>
+            <button class="rede-sgbtn" data-g="w" onclick="rdeSetGran('w')">Por semana</button>
           </div>
         </div>
-        <div class="rede-tgroup">
-          <span class="rede-tlbl">Mês</span>
-          <select class="rede-period-sel" id="rede-month-sel" onchange="rdeSetMonth(this.value)"><option value="">Todos os meses</option></select>
-        </div>
-        <div class="rede-tgroup">
-          <span class="rede-tlbl">Semana</span>
-          <select class="rede-period-sel" id="rede-week-sel" onchange="rdeSetWeek(this.value)"><option value="">Todas as semanas</option></select>
+        <div class="rede-ctrlrow" id="rde-period-row" style="display:none">
+          <span class="rede-clbl">Período</span>
+          <div class="rede-seg rde-seg-periods" id="rde-period-seg"></div>
         </div>
       </div>
-      <!-- Meta cards -->
-      <section class="rede-meta-info">
-        <div class="rede-meta-card rede-meta-main">
-          <div class="rede-mkicker">Como interpretar</div>
-          <div class="rede-mtitle">Metas operacionais da Rede</div>
-          <p class="rede-mtext">Os indicadores comparam Backbone e Acesso contra metas de atendimento. Use Prazo para medir cumprimento, Outlier para identificar chamados críticos e TME para acompanhar o tempo médio de execução.</p>
-        </div>
-        <div class="rede-meta-card">
-          <div class="rede-mkicker">Prazo</div>
-          <div class="rede-mvalue" style="color:var(--green)"><span class="rede-mdot" style="background:var(--green)"></span>88,9%</div>
-          <p class="rede-mnote">Meta mínima. Percentual de chamados concluídos dentro do prazo definido na base.</p>
-        </div>
-        <div class="rede-meta-card">
-          <div class="rede-mkicker">Outlier</div>
-          <div class="rede-mvalue" style="color:var(--red)"><span class="rede-mdot" style="background:var(--red)"></span>4,9%</div>
-          <p class="rede-mnote">Limite máximo. Chamados fora do comportamento esperado, com tempo excessivo.</p>
-        </div>
-        <div class="rede-meta-card">
-          <div class="rede-mkicker">TME</div>
-          <div class="rede-mvalue" style="color:var(--orange)"><span class="rede-mdot" style="background:var(--orange)"></span>6,0h</div>
-          <p class="rede-mnote">Tempo médio esperado para atendimento. Acima da meta indica lentidão.</p>
-        </div>
-      </section>
-      <!-- Cluster tabs -->
-      <div class="rede-ctabs">
-        <button class="rede-ctab on" onclick="rdeGoTab('vis')">Visão Geral</button>
-        <button class="rede-ctab" onclick="rdeGoTab('C')">MA CAP</button>
-        <button class="rede-ctab" onclick="rdeGoTab('I')">MA INT</button>
-        <button class="rede-ctab" onclick="rdeGoTab('P')">PI</button>
-        <button class="rede-ctab" onclick="rdeGoTab('N')">NORTE</button>
+      <!-- KPI cards -->
+      <div class="rede-kpi-grid" id="rde-kpis"></div>
+      <!-- Evolution charts -->
+      <div class="rede-section-title">Evolução <span id="rde-evo-unit">mensal</span></div>
+      <div class="rede-charts-2">
+        <div class="rede-cbx" style="min-height:220px"><canvas id="rde-line-ch"></canvas></div>
+        <div class="rede-cbx" style="min-height:220px"><canvas id="rde-time-ch"></canvas></div>
       </div>
-      <!-- Visão Geral -->
-      <div id="rcp-vis" class="rede-cpanel on"><div id="rde-vis"></div></div>
-      <!-- MA CAP -->
-      <div id="rcp-C" class="rede-cpanel">
-        <div id="rsec-C-bb" class="rede-sec">
-          <div class="rede-shead"><h2>MA CAP</h2><span class="rede-stag rede-stag-bb">Backbone</span></div>
-          <div class="rede-krow" id="rk-C-b"></div>
-          <div class="rede-c3">
-            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-C-b-p"></canvas></div></div>
-            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-C-b-o"></canvas></div></div>
-            <div class="rede-cbx"><h4>Top Motivos de Falha</h4><div class="rede-blist" id="rbl-C-b"></div></div>
-          </div>
-        </div>
-        <div id="rsec-C-ac" class="rede-sec">
-          <div class="rede-shead"><h2>MA CAP</h2><span class="rede-stag rede-stag-ac">Acesso</span></div>
-          <div class="rede-krow" id="rk-C-a"></div>
-          <div class="rede-c3">
-            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-C-a-p"></canvas></div></div>
-            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-C-a-o"></canvas></div></div>
-            <div class="rede-cbx"><h4>TME por Período (horas)</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#3ecf8e"></span>TME</span><span><span class="rede-ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div><div style="position:relative;height:160px"><canvas id="rch-C-t"></canvas></div></div>
-          </div>
-          <div class="rede-cbx"><h4>Top Causas — Acesso</h4><div class="rede-blist" id="rbl-C-a"></div></div>
-        </div>
+      <!-- Cluster table -->
+      <div class="rede-section-title" style="margin-top:20px">Desempenho por cluster</div>
+      <div class="rede-cbx" style="padding:0">
+        <table class="rede-dtable" style="font-size:11px">
+          <thead><tr><th>Cluster</th><th class="rede-num">Qtd</th><th class="rede-num">Prazo</th><th class="rede-num">Outlier</th><th class="rede-num" id="rde-th-tme">TME/TMR</th><th>Status</th></tr></thead>
+          <tbody id="rde-cl-tbl"></tbody>
+        </table>
       </div>
-      <!-- MA INT -->
-      <div id="rcp-I" class="rede-cpanel">
-        <div id="rsec-I-bb" class="rede-sec">
-          <div class="rede-shead"><h2>MA INT</h2><span class="rede-stag rede-stag-bb">Backbone</span></div>
-          <div class="rede-krow" id="rk-I-b"></div>
-          <div class="rede-c3">
-            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-I-b-p"></canvas></div></div>
-            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-I-b-o"></canvas></div></div>
-            <div class="rede-cbx"><h4>Top Motivos de Falha</h4><div class="rede-blist" id="rbl-I-b"></div></div>
-          </div>
-        </div>
-        <div id="rsec-I-ac" class="rede-sec">
-          <div class="rede-shead"><h2>MA INT</h2><span class="rede-stag rede-stag-ac">Acesso</span></div>
-          <div class="rede-krow" id="rk-I-a"></div>
-          <div class="rede-c3">
-            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-I-a-p"></canvas></div></div>
-            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-I-a-o"></canvas></div></div>
-            <div class="rede-cbx"><h4>TME por Período (horas)</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#3ecf8e"></span>TME</span><span><span class="rede-ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div><div style="position:relative;height:160px"><canvas id="rch-I-t"></canvas></div></div>
-          </div>
-          <div class="rede-cbx"><h4>Top Causas — Acesso</h4><div class="rede-blist" id="rbl-I-a"></div></div>
-        </div>
+      <!-- Cities + Causes -->
+      <div class="rede-section-title" style="margin-top:20px">Cidades ofensoras &amp; Principais causas</div>
+      <div class="rede-sub">Cidades com maior peso nos indicadores e causas mais frequentes de não-conformidade.</div>
+      <div class="rede-charts-2">
+        <div class="rede-cbx" style="min-height:260px"><canvas id="rde-city-ch"></canvas></div>
+        <div class="rede-cbx" style="min-height:260px"><canvas id="rde-cause-ch"></canvas></div>
       </div>
-      <!-- PI -->
-      <div id="rcp-P" class="rede-cpanel">
-        <div id="rsec-P-bb" class="rede-sec">
-          <div class="rede-shead"><h2>PI</h2><span class="rede-stag rede-stag-bb">Backbone</span></div>
-          <div class="rede-krow" id="rk-P-b"></div>
-          <div class="rede-c3">
-            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-P-b-p"></canvas></div></div>
-            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-P-b-o"></canvas></div></div>
-            <div class="rede-cbx"><h4>Top Motivos de Falha</h4><div class="rede-blist" id="rbl-P-b"></div></div>
-          </div>
-        </div>
-        <div id="rsec-P-ac" class="rede-sec">
-          <div class="rede-shead"><h2>PI</h2><span class="rede-stag rede-stag-ac">Acesso</span></div>
-          <div class="rede-krow" id="rk-P-a"></div>
-          <div class="rede-c3">
-            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-P-a-p"></canvas></div></div>
-            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-P-a-o"></canvas></div></div>
-            <div class="rede-cbx"><h4>TME por Período (horas)</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#3ecf8e"></span>TME</span><span><span class="rede-ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div><div style="position:relative;height:160px"><canvas id="rch-P-t"></canvas></div></div>
-          </div>
-          <div class="rede-cbx"><h4>Top Causas — Acesso</h4><div class="rede-blist" id="rbl-P-a"></div></div>
-        </div>
-      </div>
-      <!-- NORTE -->
-      <div id="rcp-N" class="rede-cpanel">
-        <div id="rsec-N-bb" class="rede-sec">
-          <div class="rede-shead"><h2>NORTE</h2><span class="rede-stag rede-stag-bb">Backbone</span></div>
-          <div class="rede-krow" id="rk-N-b"></div>
-          <div class="rede-c3">
-            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-N-b-p"></canvas></div></div>
-            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-N-b-o"></canvas></div></div>
-            <div class="rede-cbx"><h4>Top Motivos de Falha</h4><div class="rede-blist" id="rbl-N-b"></div></div>
-          </div>
-        </div>
-        <div id="rsec-N-ac" class="rede-sec">
-          <div class="rede-shead"><h2>NORTE</h2><span class="rede-stag rede-stag-ac">Acesso</span></div>
-          <div class="rede-krow" id="rk-N-a"></div>
-          <div class="rede-c3">
-            <div class="rede-cbx"><h4>No Prazo %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#4d8ef0"></span>Prazo</span><span style="color:var(--tx3)">— meta 89%</span></div><div style="position:relative;height:160px"><canvas id="rch-N-a-p"></canvas></div></div>
-            <div class="rede-cbx"><h4>Outlier %</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#e05c5c"></span>Outlier</span><span style="color:var(--tx3)">— limite 4,9%</span></div><div style="position:relative;height:160px"><canvas id="rch-N-a-o"></canvas></div></div>
-            <div class="rede-cbx"><h4>TME por Período (horas)</h4><div class="rede-leg"><span><span class="rede-ld" style="background:#3ecf8e"></span>TME</span><span><span class="rede-ld" style="background:#f0a14d;opacity:.7"></span>Meta 6,0h</span></div><div style="position:relative;height:160px"><canvas id="rch-N-t"></canvas></div></div>
-          </div>
-          <div class="rede-cbx"><h4>Top Causas — Acesso</h4><div class="rede-blist" id="rbl-N-a"></div></div>
-        </div>
-      </div>
-      <!-- Detail report -->
-      <div id="rde-detail" class="rede-detail-box">
-        <div class="rede-dhead">
-          <div>
-            <div class="rede-dtitle" id="rde-dtitle">Chamados do indicador</div>
-            <div class="rede-dsub" id="rde-dsub"></div>
-          </div>
-          <div class="rede-dacts">
-            <span class="rede-dcnt" id="rde-dcnt">0 chamados</span>
-            <button class="rede-dclose" onclick="rdeClearDetail()">✕ Fechar</button>
-          </div>
-        </div>
-        <div class="rede-dtw">
-          <table class="rede-dtable">
-            <thead><tr><th>OS/ID</th><th>Cidade</th><th>UF</th><th>Clientes Af.</th><th>TME</th><th>Causa</th><th>Período</th></tr></thead>
-            <tbody id="rde-dbody"></tbody>
-          </table>
-        </div>
-      </div>
+      <!-- Executive Report -->
+      <div class="rede-section-title" style="margin-top:20px">Relatório Executivo</div>
+      <div class="rede-report-box" id="rde-report"><span style="color:var(--tx3);font-size:11px">Carregue uma base para gerar o relatório automático.</span></div>
     </div><!-- /rede-dash -->
   </div><!-- /panel-rede -->
 
@@ -2521,8 +2445,9 @@ function clearRede(){
   try{localStorage.removeItem(REDE_STORAGE);localStorage.removeItem(REDE_UI_KEY);}catch(e){}
   rdeBD=[];rdeAD=[];
   ['mes','ml','sem','sl','ca','mo'].forEach(k=>rdeM[k].length=0);
-  rdeSelMonth='';rdeSelWeek='';rdeModo='m';rdeActiveView='bb';
+  rdeSelMonth='';rdeSelWeek='';rdeModo='m';rdeActiveView='bb';rdeTab='ACESSO';rdeGran='all';rdePeriod=null;
   Object.values(rdeCharts).forEach(ch=>{try{ch.destroy();}catch(e){}});rdeCharts={};
+  [rdeLineCh2,rdeTimeCh2,rdeCauseCh2,rdeCityCh2].forEach(ch=>{if(ch)try{ch.destroy();}catch(e){}});rdeLineCh2=rdeTimeCh2=rdeCauseCh2=rdeCityCh2=null;
   rdeShowDash();updateClearBtns();
 }
 function updateUploadTimes(){
@@ -4418,7 +4343,7 @@ function switchTab(tab,persist=true){
   if(isFuel){renderFuel();setTimeout(initFuelSplit,80);}
   if(isRep)renderPanelRepetidos();
   if(isOfs)renderOfs();
-  if(isRede){rdeBuildPeriodSelects();renderRede();}
+  if(isRede){rdeSyncControls();renderRede();}
   if(isWpp){wppUnreadCount=0;updateWppBadge();const f=document.getElementById('wpp-frame');if(f&&f.src==='about:blank')f.src='https://mcll-painel-acionamentos-production.up.railway.app/painel';}
   updateClearBtns();
 }
@@ -4907,8 +4832,9 @@ const rdeM={mes:[],ml:[],sem:[],sl:[],ca:[],mo:[]};
 const RDE_CL_NM={"C":"MA CAP","I":"MA INT","P":"PI","N":"NORTE"};
 const RDE_CL_CL={"C":"#9d7ef0","I":"#4d8ef0","P":"#3ecf8e","N":"#f0a14d"};
 const RDE_CLS=["C","I","P","N"];
-const RDE_M89=88.9,RDE_MOUT=4.9,RDE_MTME=6.0;
+const RDE_M89=85,RDE_MOUT=4.9,RDE_MTME=6.0;
 let rdeModo='m',rdeSelMonth='',rdeSelWeek='',rdeActiveView='bb',rdeCharts={};
+let rdeTab='ACESSO',rdeGran='all',rdePeriod=null,rdeLineCh2=null,rdeTimeCh2=null,rdeCauseCh2=null,rdeCityCh2=null;
 const REDE_STORAGE='atrix:rede:bases:v2';
 const REDE_UI_KEY='atrix:rede:ui:v1';
 function rdeNk(v){return String(v||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/gi,'').toUpperCase()}
@@ -4929,6 +4855,7 @@ function rdeCompactDetail(r,kind,cl,mi,wi,prazo,out,tempo,label,impacto){
   const fc=rdeGv(r,['DATA_FECHAMENTO','Data Fechamento','Data de Fechamento','data fechamento','fechamento','ENCERRAMENTO','Data Encerramento','data encerramento','data fim']);
   return{id:String(rdeGv(r,['protocolo','ticket_id','ID Ticket','id ticket','id','chamado','numero'])||'').trim(),os:String(rdeGv(r,['OS','os','ult_OS','ult os','ultima OS','última OS','os_agrupada','os concluida agrupada','os_concluida_agrupada','ordem servico','protocolo','ticket_id','ID Ticket','chamado','numero'])||'').trim(),cliente:String(rdeGv(r,['cliente','CLIENTE','nome cliente','razao social','CLIENTE FINAL'])||'').trim(),cidade:String(rdeGv(r,['cidade','CIDADE','CIDADE_SIMPLES','cidadeservico','localidade'])||'').trim(),uf:String(rdeGv(r,['uf','UF','estado'])||'').trim(),motivo:String(label||rdeGv(r,['motivo','causa','causa raiz','CAUSA_SIMPLES','ORIGEM','FALHA'])||'').trim(),periodoAtendimento:`${rdeFmtDate(ab)} - ${rdeFmtDate(fc)}`,kind,cluster:cl,mes:mi,semana:wi,prazo,out,tempo,impacto};
 }
+function rdeColVal(r,col){const v=r['__'+col];return(v!==undefined&&v!=='')?v:null;}
 function rdeRowToRede(r,sheet){
   const tipo=String(rdeGv(r,['tipo','rede','categoria','grupo'])||sheet||'').toLowerCase();
   const isAC=tipo.includes('acesso');
@@ -4938,17 +4865,26 @@ function rdeRowToRede(r,sheet){
   const cl=rdeClusterFromRow(r);
   const mi=rdeMonthIndex(mes&&ano?`${ano}-${mes}`:(mes||openedAt));
   const wi=rdeWeekIndex(rdeGv(r,['semana','week','periodo semanal','período semanal'])||openedAt);
-  const tempo=rdeNum(rdeGv(r,isAC?['TME','tme','tempo medio','tempo médio','tempo','horas','duracao','duração']:['TMR','tmr','tempo medio','tempo médio','tempo','horas','duracao','duração']));
-  const prazoRaw=rdeGv(r,['PRAZO_SEM_PARADA_RELOGIO','prazo sem parada relogio','no prazo','prazo','dentro prazo','dentro_sla','sla prazo','dentro']);
-  const outRaw=rdeGv(r,['OUTLIER_SEM_PARADA_RELOGIO','outlier sem parada relogio','outlier','fora outlier','outlier 24h','outlier_24h']);
-  const prazo=prazoRaw!==''?rdeBoolish(prazoRaw):(tempo?tempo<=RDE_MTME:false);
-  const out=outRaw!==''?rdeBoolish(outRaw):(tempo>24);
   if(isAC){
+    // Acesso: TME=col R, Prazo flag=col N (1=prazo ok), Outlier flag=col O (1=outlier)
+    const colR=rdeColVal(r,'R'),colN=rdeColVal(r,'N'),colO=rdeColVal(r,'O');
+    const tempo=rdeNum(rdeGv(r,['TME','tme','tempo medio','tempo médio','tempo','horas','duracao','duração'])||(colR!==null?colR:0));
+    const prazoRaw=rdeGv(r,['PRAZO_SEM_PARADA_RELOGIO','prazo sem parada relogio','no prazo','prazo','dentro prazo','dentro_sla','sla prazo','dentro']);
+    const prazo=prazoRaw!==''?rdeBoolish(prazoRaw):(colN!==null?Number(colN)==1:(tempo?tempo<=RDE_MTME:false));
+    const outRaw=rdeGv(r,['OUTLIER_SEM_PARADA_RELOGIO','outlier sem parada relogio','outlier','fora outlier','outlier 24h','outlier_24h']);
+    const out=outRaw!==''?rdeBoolish(outRaw):(colO!==null?Number(colO)==1:(tempo>24));
     const cli=rdeNum(rdeGv(r,['CLIENTES AFETADOS','clientes afetados','clientes','cliente afetado','impactados','afetados']));
     const motivo=rdeLabelIndex(rdeM.mo,rdeGv(r,['CAUSA_SIMPLES','ORIGEM','CLASSE_CABO','motivo','causa','causa raiz','falha','tipo encerramento']));
     const detail=rdeCompactDetail(r,'Acesso',cl,mi,wi,prazo,out,tempo,rdeM.mo[motivo]||'Acesso',cli);
     return{kind:'ac',row:[cl,mi,wi,prazo?1:0,out?1:0,tempo,cli,motivo,detail]};
   }
+  // Backbone: TMR=col R, Prazo flag=col S (1=prazo ok), Outlier flag=col T (1=outlier)
+  const colR=rdeColVal(r,'R'),colS=rdeColVal(r,'S'),colT=rdeColVal(r,'T');
+  const tempo=rdeNum(rdeGv(r,['TMR','tmr','tempo medio','tempo médio','tempo','horas','duracao','duração'])||(colR!==null?colR:0));
+  const prazoRaw=rdeGv(r,['PRAZO_SEM_PARADA_RELOGIO','prazo sem parada relogio','no prazo','prazo','dentro prazo','dentro_sla','sla prazo','dentro']);
+  const prazo=prazoRaw!==''?rdeBoolish(prazoRaw):(colS!==null?Number(colS)==1:(tempo?tempo<=RDE_MTME:false));
+  const outRaw=rdeGv(r,['OUTLIER_SEM_PARADA_RELOGIO','outlier sem parada relogio','outlier','fora outlier','outlier 24h','outlier_24h']);
+  const out=outRaw!==''?rdeBoolish(outRaw):(colT!==null?Number(colT)==1:(tempo>24));
   const causa=rdeLabelIndex(rdeM.ca,rdeGv(r,['[INCIDENTE - TRECHO DOWN] MOTIVO DA FALHA (REDE)','MOTIVO DA FALHA (REDE)','FALHA','motivo','causa','causa raiz','tipo encerramento']));
   const detail=rdeCompactDetail(r,'Backbone',cl,mi,wi,prazo,out,tempo,rdeM.ca[causa]||'Backbone',0);
   return{kind:'bb',row:[cl,mi,wi,prazo?1:0,out?1:0,tempo,causa,detail]};
@@ -4962,7 +4898,7 @@ function rdeApplyRows(rows,fileName){
   try{localStorage.setItem(REDE_STORAGE,JSON.stringify({version:3,BD:rdeBD,AD:rdeAD,fileName,M:{mes:[...rdeM.mes],ml:[...rdeM.ml],sem:[...rdeM.sem],sl:[...rdeM.sl],ca:[...rdeM.ca],mo:[...rdeM.mo]},at:_now.toISOString()}));}catch(e){console.warn('rede save',e)}
   const fn=document.getElementById('rede-fname');if(fn)fn.textContent=fileName;
   const ts=document.getElementById('rede-ts-text');if(ts)ts.textContent='Anexado '+_now.toLocaleDateString('pt-BR')+' '+_now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  rdeSelMonth='';rdeSelWeek='';rdeModo='m';rdeShowDash();rdeBuildPeriodSelects();renderRede();updateClearBtns();
+  rdeSelMonth='';rdeSelWeek='';rdeModo='m';rdeTab='ACESSO';rdeGran='all';rdePeriod=null;rdeShowDash();rdeSyncControls();renderRede();updateClearBtns();
 }
 function rdeHasDetail(rows,idx){return Array.isArray(rows)&&rows.some(r=>r&&r[idx]&&typeof r[idx]==='object'&&String(r[idx].os||r[idx].id||'').trim())}
 function rdeRestoreM(saved){
@@ -4986,16 +4922,14 @@ function rdeRestoreBase(){
     rdeShowDash();
   }catch(e){console.warn('rede restore',e)}
 }
-function rdeSaveUI(){try{localStorage.setItem(REDE_UI_KEY,JSON.stringify({selMonth:rdeSelMonth,selWeek:rdeSelWeek,modo:rdeModo,activeView:rdeActiveView}));}catch(e){}}
+function rdeSaveUI(){try{localStorage.setItem(REDE_UI_KEY,JSON.stringify({tab:rdeTab,gran:rdeGran,period:rdePeriod}));}catch(e){}}
 function rdeRestoreUI(){
   try{
     const raw=localStorage.getItem(REDE_UI_KEY);if(!raw)return;
     const ui=JSON.parse(raw);
-    if(ui.activeView&&['bb','ac','all'].includes(ui.activeView))rdeActiveView=ui.activeView;
-    if(ui.modo&&['m','s'].includes(ui.modo))rdeModo=ui.modo;
-    if(ui.selMonth&&rdeM.mes.includes(ui.selMonth))rdeSelMonth=ui.selMonth;
-    if(ui.selWeek&&rdeM.sem.includes(ui.selWeek))rdeSelWeek=ui.selWeek;
-    document.querySelectorAll('#panel-rede .rede-vbtn').forEach((b,i)=>b.classList.toggle('on',['bb','ac','all'][i]===rdeActiveView));
+    if(ui.tab&&['ACESSO','BACKBONE'].includes(ui.tab))rdeTab=ui.tab;
+    if(ui.gran&&['all','m','w'].includes(ui.gran))rdeGran=ui.gran;
+    if(ui.period)rdePeriod=ui.period;
   }catch(e){console.warn('rede ui restore',e)}
 }
 function rdeShowDash(){
@@ -5007,7 +4941,7 @@ function rdeShowDash(){
 document.getElementById('file-rede').addEventListener('change',function(e){
   const f=e.target.files[0];if(!f)return;
   const rd=new FileReader();
-  rd.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'array'});const rows=[];wb.SheetNames.forEach(sn=>XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:''}).forEach(row=>rows.push({sheet:sn,row})));rdeApplyRows(rows,f.name)}catch(err){alert('Erro ao carregar base de rede: '+err.message)}};
+  rd.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'array'});const rows=[];wb.SheetNames.forEach(sn=>{const ws=wb.Sheets[sn];const letterData=XLSX.utils.sheet_to_json(ws,{header:'A',defval:''});const namedData=XLSX.utils.sheet_to_json(ws,{defval:''});namedData.forEach((row,i)=>{const lr=letterData[i+1]||{};Object.entries(lr).forEach(([col,val])=>{row['__'+col]=val;});rows.push({sheet:sn,row});});});rdeApplyRows(rows,f.name)}catch(err){alert('Erro ao carregar base de rede: '+err.message)}};
   rd.readAsArrayBuffer(f);e.target.value='';
 });
 function rdePkeys(){return rdeModo==='m'?rdeM.mes:rdeM.sem;}
@@ -5019,23 +4953,22 @@ function rdeWeeksForMonth(monthKey){
   return[...new Set(idxs)].filter(i=>rdeM.sem[i]!==undefined).sort((a,b)=>rdeM.sem[a].localeCompare(rdeM.sem[b])).map(i=>({key:rdeM.sem[i],label:rdeM.sl[i]||rdeM.sem[i]}));
 }
 function rdeMonthForWeek(wk){if(!wk)return'';const all=[...rdeBD,...rdeAD];const idxs=[...new Set(all.filter(r=>rdeM.sem[r[2]]===wk).map(r=>r[1]))];return idxs.length===1?rdeM.mes[idxs[0]]||'':'';}
-function rdeBuildPeriodSelects(){
-  const ms=document.getElementById('rede-month-sel'),ws=document.getElementById('rede-week-sel');
-  if(ms)ms.innerHTML=rdePeriodOpts(rdeM.mes,rdeM.ml,rdeSelMonth,'Todos os meses');
-  if(ws){
-    const weeks=rdeWeeksForMonth(rdeSelMonth);
-    ws.innerHTML='<option value="">Todas as semanas</option>'+weeks.map(w=>`<option value="${w.key}"${w.key===rdeSelWeek?' selected':''}>${w.label}</option>`).join('');
-    if(rdeSelWeek&&!weeks.some(w=>w.key===rdeSelWeek)){rdeSelWeek='';ws.value='';}
-  }
-}
-function rdeSetMonth(v){rdeSelMonth=v;rdeSelWeek='';rdeModo='m';rdeBuildPeriodSelects();renderRede();rdeSaveUI();}
-function rdeSetWeek(v){rdeSelWeek=v;rdeModo=v?'s':'m';const mes=rdeMonthForWeek(rdeSelWeek);if(mes)rdeSelMonth=mes;rdeBuildPeriodSelects();renderRede();rdeSaveUI();}
-function rdeSetView(v){rdeActiveView=v;document.querySelectorAll('#panel-rede .rede-vbtn').forEach((b,i)=>b.classList.toggle('on',['bb','ac','all'][i]===v));renderRede();rdeSaveUI();}
-function rdeGoTab(id){
-  const ids=['vis','C','I','P','N'];
-  document.querySelectorAll('#panel-rede .rede-ctab').forEach((t,i)=>t.classList.toggle('on',ids[i]===id));
-  document.querySelectorAll('#panel-rede .rede-cpanel').forEach(p=>p.classList.toggle('on',p.id==='rcp-'+id));
-}
+function rdeMname(m){const mo={'01':'jan','02':'fev','03':'mar','04':'abr','05':'mai','06':'jun','07':'jul','08':'ago','09':'set','10':'out','11':'nov','12':'dez'};const p=String(m||'').split('-');return(mo[p[1]]||p[1]||m)+'/'+String(p[0]||'').slice(2);}
+function rdePKey(){return rdeGran==='w'?'w':'m';}
+function rdeToFlat(rows,kind){const isAC=kind==='AC';return rows.map(r=>{const det=r[isAC?8:7];const cidade=(det&&typeof det==='object')?String(det.cidade||'').trim():'';return{m:rdeM.mes[r[1]]||'',w:rdeM.sem[r[2]]||'',cl:r[0],p:r[3],o:r[4],t:r[5],c:isAC?(rdeM.mo[r[7]]||'Não informado'):(rdeM.ca[r[6]]||'Não informado'),cidade};}).filter(r=>r.m||r.w);}
+function rdeGetAllFlat(){return rdeToFlat(rdeTab==='ACESSO'?rdeAD:rdeBD,rdeTab==='ACESSO'?'AC':'BB');}
+function rdeGetDisplayRecs(){const flat=rdeGetAllFlat();const gk=rdePKey();if(rdeGran!=='all'&&rdePeriod)return flat.filter(r=>r[gk]===rdePeriod);return flat;}
+function rdeAgg2(recs){const n=recs.length;if(!n)return{n:0,prazo:0,outlier:0,tAvg:0,tMed:0};const p=recs.filter(r=>r.p===1).length,o=recs.filter(r=>r.o===1).length;const ts=recs.map(r=>r.t).filter(t=>t>0).sort((a,b)=>a-b);const tAvg=ts.length?ts.reduce((a,b)=>a+b,0)/ts.length:0;const tMed=ts.length?(ts.length%2?ts[(ts.length-1)/2]:(ts[ts.length/2-1]+ts[ts.length/2])/2):0;return{n,prazo:p/n*100,outlier:o/n*100,tAvg,tMed};}
+function rdeChipHtml(a){if(!a.n)return'<span class="rede-chip">—</span>';if(a.prazo>=RDE_M89&&a.outlier<=RDE_MOUT&&a.tAvg<=RDE_MTME)return'<span class="rede-chip ok">na meta</span>';return(a.prazo<75||a.outlier>15)?'<span class="rede-chip bd">crítico</span>':'<span class="rede-chip wn">atenção</span>';}
+function rdeSetTab(tab){rdeTab=tab;rdePeriod=null;if(rdeGran!=='all'){const flat=rdeGetAllFlat();const keys=[...new Set(flat.map(r=>r[rdePKey()]))].filter(Boolean).sort();rdePeriod=keys[keys.length-1]||null;}document.querySelectorAll('#panel-rede .rede-tab-btn').forEach(b=>b.classList.toggle('on',b.dataset.rdetab===tab));rdeSyncControls();renderRede();rdeSaveUI();}
+function rdeSetGran(gran){rdeGran=gran;if(gran==='all'){rdePeriod=null;}else{const flat=rdeGetAllFlat();const keys=[...new Set(flat.map(r=>r[rdePKey()]))].filter(Boolean).sort();rdePeriod=keys[keys.length-1]||null;}rdeSyncControls();renderRede();rdeSaveUI();}
+function rdePeriodClick(p){rdePeriod=p;rdeSyncControls();renderRede();rdeSaveUI();}
+function rdeSyncControls(){document.querySelectorAll('#rde-gran-seg .rede-sgbtn').forEach(b=>b.classList.toggle('on',b.dataset.g===rdeGran));const pr=document.getElementById('rde-period-row');if(!pr)return;if(rdeGran==='all'){pr.style.display='none';return;}pr.style.display='flex';const flat=rdeGetAllFlat();const gk=rdePKey();const keys=[...new Set(flat.map(r=>r[gk]))].filter(Boolean).sort();const seg=document.getElementById('rde-period-seg');if(seg)seg.innerHTML=keys.map(x=>{const lab=gk==='w'?String(x).replace(/^\d{4}-/,''):rdeMname(x);return`<button class="rede-sgbtn rede-pbtn${x===rdePeriod?' on':''}" onclick="rdePeriodClick('${eh(x)}')">${lab}</button>`;}).join('');}
+function rdeBuildPeriodSelects(){rdeSyncControls();}
+function rdeSetMonth(v){rdeSelMonth=v;rdeBuildPeriodSelects();}
+function rdeSetWeek(v){rdeSelWeek=v;rdeBuildPeriodSelects();}
+function rdeSetView(v){rdeActiveView=v;}
+function rdeGoTab(id){}
 function rdeFBB(cl){return rdeBD.filter(r=>{if(cl&&r[0]!==cl)return false;if(rdeSelMonth&&rdeM.mes[r[1]]!==rdeSelMonth)return false;if(rdeSelWeek&&rdeM.sem[r[2]]!==rdeSelWeek)return false;return true;})}
 function rdeFAC(cl){return rdeAD.filter(r=>{if(cl&&r[0]!==cl)return false;if(rdeSelMonth&&rdeM.mes[r[1]]!==rdeSelMonth)return false;if(rdeSelWeek&&rdeM.sem[r[2]]!==rdeSelWeek)return false;return true;})}
 function rdeFAll(cl){const bb=rdeFBB(cl).map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],0,rdeM.ca[r[6]]||'Backbone',r[7]]);const ac=rdeFAC(cl).map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],r[6],rdeM.mo[r[7]]||'Acesso',r[8]]);return bb.concat(ac);}
@@ -5116,7 +5049,7 @@ function rdeSetBL(id,items,color){
   const mx=items[0][1];
   el.innerHTML=items.map(([n,v])=>`<div class="rede-br"><span class="rede-bn">${eh(n)}</span><div class="rede-bb_"><div class="rede-bf" style="width:${(v/mx*100).toFixed(0)}%;background:${color}"></div></div><span class="rede-bv">${v}</span></div>`).join('');
 }
-function rdeRenderVis(){
+function rdeRenderVis_LEGACY(){
   const isAC=rdeActiveView==='ac',isAll=rdeActiveView==='all';
   const tag=isAll?'Backbone + Acesso':isAC?'Acesso':'Backbone';
   const rowsFor=cl=>isAll?rdeFAll(cl):(isAC?rdeFAC(cl):rdeFBB(cl));
@@ -5168,10 +5101,114 @@ function rdeRenderClusters(){
 }
 function renderRede(){
   if(!rdeBD.length&&!rdeAD.length)return;
-  rdeRenderVis();rdeRenderClusters();
+  const recs=rdeGetDisplayRecs(),all=rdeGetAllFlat();
+  const a=rdeAgg2(recs);
+  const isAC=rdeTab==='ACESSO',tl=isAC?'TME':'TMR';
+  const txC=getComputedStyle(document.body).getPropertyValue('--tx3').trim()||'#8e8e93';
+  const gdC=getComputedStyle(document.body).getPropertyValue('--bd').trim()||'rgba(0,0,0,.07)';
+  const gk=rdePKey();
+  // sync tabs
+  document.querySelectorAll('#panel-rede .rede-tab-btn').forEach(b=>b.classList.toggle('on',b.dataset.rdetab===rdeTab));
+  const thTme=document.getElementById('rde-th-tme');if(thTme)thTme.textContent=tl;
+  // KPIs
+  const kpiEl=document.getElementById('rde-kpis');
+  if(kpiEl){
+    const pCls=a.prazo>=RDE_M89?'ok':a.prazo>=RDE_M89*.88?'wn':'bd';
+    const oCls=a.outlier<=RDE_MOUT?'ok':a.outlier<=RDE_MOUT*1.8?'wn':'bd';
+    const tCls=a.tAvg<=RDE_MTME?'ok':a.tAvg<=RDE_MTME*1.5?'wn':'bd';
+    const c3=(cls)=>cls==='ok'?'#34c759':cls==='wn'?'#ff9500':'#ff3b30';
+    const pGap=a.prazo>=RDE_M89?'✓ dentro da meta':'▼ '+(RDE_M89-a.prazo).toFixed(1)+' p.p. abaixo';
+    const oGap=a.outlier<=RDE_MOUT?'✓ dentro da meta':'▲ '+(a.outlier-RDE_MOUT).toFixed(1)+' p.p. acima';
+    const tGap=a.tAvg<=RDE_MTME?'✓ dentro da meta':'▲ '+(a.tAvg-RDE_MTME).toFixed(2)+'h acima';
+    kpiEl.innerHTML=
+      `<div class="rede-kpi-card"><div class="rkl">Prazo</div><div class="rkv ${pCls}">${a.prazo.toFixed(1)}%</div><div class="rkmeta">${recs.filter(r=>r.p===1).length} de ${a.n} · meta ≥${RDE_M89}%</div><div class="rkgap ${pCls}">${pGap}</div><div class="rkbar"><div class="rkfill" style="width:${Math.min(a.prazo,100).toFixed(0)}%;background:${c3(pCls)}"></div></div></div>`+
+      `<div class="rede-kpi-card"><div class="rkl">Outlier</div><div class="rkv ${oCls}">${a.outlier.toFixed(1)}%</div><div class="rkmeta">${recs.filter(r=>r.o===1).length} de ${a.n} · meta ≤${RDE_MOUT}%</div><div class="rkgap ${oCls}">${oGap}</div><div class="rkbar"><div class="rkfill" style="width:${Math.min(a.outlier/10*100,100).toFixed(0)}%;background:${c3(oCls)}"></div></div></div>`+
+      `<div class="rede-kpi-card"><div class="rkl">${tl} médio</div><div class="rkv ${tCls}">${a.tAvg.toFixed(2)}h</div><div class="rkmeta">mediana ${a.tMed.toFixed(2)}h · meta ≤${RDE_MTME}h</div><div class="rkgap ${tCls}">${tGap}</div><div class="rkbar"><div class="rkfill" style="width:${Math.min(a.tAvg/RDE_MTME/2*100,100).toFixed(0)}%;background:${c3(tCls)}"></div></div></div>`;
+  }
+  // Evolution series
+  const evoUnit=document.getElementById('rde-evo-unit');if(evoUnit)evoUnit.textContent=gk==='w'?'semanal':'mensal';
+  const allKeys=[...new Set(all.map(r=>r[gk]))].filter(Boolean).sort();
+  const buckets=allKeys.map(x=>rdeAgg2(all.filter(r=>r[gk]===x)));
+  const labels=allKeys.map(x=>gk==='w'?String(x).replace(/^\d{4}-/,''):rdeMname(x));
+  // Line chart: Prazo & Outlier %
+  if(rdeLineCh2){try{rdeLineCh2.destroy();}catch(e){}}
+  const lcCv=document.getElementById('rde-line-ch');
+  if(lcCv){
+    rdeLineCh2=new Chart(lcCv,{type:'line',data:{labels,datasets:[
+      {label:'Prazo %',data:buckets.map(b=>+b.prazo.toFixed(1)),borderColor:'#34c759',backgroundColor:'rgba(52,199,89,.08)',tension:.35,fill:true,borderWidth:2,pointRadius:allKeys.map(x=>x===rdePeriod?6:3),pointBackgroundColor:'#34c759'},
+      {label:'Outlier %',data:buckets.map(b=>+b.outlier.toFixed(1)),borderColor:'#ff3b30',tension:.35,borderWidth:2,pointRadius:allKeys.map(x=>x===rdePeriod?6:3),pointBackgroundColor:'#ff3b30'},
+      {label:'Meta prazo',data:allKeys.map(()=>RDE_M89),type:'line',borderColor:'rgba(52,199,89,.35)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false},
+      {label:'Limite outlier',data:allKeys.map(()=>RDE_MOUT),type:'line',borderColor:'rgba(255,59,48,.35)',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:'Prazo & Outlier (%)',color:txC,font:{size:12,weight:'600'}},legend:{labels:{boxWidth:12,color:txC,filter:i=>!i.text.startsWith('Meta')&&!i.text.startsWith('Limite')}}},onClick:(e,el)=>{if(el.length){rdeGran=gk;rdePeriod=allKeys[el[0].index];rdeSyncControls();renderRede();}},scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC},min:0,max:100},x:{grid:{display:false},ticks:{color:txC}}},spanGaps:true}});
+  }
+  // Bar chart: TME/TMR per period
+  if(rdeTimeCh2){try{rdeTimeCh2.destroy();}catch(e){}}
+  const tcCv=document.getElementById('rde-time-ch');
+  if(tcCv){
+    rdeTimeCh2=new Chart(tcCv,{type:'bar',data:{labels,datasets:[
+      {label:tl,data:buckets.map(b=>+b.tAvg.toFixed(2)),borderRadius:6,backgroundColor:allKeys.map((x,i)=>x===rdePeriod?'rgba(0,122,255,.85)':(buckets[i].tAvg<=RDE_MTME?'rgba(52,199,89,.7)':'rgba(255,149,0,.75)'))},
+      {label:`Meta ${RDE_MTME}h`,data:allKeys.map(()=>RDE_MTME),type:'line',borderColor:'rgba(255,149,0,.5)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:`${tl} por período (h) · meta ${RDE_MTME}h`,color:txC,font:{size:12,weight:'600'}},legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.type==='line'?null:`${c.dataset.label}: ${c.parsed.y}h`}}},onClick:(e,el)=>{if(el.length&&el[0].datasetIndex===0){rdeGran=gk;rdePeriod=allKeys[el[0].index];rdeSyncControls();renderRede();}},scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'h',color:txC},min:0},x:{grid:{display:false},ticks:{color:txC}}},spanGaps:true}});
+  }
+  // Cluster table
+  const clMap={};recs.forEach(r=>{if(!clMap[r.cl])clMap[r.cl]=[];clMap[r.cl].push(r);});
+  const clKeys=Object.keys(clMap).sort();
+  const clTbl=document.getElementById('rde-cl-tbl');
+  if(clTbl){
+    clTbl.innerHTML=clKeys.map(cl=>{
+      const ca=rdeAgg2(clMap[cl]);
+      const pC=ca.prazo>=RDE_M89?'ok':ca.prazo<75?'bd':'wn';
+      const oC=ca.outlier<=RDE_MOUT?'ok':ca.outlier>15?'bd':'wn';
+      const tC=ca.tAvg<=RDE_MTME?'ok':ca.tAvg>10?'bd':'wn';
+      const col={ok:'var(--green,#34c759)',wn:'var(--orange,#ff9500)',bd:'var(--red,#ff3b30)'};
+      return`<tr><td><b>${eh(cl)}</b></td><td class="rede-num">${ca.n}</td><td class="rede-num" style="color:${col[pC]}">${ca.prazo.toFixed(1)}%</td><td class="rede-num" style="color:${col[oC]}">${ca.outlier.toFixed(1)}%</td><td class="rede-num" style="color:${col[tC]}">${ca.tAvg.toFixed(2)}h</td><td>${rdeChipHtml(ca)}</td></tr>`;
+    }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--tx3)">Sem dados</td></tr>';
+  }
+  // Cities offensive chart
+  const cityMap={};recs.forEach(r=>{const c=r.cidade&&r.cidade!==''?r.cidade:'Não informado';if(!cityMap[c])cityMap[c]={total:0,fp:0,ou:0};cityMap[c].total++;if(r.p===0)cityMap[c].fp++;if(r.o===1)cityMap[c].ou++;});
+  const topCities=Object.entries(cityMap).map(([k,v])=>({k,...v,score:v.fp+v.ou})).filter(x=>x.k!=='Não informado'||x.score>0).sort((a,b)=>b.score-a.score).slice(0,10);
+  if(rdeCityCh2){try{rdeCityCh2.destroy();}catch(e){}}
+  const cityCv=document.getElementById('rde-city-ch');
+  if(cityCv&&topCities.length){
+    rdeCityCh2=new Chart(cityCv,{type:'bar',data:{labels:topCities.map(c=>c.k),datasets:[{label:'Fora do prazo',data:topCities.map(c=>c.fp),backgroundColor:'rgba(255,59,48,.75)',borderRadius:4},{label:'Outlier',data:topCities.map(c=>c.ou),backgroundColor:'rgba(255,149,0,.8)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{title:{display:true,text:'Top 10 cidades ofensoras',color:txC,font:{size:12,weight:'600'}},legend:{labels:{boxWidth:12,color:txC}}},scales:{x:{stacked:false,grid:{color:gdC},ticks:{color:txC}},y:{grid:{display:false},ticks:{color:txC,font:{size:10}}}}}});
+  }else if(cityCv){const ctx=cityCv.getContext('2d');ctx.clearRect(0,0,cityCv.width,cityCv.height);}
+  // Causes chart
+  const causeMap={};recs.forEach(r=>{const c=String(r.c||'Não informado').trim()||'Não informado';if(!causeMap[c])causeMap[c]={fp:0,ou:0};if(r.p===0)causeMap[c].fp++;if(r.o===1)causeMap[c].ou++;});
+  const top8=Object.entries(causeMap).map(([k,v])=>({k,...v})).sort((a,b)=>(b.fp+b.ou)-(a.fp+a.ou)).slice(0,8);
+  if(rdeCauseCh2){try{rdeCauseCh2.destroy();}catch(e){}}
+  const ccCv=document.getElementById('rde-cause-ch');
+  if(ccCv&&top8.length){
+    rdeCauseCh2=new Chart(ccCv,{type:'bar',data:{labels:top8.map(t=>t.k),datasets:[{label:'Fora do prazo',data:top8.map(t=>t.fp),backgroundColor:'rgba(255,59,48,.75)',borderRadius:4},{label:'Outlier',data:top8.map(t=>t.ou),backgroundColor:'rgba(255,149,0,.8)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{title:{display:true,text:'Top causas de não-conformidade',color:txC,font:{size:12,weight:'600'}},legend:{labels:{boxWidth:12,color:txC}}},scales:{x:{grid:{color:gdC},ticks:{color:txC}},y:{grid:{display:false},ticks:{color:txC,font:{size:10}}}}}});
+  }
+  // Executive Report
+  const rptEl=document.getElementById('rde-report');
+  if(rptEl&&a.n>0){
+    const scopeTxt=rdeGran==='all'?'Acumulado':(rdeGran==='w'?'Semana '+(rdePeriod||''):rdeMname(rdePeriod||''));
+    const tabTxt=rdeTab==='ACESSO'?'Acesso':'Backbone';
+    const prazoStatus=a.prazo>=RDE_M89?'ok':'bd',outlierStatus=a.outlier<=RDE_MOUT?'ok':'bd',tmeStatus=a.tAvg<=RDE_MTME?'ok':'bd';
+    // Best/worst cluster
+    const clEntries=clKeys.map(cl=>({cl,a:rdeAgg2(clMap[cl])})).filter(x=>x.a.n>0);
+    const worstCl=clEntries.sort((a,b)=>a.a.prazo-b.a.prazo)[0];
+    const bestCl=[...clEntries].sort((a,b)=>b.a.prazo-a.a.prazo)[0];
+    // Top city/cause
+    const topCity=topCities[0];
+    const topCause=top8[0];
+    const cityPct=topCity&&a.n?((topCity.fp+topCity.ou)/a.n*100).toFixed(1):0;
+    const causePct=topCause&&a.n?((topCause.fp+topCause.ou)/a.n*100).toFixed(1):0;
+    const clReport=clEntries.map(x=>`${x.cl} <span class="${x.a.prazo>=RDE_M89?'rr-ok':'rr-bd'}">${x.a.prazo.toFixed(1)}%</span> (${x.a.n})`).join(' · ');
+    rptEl.innerHTML=
+      `<span class="rr-title">Relatório ${tabTxt} — ${scopeTxt}</span>`+
+      `<div class="rr-para"><b>Prazo:</b> <span class="rr-${prazoStatus}">${a.prazo.toFixed(1)}%</span> (${recs.filter(r=>r.p===1).length}/${a.n} chamados${a.prazo<RDE_M89?' · <b>'+((RDE_M89-a.prazo).toFixed(1))+' p.p. abaixo da meta</b>':''}).</div>`+
+      `<div class="rr-para"><b>Outlier:</b> <span class="rr-${outlierStatus}">${a.outlier.toFixed(1)}%</span> (${recs.filter(r=>r.o===1).length} chamados${a.outlier>RDE_MOUT?' · <b>'+(a.outlier-RDE_MOUT).toFixed(1)+' p.p. acima do limite</b>':''}).</div>`+
+      `<div class="rr-para"><b>${tl} médio:</b> <span class="rr-${tmeStatus}">${a.tAvg.toFixed(2)}h</span> (mediana ${a.tMed.toFixed(2)}h${a.tAvg>RDE_MTME?' · <b>'+(a.tAvg-RDE_MTME).toFixed(2)+'h acima da meta</b>':''}).</div>`+
+      (clReport?`<div class="rr-para"><b>Por cluster:</b> ${clReport}.</div>`:'')+
+      (worstCl&&worstCl.a.prazo<RDE_M89?`<div class="rr-para"><b>Cluster crítico:</b> ${worstCl.cl} com prazo de <span class="rr-bd">${worstCl.a.prazo.toFixed(1)}%</span> (${worstCl.a.n} chamados).</div>`:'')+
+      (topCity&&topCity.score>0?`<div class="rr-para"><b>Cidade mais ofensora:</b> ${eh(topCity.k)} com ${topCity.fp+topCity.ou} ocorrências (${cityPct}% do total) — ${topCity.fp} fora do prazo, ${topCity.ou} outlier.</div>`:'')+
+      (topCause&&topCause.fp+topCause.ou>0?`<div class="rr-para"><b>Causa dominante:</b> ${eh(topCause.k)} — ${topCause.fp+topCause.ou} casos (${causePct}% do total), sendo ${topCause.fp} fora do prazo e ${topCause.ou} outlier.</div>`:'');
+  }else if(rptEl){rptEl.innerHTML='<span style="color:var(--tx3);font-size:11px">Sem dados para o período selecionado.</span>';}
 }
 loadAbAnnotations();initAuth();renderFuel();
-rdeRestoreBase();if(rdeBD.length||rdeAD.length){rdeBuildPeriodSelects();rdeRestoreUI();}
+rdeRestoreBase();if(rdeBD.length||rdeAD.length){rdeRestoreUI();rdeSyncControls();renderRede();}
 </script>
 </body>
 </html>
