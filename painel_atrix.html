@@ -3913,7 +3913,7 @@ const OFS_UF_NAMES={
   PA:['arllon souza','renato augusto rodrigues dias','valdez coelho ferreira filho','william alves santos','derick willam alcantara silva','rodrigo piaui de carvalho','adriano da silva braga','gefferson de lima belisario','vagner goncalves das neves','vitor manoel santan']
 };
 const OFS_MOP_NAMES=['moises amorim viana','clemilton mendes da silva','cleimilton mendes da silva'];
-function normN(s){return String(s||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ');}
+function normN(s){return String(s||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');}
 function isOfsExcluded(t){return OFS_EXCLUDED.some(e=>normN(t).includes(e));}
 function isOfsWeekday(s){const n=normN(s);return OFS_DIAS_SEM.some(d=>n===normN(d));}
 function ofsStatusKey(s){
@@ -4933,7 +4933,7 @@ function downloadCurrentReport(){
   a.download='relatorio_atrix_'+new Date().toISOString().slice(0,10)+'.html';
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
 }
-</script>
+<\/script>
 </body>
 </html>`;
   const w=window.open('','_blank','width=1200,height=960,toolbar=0,menubar=0,scrollbars=1,resizable=1');
@@ -4952,7 +4952,7 @@ let rdeModo='m',rdeSelMonth='',rdeSelWeek='',rdeActiveView='bb',rdeCharts={};
 let rdeTab='ACESSO',rdeGran='all',rdePeriod=null,rdeCluster='',rdeCallsOnRender=false,rdeLineCh2=null,rdeTimeCh2=null,rdeCauseCh2=null,rdeCityCh2=null;
 const REDE_STORAGE='atrix:rede:bases:v2';
 const REDE_UI_KEY='atrix:rede:ui:v1';
-function rdeNk(v){return String(v||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/gi,'').toUpperCase()}
+function rdeNk(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toUpperCase()}
 function rdeGv(r,cols){const m=Object.fromEntries(Object.keys(r).map(k=>[rdeNk(k),k]));for(const c of cols){const k=m[rdeNk(c)];if(k&&r[k]!==undefined&&r[k]!=='')return r[k]}return''}
 function rdeNum(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number')return v;return parseFloat(String(v).replace(',','.').replace(/[^\d.-]/g,''))||0}
 function rdeBoolish(v){const s=rdeNk(v);return v===1||v===true||['SIM','S','TRUE','YES','Y','1','NO PRAZO','DENTRO PRAZO','DENTRO SLA'].includes(s)}
