@@ -1358,6 +1358,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
               <button class="ab-copy-btn" id="ab-btn-pivot" onclick="abCopiarPivot(this)" disabled>Copiar tabela</button>
             </div>
             <div class="ab-pivot-scroll"><table class="ab-pivot" id="ab-pivot"></table></div>
+            <p style="font-size:13px;color:var(--tx2);margin:10px 0 4px">Bom dia, segue backlog B2B reapros.</p>
             <div class="ab-section-hd"><span class="ab-section-title">Resumo em blocos por MOP/EPS</span></div>
             <div id="ab-blocos"></div>
           </div>
@@ -3170,12 +3171,20 @@ function abTextoPivot(chamados){
   });
   return t;
 }
-function abCopiarPivot(btn){
-  navigator.clipboard.writeText(abTextoPivot(gFAb())).then(()=>{
-    const o=btn.textContent;btn.textContent='Copiado!';
-    setTimeout(()=>btn.textContent=o,1500);
-  });
+function abCopiarTexto(texto,btn){
+  /* Força cópia como texto puro via textarea — evita que o browser copie HTML/imagem */
+  const ta=document.createElement('textarea');
+  ta.value=texto;
+  ta.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0';
+  document.body.appendChild(ta);
+  ta.focus();ta.select();
+  let ok=false;try{ok=document.execCommand('copy');}catch{}
+  document.body.removeChild(ta);
+  if(!ok&&navigator.clipboard)navigator.clipboard.writeText(texto).catch(()=>{});
+  const o=btn.textContent;btn.textContent='Copiado!';
+  setTimeout(()=>btn.textContent=o,1500);
 }
+function abCopiarPivot(btn){abCopiarTexto(abTextoPivot(gFAb()),btn);}
 function abRenderBlocos(chamados){
   const el=document.getElementById('ab-blocos');if(!el)return;
   const mopsData=[...new Set(chamados.map(c=>c.mop).filter(Boolean))];
@@ -3203,12 +3212,7 @@ function abTextoBloco(mop,chamados){
   });
   return t;
 }
-function abCopiarBloco(mop,btn){
-  navigator.clipboard.writeText(abTextoBloco(mop,gFAb())).then(()=>{
-    const o=btn.textContent;btn.textContent='Copiado!';
-    setTimeout(()=>btn.textContent=o,1500);
-  });
-}
+function abCopiarBloco(mop,btn){abCopiarTexto(abTextoBloco(mop,gFAb()),btn);}
 function toggleAbResumo(btn){
   const body=document.getElementById('ab-resumo-body');if(!body)return;
   const aberto=body.style.display!=='none';
