@@ -651,7 +651,12 @@ body {
 .ab-resumo-hd .abr-arrow{font-size:10px;transition:transform .15s;color:var(--tx3)}
 .ab-resumo-hd.open .abr-arrow{transform:rotate(90deg)}
 .ab-resumo-body{margin-top:12px}
-.ab-pivot-scroll{overflow-x:auto;margin-bottom:16px}
+.ab-section-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0 8px}
+.ab-section-title{font-size:12px;font-weight:600;color:var(--tx2)}
+.ab-copy-btn{font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:.5px solid var(--bd2);background:var(--surface2);color:var(--tx2);cursor:pointer;font-family:inherit;white-space:nowrap;transition:background .12s}
+.ab-copy-btn:hover:not(:disabled){background:var(--surface3);color:var(--tx)}
+.ab-copy-btn:disabled{opacity:.4;cursor:default}
+.ab-pivot-scroll{overflow-x:auto;margin-bottom:4px}
 .ab-pivot{width:100%;border-collapse:collapse;font-size:12px;min-width:380px}
 .ab-pivot th{padding:7px 10px;background:var(--blue-bg);color:var(--blue);font-weight:600;text-align:right;white-space:nowrap}
 .ab-pivot th.l{text-align:left}
@@ -660,24 +665,17 @@ body {
 .ab-pivot tr.apg td{background:var(--blue-bg);color:var(--blue);font-weight:600;border-bottom:none}
 .ab-pivot tr.aps td.l{padding-left:22px;color:var(--tx2)}
 .ab-pivot tr.apr td{background:var(--surface2);font-weight:600;border-bottom:none;color:var(--tx)}
-.ab-pivot .ab-neg{color:var(--red)}
-.ab-det-wrap{border:.5px solid var(--bd);border-radius:10px;overflow:hidden;margin-bottom:12px}
-.ab-det-head{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);font-weight:600;font-size:12px;cursor:pointer;border-top:.5px solid var(--bd)}
-.ab-det-head:first-child{border-top:none}
-.ab-det-meta{font-size:11px;color:var(--tx3);font-weight:400}
-.ab-det-chev{font-size:10px;margin-right:5px;transition:transform .15s;display:inline-block;color:var(--tx3)}
-.ab-det-head.open .ab-det-chev{transform:rotate(90deg)}
-.ab-det-body table{width:100%;border-collapse:collapse;font-size:12px}
-.ab-det-body th{padding:5px 10px;text-align:left;color:var(--tx3);font-weight:400;border-bottom:.5px solid var(--bd)}
-.ab-det-body td{padding:6px 10px;border-top:.5px solid var(--bd);color:var(--tx2)}
-.ab-wa-box{margin-top:16px}
-.ab-wa-lbl{font-size:12px;font-weight:600;color:var(--tx);margin-bottom:7px}
-.ab-wa-txt{width:100%;min-height:170px;border:.5px solid var(--bd2);border-radius:8px;padding:10px;font:12px/1.6 ui-monospace,monospace;resize:vertical;box-sizing:border-box;background:var(--surface);color:var(--tx)}
-.ab-wa-btns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-.ab-wa-btn{font-size:12px;padding:7px 13px;border-radius:8px;border:.5px solid var(--bd);background:var(--surface);cursor:pointer;color:var(--tx2);font-family:inherit;transition:background .12s}
-.ab-wa-btn:hover{background:var(--surface2)}
-.ab-wa-btn.wa-green{background:#25d366;border-color:#1da851;color:#fff;font-weight:600}
-.ab-wa-btn.wa-green:hover{background:#1db954}
+.ab-bloco{border:.5px solid var(--bd);border-radius:10px;overflow:hidden;margin-bottom:10px}
+.ab-bloco-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px;background:var(--surface2)}
+.ab-bloco-titulo{display:flex;align-items:center;gap:7px;font-weight:600;font-size:12px;color:var(--tx)}
+.ab-bloco-qtd{font-weight:400;color:var(--tx3)}
+.ab-bloco-scroll{overflow-x:auto}
+.ab-bloco-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:680px}
+.ab-bloco-tbl th{padding:6px 10px;background:var(--blue-bg);color:var(--blue);text-align:left;font-weight:600;white-space:nowrap}
+.ab-bloco-tbl td{padding:7px 10px;border-bottom:.5px solid var(--bd);color:var(--tx2);vertical-align:top}
+.ab-bloco-tbl tr:last-child td{border-bottom:none}
+.ab-faixa-tag{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.ab-faixa-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block}
 table { width: 100%; border-collapse: collapse; font-size: 11px; }
 th {
   text-align: left; padding: 8px 12px;
@@ -1355,16 +1353,13 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
             <span class="abr-arrow">▶</span>
           </div>
           <div id="ab-resumo-body" class="ab-resumo-body" style="display:none">
-            <div class="ab-pivot-scroll"><table class="ab-pivot" id="ab-pivot"></table></div>
-            <div id="ab-det"></div>
-            <div class="ab-wa-box">
-              <div class="ab-wa-lbl"><i class="ti ti-brand-whatsapp" style="font-size:12px;vertical-align:-1px;color:#25d366;margin-right:4px"></i>Relatório para WhatsApp</div>
-              <textarea id="ab-wa-txt" class="ab-wa-txt" readonly></textarea>
-              <div class="ab-wa-btns">
-                <button class="ab-wa-btn" onclick="abWaCopiar()"><span id="ab-wa-copy-lbl">Copiar texto</span></button>
-                <button class="ab-wa-btn wa-green" onclick="abWaAbrir()"><i class="ti ti-brand-whatsapp" style="font-size:12px;vertical-align:-1px"></i> Abrir no WhatsApp</button>
-              </div>
+            <div class="ab-section-hd">
+              <span class="ab-section-title">Tabela dinâmica — substatus × MOP/EPS × UF</span>
+              <button class="ab-copy-btn" id="ab-btn-pivot" onclick="abCopiarPivot(this)" disabled>Copiar tabela</button>
             </div>
+            <div class="ab-pivot-scroll"><table class="ab-pivot" id="ab-pivot"></table></div>
+            <div class="ab-section-hd"><span class="ab-section-title">Resumo em blocos por MOP/EPS</span></div>
+            <div id="ab-blocos"></div>
           </div>
         </div>
       </div>
@@ -2194,8 +2189,8 @@ const SLA_ORDER=['Maior que 24h','Entre 12h e 24h','Entre 8h e 12h','Entre 4h e 
 const SLA_CLR={'Maior que 24h':'#ff3b30','Entre 12h e 24h':'#ff9500','Entre 8h e 12h':'#ffcc00','Entre 4h e 8h':'#34c759','Até 4h':'#007aff'};
 const SLA_BADGE={'Maior que 24h':'b-red','Entre 12h e 24h':'b-orange','Entre 8h e 12h':'b-yellow','Entre 4h e 8h':'b-green','Até 4h':'b-blue'};
 const AB_ORDEM_UF=['MA','PA','PI','AM','AP'];
-const AB_ORDEM_MOP=['GIGA+ MA','SLN MA','SLN PA','GIGA+ PI','GIGA+ AM','GIGA+ AP','ADX'];
-const AB_ORDEM_SUB=['Pendente Agendamento','Pendente Cliente','Aguardando Liberação De Acesso','Encaminhado ao Técnico','Pendente Validação'];
+const AB_ORDEM_MOP=['SLN MA','GIGA+ MA','GIGA+ PI','SLN PA','GIGA+ AM','GIGA+ AP','ADX'];
+const AB_ORDEM_SUB=['Pendente Agendamento','Pendente Cliente','Aguardando Liberação De Acesso','Aguardando Disponibilidade Técnica','Encaminhado ao Técnico','Pendente Validação'];
 const AGING_MAP={'Maior que 24h':'Maior que 24h','Entre 12h e 24h':'Entre 12h e 24h','Entre 8h e 12h':'Entre 8h e 12h','Entre 4h e 8h':'Entre 4h e 8h','Ate 4h':'Até 4h','Até 4h':'Até 4h','Ate 8h':'Entre 4h e 8h','Até 8h':'Entre 4h e 8h','Ate 12h':'Entre 8h e 12h','Até 12h':'Entre 8h e 12h','Ate 24h':'Entre 12h e 24h','Até 24h':'Entre 12h e 24h'};
 const MOP_CLR={'SLN MA':'#007aff','GIGA+ MA':'#34c759','GIGA+ PI':'#ff6b35','SLN PA':'#af52de','ADX':'#32ade6','MA CAP':'#007aff','MA INT':'#34c759','PI CAP':'#ff6b35','PI INT':'#ff9f0a','PA CAP':'#af52de','PA INT':'#c4439a','AP / AM':'#32ade6'};
 const MOP_QUICK=['SLN MA','GIGA+ MA','GIGA+ PI','SLN PA','ADX'];
@@ -3127,6 +3122,13 @@ function abConstruirPivot(chamados){
   return{ufs,mapa};
 }
 function abSomaUf(obj,ufs){return ufs.reduce((t,uf)=>t+(obj[uf]||0),0);}
+function abFaixaDot(f){
+  f=(f||'').toLowerCase();
+  if(f.includes('maior'))return'var(--red)';
+  if(f.includes('12h e 24h'))return'var(--orange)';
+  if(f.includes('8h e 12h'))return'var(--yellow)';
+  return'var(--green)';
+}
 function abRenderPivot(chamados){
   const el=document.getElementById('ab-pivot');if(!el)return;
   const{ufs,mapa}=abConstruirPivot(chamados);
@@ -3150,72 +3152,77 @@ function abRenderPivot(chamados){
   b+=`<tr class="apr"><td class="l">Total geral</td>`+ufs.map(uf=>`<td>${totalUf[uf]||''}</td>`).join('')+`<td>${totalGeral}</td></tr></tbody>`;
   el.innerHTML=h+b;
 }
-function abRenderDet(chamados){
-  const el=document.getElementById('ab-det');if(!el)return;
-  const grupos={};
-  chamados.forEach(c=>{const m=c.mop||'—';(grupos[m]=grupos[m]||[]).push(c);});
-  const mops=Object.keys(grupos).sort(abOrdenarPor(AB_ORDEM_MOP));
-  el.innerHTML='<div class="ab-det-wrap">'+mops.map((m,i)=>{
-    const itens=grupos[m];
-    const outlier=itens.filter(c=>c.faixa===SLA_ORDER[0]).length;
-    const linhas=itens.map(c=>{
-      const bc=SLA_BADGE[c.faixa]||'b-blue';
-      const cl=safeUrl(c.link);
-      const idCell=cl?`<a href="${eh(cl)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-weight:600">#${eh(c.id)}</a>`:`<span style="font-weight:600">#${eh(c.id)}</span>`;
-      return`<tr><td>${idCell}</td><td>${eh(c.cliente)}</td><td style="color:var(--tx3)">${eh(c.cidade)}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${fd(c.slaH)}</td><td><span class="badge ${bc}">${eh(c.faixa)}</span></td><td style="color:var(--tx3)">${eh(c.substatus)}</td></tr>`;
-    }).join('');
-    return`<div class="ab-det-head${i===0?' open':''}" onclick="abToggleDet(this)"><span><span class="ab-det-chev">▶</span>${eh(m)}</span><span class="ab-det-meta">${itens.length} chamado(s)${outlier?` · ${outlier} outlier >24h`:''}</span></div><div class="ab-det-body"${i===0?'':' style="display:none"'}><div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>Cliente</th><th>Cidade</th><th style="text-align:right">SLA</th><th>Faixa</th><th>Substatus</th></tr></thead><tbody>${linhas}</tbody></table></div></div>`;
-  }).join('')+'</div>';
-}
-function abToggleDet(head){
-  head.classList.toggle('open');
-  head.nextElementSibling.style.display=head.classList.contains('open')?'':'none';
-}
-function abGerarWA(chamados){
+function abTextoPivot(chamados){
   const{ufs,mapa}=abConstruirPivot(chamados);
   const subs=Object.keys(mapa).sort(abOrdenarPor(AB_ORDEM_SUB));
-  const hoje=new Date().toLocaleDateString('pt-BR');
-  const outlier=chamados.filter(c=>c.faixa===SLA_ORDER[0]).length;
-  const dentro=chamados.length-outlier;
-  let t=`📋 *RESUMO B2B ABERTOS* — ${hoje}\nTotal: *${chamados.length}* chamado(s)\n`;
+  const agora=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  let t=`📋 *RESUMO B2B ABERTOS* — ${agora}\nTotal: *${chamados.length}* chamado(s)\n`;
   subs.forEach(s=>{
-    const mops=mapa[s];
-    const gUf={};ufs.forEach(uf=>gUf[uf]=0);
+    const mops=mapa[s];const gUf={};ufs.forEach(uf=>gUf[uf]=0);
     Object.values(mops).forEach(o=>ufs.forEach(uf=>gUf[uf]+=(o[uf]||0)));
     const gT=abSomaUf(gUf,ufs);if(gT<1)return;
-    t+=`\n*${s.toUpperCase()}* (${gT})\n`;
+    t+=`\n*${s}* (${gT})\n`;
     Object.keys(mops).sort(abOrdenarPor(AB_ORDEM_MOP)).forEach(m=>{
       const o=mops[m];const mT=abSomaUf(o,ufs);if(mT<1)return;
       const det=ufs.filter(uf=>o[uf]).map(uf=>`${uf} ${o[uf]}`).join(', ');
       t+=`• ${m}: ${mT} (${det})\n`;
     });
   });
-  t+=`\n⏱ Fora do prazo (>24h): *${outlier}*\n✓ Dentro do prazo: *${dentro}*`;
   return t;
+}
+function abCopiarPivot(btn){
+  navigator.clipboard.writeText(abTextoPivot(gFAb())).then(()=>{
+    const o=btn.textContent;btn.textContent='Copiado!';
+    setTimeout(()=>btn.textContent=o,1500);
+  });
+}
+function abRenderBlocos(chamados){
+  const el=document.getElementById('ab-blocos');if(!el)return;
+  const mopsData=[...new Set(chamados.map(c=>c.mop).filter(Boolean))];
+  const mopsExtra=mopsData.filter(m=>!AB_ORDEM_MOP.some(x=>nk(x)===nk(m)));
+  const mopsFull=[...AB_ORDEM_MOP,...mopsExtra];
+  el.innerHTML=mopsFull.map(mop=>{
+    const itens=chamados.filter(c=>nk(c.mop)===nk(mop));
+    const linhas=itens.length?itens.map(c=>{
+      const cl=safeUrl(c.link);
+      const idCell=cl?`<a href="${eh(cl)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-weight:600">${eh(c.id)}</a>`:`<span style="font-weight:600;color:var(--blue)">${eh(c.id)}</span>`;
+      return`<tr><td style="min-width:140px">${eh(c.cliente)}</td><td style="white-space:nowrap">${idCell}</td><td>${eh(c.assunto)}</td><td style="text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap">${fd(c.slaH)}</td><td><span class="ab-faixa-tag"><span class="ab-faixa-dot" style="background:${abFaixaDot(c.faixa)}"></span>${eh(c.faixa)}</span></td><td style="color:var(--tx3);white-space:nowrap">${eh(c.cidade)}</td><td style="color:var(--tx3)">${eh(c.uf)}</td><td style="color:var(--tx3)">${eh(c.substatus)}</td></tr>`;
+    }).join(''):`<tr><td colspan="8" style="text-align:center;color:var(--tx3);padding:14px;font-style:italic">Nenhum chamado em aberto neste MOP/EPS.</td></tr>`;
+    return`<div class="ab-bloco"><div class="ab-bloco-hd"><span class="ab-bloco-titulo">▸ ${eh(mop)} <span class="ab-bloco-qtd">· ${itens.length} chamado(s)</span></span><button class="ab-copy-btn" onclick="abCopiarBloco('${eh(mop)}',this)"${itens.length?'':' disabled'}>Copiar bloco</button></div><div class="ab-bloco-scroll"><table class="ab-bloco-tbl"><thead><tr><th>Cliente</th><th>ID Ticket</th><th>Assunto</th><th style="text-align:right">SLA</th><th>Faixa</th><th>Cidade</th><th>UF</th><th>Substatus</th></tr></thead><tbody>${linhas}</tbody></table></div></div>`;
+  }).join('');
+}
+function abTextoBloco(mop,chamados){
+  const itens=chamados.filter(c=>nk(c.mop)===nk(mop));
+  const agora=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  let t=`📋 *${mop}* — ${itens.length} chamado(s)\n_Atualizado ${agora}_\n`;
+  if(!itens.length){return t+'\nSem chamados em aberto.';}
+  itens.forEach((c,i)=>{
+    t+=`\n*${i+1}. ${c.cliente}* — #${c.id}\n`;
+    if(c.assunto)t+=`${c.assunto}\n`;
+    t+=`⏱ ${fd(c.slaH)} · ${c.faixa} · ${c.cidade}/${c.uf}\nSubstatus: ${c.substatus}\n`;
+  });
+  return t;
+}
+function abCopiarBloco(mop,btn){
+  navigator.clipboard.writeText(abTextoBloco(mop,gFAb())).then(()=>{
+    const o=btn.textContent;btn.textContent='Copiado!';
+    setTimeout(()=>btn.textContent=o,1500);
+  });
 }
 function toggleAbResumo(btn){
   const body=document.getElementById('ab-resumo-body');if(!body)return;
   const aberto=body.style.display!=='none';
   body.style.display=aberto?'none':'';
   btn.classList.toggle('open',!aberto);
-  if(!aberto){const ch=gFAb();abRenderPivot(ch);abRenderDet(ch);const ta=document.getElementById('ab-wa-txt');if(ta)ta.value=abGerarWA(ch);}
+  if(!aberto)renderAbResumo();
 }
 function renderAbResumo(){
   const body=document.getElementById('ab-resumo-body');
   if(!body||body.style.display==='none')return;
-  const ch=gFAb();abRenderPivot(ch);abRenderDet(ch);
-  const ta=document.getElementById('ab-wa-txt');if(ta)ta.value=abGerarWA(ch);
-}
-function abWaCopiar(){
-  const ta=document.getElementById('ab-wa-txt');if(!ta)return;
-  navigator.clipboard.writeText(ta.value).then(()=>{
-    const l=document.getElementById('ab-wa-copy-lbl');if(!l)return;
-    l.textContent='Copiado!';setTimeout(()=>l.textContent='Copiar texto',1500);
-  });
-}
-function abWaAbrir(){
-  const ta=document.getElementById('ab-wa-txt');if(!ta)return;
-  window.open('https://wa.me/?text='+encodeURIComponent(ta.value),'_blank');
+  const ch=gFAb();
+  abRenderPivot(ch);
+  abRenderBlocos(ch);
+  const pb=document.getElementById('ab-btn-pivot');if(pb)pb.disabled=ch.length===0;
 }
 
 /* ─── RENDER ENCERRADOS ─── */
