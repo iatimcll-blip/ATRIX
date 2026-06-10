@@ -2828,6 +2828,7 @@ function procAb(raw,fname){
   });
   document.getElementById('nb-ab').textContent=dAb.length;
   lastAbAt=now2();updateUploadTimes();
+  podaAbAnnotations(); // apaga anotações de tickets que saíram da base
   fillFiltersAb();renderAllAb();startRefresh();
   document.getElementById('empty-ab').style.display='none';
   document.getElementById('dash-ab').style.display='block';
@@ -4284,6 +4285,12 @@ let abAnnotations={};
 const AB_ANN_KEY='atrix:ab:annotations:v1';
 function loadAbAnnotations(){try{abAnnotations=JSON.parse(localStorage.getItem(AB_ANN_KEY)||'{}')||{};}catch{abAnnotations={};}}
 function saveAbAnnotation(id,field,value){if(!id)return;if(!abAnnotations[id])abAnnotations[id]={};abAnnotations[id][field]=value;try{localStorage.setItem(AB_ANN_KEY,JSON.stringify(abAnnotations));}catch(e){console.warn('ann save',e);}}
+/* Poda: remove anotações de tickets que não estão mais na base ativa */
+function podaAbAnnotations(){
+  const ativos=new Set(dAb.map(d=>d.id));
+  Object.keys(abAnnotations).forEach(id=>{if(!ativos.has(id))delete abAnnotations[id];});
+  try{localStorage.setItem(AB_ANN_KEY,JSON.stringify(abAnnotations));}catch(e){console.warn('ann poda',e);}
+}
 function getOfsProfList(){return[...new Set(ofsRows.map(r=>r.tecnico).filter(Boolean))].sort();}
 function abAnnProfSelect(id){
   const saved=(abAnnotations[id]||{}).prof||'';
