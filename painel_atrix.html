@@ -538,6 +538,10 @@ body {
   min-width: 160px; transition: border-color .13s;
 }
 .finput:focus { border-color: var(--blue); }
+.srch-wrap{display:flex;align-items:center;gap:0;position:relative}
+.srch-wrap .finput{border-radius:8px 0 0 8px;min-width:160px;flex:1}
+.srch-clear{border:.5px solid var(--bd2);border-left:none;border-radius:0 8px 8px 0;background:var(--surface);color:var(--tx3);cursor:pointer;font-size:13px;line-height:1;padding:0 8px;height:100%;align-self:stretch;display:flex;align-items:center;transition:color .12s,background .12s}
+.srch-clear:hover{color:var(--tx);background:var(--surface2)}
 [data-theme=dark] .fsel, [data-theme=dark] .finput { background: var(--surface2); }
 .quick-mop {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
@@ -1338,7 +1342,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <select class="fsel" id="f-faixa" onchange="renderTAb()"><option value="">Todas as faixas</option></select>
           <select class="fsel" id="f-sub" onchange="renderTAb()"><option value="">Todos substatus</option></select>
           <select class="fsel" id="f-uf" onchange="renderTAb()"><option value="">Todas UFs</option></select>
-          <input class="finput" id="f-srch-ab" placeholder="Buscar cliente ou ticket…" oninput="renderTAb()">
+          <div class="srch-wrap"><input class="finput" id="f-srch-ab" placeholder="Buscar cliente ou ticket…" oninput="renderTAb()"><button class="srch-clear" onclick="document.getElementById('f-srch-ab').value='';renderTAb()" title="Limpar busca">×</button></div>
         </div>
         <div class="ab-sort-bar">
           <span class="abs-label">Ordenar por:</span>
@@ -3049,8 +3053,10 @@ function rTecAb(){
   const sem=data.filter(d=>!(abAnnotations[d.id]||{}).prof).length;
   const el=document.getElementById('reg-ab');if(!el)return;
   const entries=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const atrib=entries.reduce((s,e)=>s+e[1],0);
   const rows=listRows(entries,()=>'var(--blue)');
-  el.innerHTML=(rows||(entries.length?'':'<div style="font-size:11px;color:var(--tx3);padding:5px">Nenhum técnico atribuído</div>'))+(sem?`<div style="font-size:10px;color:var(--tx3);padding:2px 0 0">Sem atribuição: ${sem}</div>`:'');
+  const footer=data.length?`<div style="font-size:10px;color:var(--tx3);padding:5px 0 0;border-top:.5px solid var(--bd);margin-top:4px">Atribuídos: <b>${atrib}</b> · Sem atribuição: <b>${sem}</b> · Total: <b>${atrib+sem}</b></div>`:'';
+  el.innerHTML=(rows||(!entries.length?'<div style="font-size:11px;color:var(--tx3);padding:5px">Nenhum técnico atribuído</div>':''))+footer;
 }
 function rMopAb(){
   const data=abScope();
