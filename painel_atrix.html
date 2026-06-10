@@ -3071,15 +3071,19 @@ function rSlaAb(){
   document.getElementById('sla-ab').innerHTML=barRows(SLA_ORDER.map(f=>[f,c[f]]),k=>SLA_CLR[k],mx);
 }
 function rTecAb(){
-  const data=abScope();const counts={};
+  const data=abScope();
+  const fechVal=data.filter(d=>{const sk=nk(d.substatus);return sk.includes('FECHADO')||isValidationSubstatus(d.substatus);}).length;
+  const counts={};
   data.forEach(d=>{const p=(abAnnotations[d.id]||{}).prof;if(p)counts[p]=(counts[p]||0)+1;});
   const sem=data.filter(d=>!(abAnnotations[d.id]||{}).prof).length;
   const el=document.getElementById('reg-ab');if(!el)return;
   const entries=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
   const atrib=entries.reduce((s,e)=>s+e[1],0);
-  const rows=listRows(entries,()=>'var(--blue)');
-  const footer=data.length?`<div style="font-size:10px;color:var(--tx3);padding:5px 0 0;border-top:.5px solid var(--bd);margin-top:4px">Atribuídos: <b>${atrib}</b> · Sem atribuição: <b>${sem}</b> · Total: <b>${atrib+sem}</b></div>`:'';
-  el.innerHTML=(rows||(!entries.length?'<div style="font-size:11px;color:var(--tx3);padding:5px">Nenhum técnico atribuído</div>':''))+footer;
+  const counter=`<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0 6px;border-bottom:.5px solid var(--bd);margin-bottom:5px"><span style="font-size:10px;color:var(--tx3)">Fechados + Pend. Validação</span><b style="font-size:14px;color:var(--green)">${fechVal}</b></div>`;
+  const rows=entries.map(([k,v])=>`<div class="lrow"><div class="ll"><span class="ldot" style="background:var(--blue)"></span>${eh(k)}</div><span class="lc">${v}</span></div>`).join('');
+  const noTec=!entries.length?`<div style="font-size:11px;color:var(--tx3);padding:3px 0">Nenhum técnico atribuído</div>`:'';
+  const footer=`<div style="font-size:10px;color:var(--tx3);padding:5px 0 0;border-top:.5px solid var(--bd);margin-top:4px">Atribuídos: <b>${atrib}</b> · Sem atribuição: <b>${sem}</b> · Total: <b>${atrib+sem}</b></div>`;
+  el.innerHTML=counter+(rows||noTec)+footer;
 }
 function rMopAb(){
   const data=abScope();
