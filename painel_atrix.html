@@ -108,7 +108,7 @@ body {
   font-size: clamp(10px, 1vw, 12px); font-weight: 500; color: var(--tx3);
   cursor: pointer; background: none; border: none;
   font-family: inherit; transition: color .15s, background .15s; user-select: none; white-space: nowrap;
-  flex: 1 1 0; min-width: 60px; justify-content: center; position: relative;
+  flex: 1 1 0; min-width: 0; justify-content: center; position: relative;
 }
 .ntab:hover { background: var(--surface2); }
 .ntab.active { background: var(--surface); box-shadow: var(--shadow-sm); }
@@ -292,7 +292,7 @@ body {
   text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; margin-right: 2px;
 }
 /* NAV RIGHT */
-.nav-right { display: flex; align-items: center; gap: 6px; margin-left: clamp(6px, 1vw, 10px); flex-shrink: 0; overflow-x: auto; scrollbar-width: none; max-width: min(60vw, 700px); }
+.nav-right { display: flex; align-items: center; gap: 6px; margin-left: clamp(6px, 1vw, 10px); flex-shrink: 1; overflow-x: auto; scrollbar-width: none; min-width: 0; }
 .nav-right::-webkit-scrollbar { display: none; }
 .nav-btn {
   width: clamp(24px, 2vw, 30px); height: clamp(24px, 2vw, 30px); border-radius: 8px; border: .5px solid var(--bd);
@@ -1357,8 +1357,10 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
               <span class="ab-section-title">Tabela dinâmica — substatus × MOP/EPS × UF</span>
               <button class="ab-copy-btn" id="ab-btn-pivot" onclick="abCopiarPivot(this)" disabled>Copiar tabela</button>
             </div>
-            <div class="ab-pivot-scroll"><table class="ab-pivot" id="ab-pivot"></table></div>
-            <p style="font-size:13px;color:var(--tx2);margin:10px 0 4px">Bom dia, segue backlog B2B reapros.</p>
+            <div id="ab-pivot-cap" style="padding:10px;background:var(--surface);border-radius:8px;border:.5px solid var(--bd)">
+              <div class="ab-pivot-scroll"><table class="ab-pivot" id="ab-pivot"></table></div>
+              <p style="font-size:13px;color:var(--tx2);margin:10px 0 2px">Bom dia, segue backlog B2B reapros.</p>
+            </div>
             <div class="ab-section-hd"><span class="ab-section-title">Resumo em blocos por MOP/EPS</span></div>
             <div id="ab-blocos"></div>
           </div>
@@ -3171,20 +3173,46 @@ function abTextoPivot(chamados){
   });
   return t;
 }
-function abCopiarTexto(texto,btn){
-  /* Força cópia como texto puro via textarea — evita que o browser copie HTML/imagem */
-  const ta=document.createElement('textarea');
-  ta.value=texto;
-  ta.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0';
-  document.body.appendChild(ta);
-  ta.focus();ta.select();
-  let ok=false;try{ok=document.execCommand('copy');}catch{}
-  document.body.removeChild(ta);
-  if(!ok&&navigator.clipboard)navigator.clipboard.writeText(texto).catch(()=>{});
-  const o=btn.textContent;btn.textContent='Copiado!';
-  setTimeout(()=>btn.textContent=o,1500);
+function abCarregarH2C(cb){
+  if(window.html2canvas)return cb();
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+  s.onload=cb;s.onerror=()=>{alert('Falha ao carregar html2canvas.');};
+  document.head.appendChild(s);
 }
-function abCopiarPivot(btn){abCopiarTexto(abTextoPivot(gFAb()),btn);}
+function abCopiarImagem(el,btn){
+  const orig=btn.textContent;
+  btn.textContent='Gerando…';btn.disabled=true;
+  /* oculta botões dentro do elemento capturado */
+  const btns=[...el.querySelectorAll('.ab-copy-btn,button')];
+  btns.forEach(b=>b.style.visibility='hidden');
+  abCarregarH2C(async()=>{
+    try{
+      const bg=getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#ffffff';
+      const canvas=await html2canvas(el,{backgroundColor:bg,scale:2,useCORS:true,logging:false,allowTaint:true});
+      btns.forEach(b=>b.style.visibility='');
+      canvas.toBlob(async blob=>{
+        try{
+          await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+          btn.textContent='Copiado!';
+        }catch{
+          const a=document.createElement('a');
+          a.href=URL.createObjectURL(blob);a.download='resumo-atrix.png';a.click();
+          btn.textContent='Salvo!';
+        }
+        btn.disabled=false;setTimeout(()=>btn.textContent=orig,2000);
+      },'image/png');
+    }catch(e){
+      btns.forEach(b=>b.style.visibility='');
+      btn.textContent='Erro';btn.disabled=false;
+      setTimeout(()=>btn.textContent=orig,2000);
+    }
+  });
+}
+function abCopiarPivot(btn){
+  const el=document.getElementById('ab-pivot-cap');
+  if(el)abCopiarImagem(el,btn);
+}
 function abRenderBlocos(chamados){
   const el=document.getElementById('ab-blocos');if(!el)return;
   const mopsData=[...new Set(chamados.map(c=>c.mop).filter(Boolean))];
@@ -3212,7 +3240,10 @@ function abTextoBloco(mop,chamados){
   });
   return t;
 }
-function abCopiarBloco(mop,btn){abCopiarTexto(abTextoBloco(mop,gFAb()),btn);}
+function abCopiarBloco(mop,btn){
+  const el=btn.closest('.ab-bloco');
+  if(el)abCopiarImagem(el,btn);
+}
 function toggleAbResumo(btn){
   const body=document.getElementById('ab-resumo-body');if(!body)return;
   const aberto=body.style.display!=='none';
