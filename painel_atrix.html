@@ -80,7 +80,7 @@ body {
   padding: clamp(5px, 0.8vh, 8px) clamp(10px, 1.5vw, 20px); gap: 0; position: relative; z-index: 100;
 }
 .nav-brand {
-  display: flex; align-items: center; gap: 8px; margin-right: clamp(8px, 2vw, 30px); flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px; margin-right: clamp(6px, 1.5vw, 24px); flex-shrink: 0;
   padding: clamp(3px, 0.5vh, 5px) clamp(6px, 0.8vw, 12px); border-radius: 14px;
   background: rgba(255,255,255,.66); border: .5px solid var(--bd);
   box-shadow: 0 8px 24px rgba(0,0,0,.08);
@@ -92,7 +92,7 @@ body {
   font-size: 14px; color: #fff; font-weight: 600; flex-shrink: 0;
 }
 .nav-logo {
-  width: clamp(110px, 13vw, 220px); height: clamp(40px, 5vh, 58px); object-fit: contain; display: block;
+  width: clamp(80px, 10vw, 180px); height: clamp(36px, 4.5vh, 52px); object-fit: contain; display: block;
   filter: drop-shadow(0 6px 14px rgba(0,0,0,.18));
 }
 [data-theme=dark] .nav-brand { background: rgba(28,28,30,.72); }
@@ -292,7 +292,7 @@ body {
   text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; margin-right: 2px;
 }
 /* NAV RIGHT */
-.nav-right { display: flex; align-items: center; gap: 6px; margin-left: clamp(6px, 1vw, 10px); flex-shrink: 1; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.nav-right { display: flex; align-items: center; gap: 6px; margin-left: clamp(6px, 1vw, 10px); flex-shrink: 0; overflow-x: visible; }
 .nav-right::-webkit-scrollbar { display: none; }
 .nav-btn {
   width: clamp(24px, 2vw, 30px); height: clamp(24px, 2vw, 30px); border-radius: 8px; border: .5px solid var(--bd);
@@ -978,6 +978,11 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
   /* chips: esconde texto, mantém só o dot */
   .nav-chip .nc-text{display:none}
   .nav-chip{padding:4px 5px;gap:0}
+  /* tabs: ícones ocultos, fonte e padding menores — libera ~150px */
+  .ntab i{display:none}
+  .ntab{font-size:10px;padding:5px 7px;gap:2px}
+  .nav-logo{width:clamp(72px,7.5vw,110px);height:38px}
+  .nav-brand{margin-right:6px;padding:3px 6px}
 }
 @media(max-width:620px){
   /* chips ocultos — Central de Dados ainda acessível pelo botão */
