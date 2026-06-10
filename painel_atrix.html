@@ -3872,7 +3872,7 @@ function renderAleloPanel(){
   let imgSide='';
   if(aleloCardImage){
     const ts=aleloCardImageAt?new Date(aleloCardImageAt).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
-    imgSide=`<div class="alelo-img-side"><img class="alelo-img-preview" src="${aleloCardImage}" alt="Cartão Alelo"><div class="alelo-saldo-meta"><div class="alelo-saldo-base"><span>Saldo base</span><b>${brl(bal.total)}</b></div><div class="alelo-saldo-disp"><span>Saldo cartão</span><b>${brl(bal.available)}</b></div></div>${ts?`<div class="alelo-img-ts">Anexado em ${ts}</div>`:''}<button class="alelo-img-rmv admin-only" onclick="aleloRemoverImagem()">Remover imagem</button></div>`;
+    imgSide=`<div class="alelo-img-side"><img class="alelo-img-preview" src="${aleloCardImage}" alt="Cartão Alelo"><div class="alelo-saldo-meta"><div class="alelo-saldo-base"><span>Valor de Aportes</span><b>${brl(bal.total)}</b></div><div class="alelo-saldo-disp"><span>Saldo cartão</span><b>${brl(bal.available)}</b></div></div>${ts?`<div class="alelo-img-ts">Anexado em ${ts}</div>`:''}<div style="text-align:center;font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:.04em;margin-top:4px;text-transform:uppercase">Portal Alelo</div><button class="alelo-img-rmv admin-only" onclick="aleloRemoverImagem()">Remover imagem</button></div>`;
   }
   el.innerHTML=aleloCardImage?`<div class="alelo-img-wrap">${imgSide}<div class="alelo-img-main">${mainContent}</div></div>`:mainContent;
 }
