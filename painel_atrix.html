@@ -1001,6 +1001,30 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
 .rede-did{font-weight:700;color:var(--blue)}
 .rede-dmuted{color:var(--tx3);text-align:center}
 @media(max-width:900px){.rede-krow{grid-template-columns:repeat(2,1fr)}.rede-sgrid{grid-template-columns:repeat(2,1fr)}.rede-c3{grid-template-columns:1fr}.rede-meta-info{grid-template-columns:1fr 1fr}.rede-meta-card.rede-meta-main{grid-column:1/-1}}
+/* ─── CENTRAL DE DADOS ─── */
+.cd-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:.5px solid var(--bd); }
+.cd-row:last-child { border-bottom:none; }
+.cd-ico { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+.cd-name { flex:1; min-width:0; }
+.cd-lbl { font-size:13px; font-weight:600; color:var(--tx); }
+.cd-ts { font-size:11px; color:var(--tx3); margin-top:1px; }
+.cd-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; transition:background .2s; }
+.cd-dot.cd-on { background:var(--green); box-shadow:0 0 0 3px rgba(52,199,89,.2); }
+.cd-dot.cd-off { background:var(--bd2); }
+.cd-upload-btn { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:.5px solid var(--bd2); font-family:inherit; transition:all .13s; white-space:nowrap; }
+.cd-upload-btn:hover { opacity:.8; }
+/* Status chips na navbar */
+.nav-chips { display:flex; align-items:center; gap:4px; }
+.nav-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:14px; font-size:10px; font-weight:600; cursor:pointer; border:.5px solid var(--bd2); background:var(--surface2); color:var(--tx3); transition:all .13s; white-space:nowrap; }
+.nav-chip:hover { background:var(--surface3); }
+.nav-chip .nc-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.nav-chip .nc-dot.on { background:var(--green); }
+.nav-chip .nc-dot.off { background:var(--bd2); }
+/* MOP ref btn */
+.mop-ref-btn { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; border:.5px solid var(--bd); background:var(--surface2); color:var(--tx2); font-family:inherit; transition:all .13s; margin-bottom:14px; }
+.mop-ref-btn:hover { background:var(--surface3); color:var(--tx); }
+/* Global footer */
+.pfooter-global { text-align:center; font-size:10px; color:var(--tx3); padding:10px 0 14px; }
 /* ─── REDE v2 ─── */
 .rede-tabs-bar{display:flex;gap:8px;margin:14px 0 12px;flex-wrap:wrap}
 .rede-tab-btn{background:var(--surface2);border:.5px solid var(--bd);color:var(--tx2);padding:7px 20px;border-radius:12px;cursor:pointer;font-weight:600;font-size:11px;transition:.18s;font-family:inherit}
@@ -1054,7 +1078,7 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
   <form class="login-card" onsubmit="loginUser(event)">
     <img class="login-logo" src="assets/mcll-logo.png" alt="MCLL Monitoramento B2B">
     <div class="login-title">Acesso MCLL</div>
-    <div class="login-sub">Entre com seu usuário e senha para visualizar o painel B2B.</div>
+    <div class="login-sub">Entre com usuário e senha para abrir o painel.</div>
     <div class="login-field">
       <label for="login-user">Usuário</label>
       <input id="login-user" autocomplete="username" required>
@@ -1152,23 +1176,25 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
   </div>
 
   <div class="nav-right">
-    <div id="up-ab" style="display:flex;flex-direction:column;align-items:center;gap:1px">
-      <label class="upload-pill up-ab" for="file-ab"><i class="ti ti-upload"></i>Abertos</label>
-      <span id="ts-ab" style="font-size:9px;color:var(--tx3);white-space:nowrap;line-height:1.2;min-height:12px"></span>
+    <!-- Status chips -->
+    <div class="nav-chips">
+      <button class="nav-chip" id="chip-ab" onclick="openCentral('ab')" title="Abertos — clique para carregar"><span class="nc-dot off" id="chip-ab-dot"></span>Abertos</button>
+      <button class="nav-chip" id="chip-enc" onclick="openCentral('enc')" title="Encerrados — clique para carregar"><span class="nc-dot off" id="chip-enc-dot"></span>Enc</button>
+      <button class="nav-chip" id="chip-rede" onclick="openCentral('rede')" title="Rede — clique para carregar"><span class="nc-dot off" id="chip-rede-dot"></span>Rede</button>
+      <button class="nav-chip" id="chip-ofs" onclick="openCentral('ofs')" title="OFS — clique para carregar"><span class="nc-dot off" id="chip-ofs-dot"></span>OFS</button>
+      <button class="nav-chip admin-only" id="chip-fuel" onclick="openCentral('fuel')" title="Combustíveis — clique para carregar"><span class="nc-dot off" id="chip-fuel-dot"></span>Alelo</button>
     </div>
-    <div id="up-enc" style="display:none;flex-direction:column;align-items:center;gap:1px">
-      <label class="upload-pill up-enc" for="file-enc"><i class="ti ti-upload"></i>Encerrados</label>
-      <span id="ts-enc" style="font-size:9px;color:var(--tx3);white-space:nowrap;line-height:1.2;min-height:12px"></span>
-    </div>
-    <label class="upload-pill admin-only" id="up-fuel" for="file-fuel" style="display:none"><i class="ti ti-upload"></i>Alelo</label>
+    <!-- Hidden timestamps (kept for JS compatibility) -->
+    <span id="ts-ab" style="display:none"></span>
+    <span id="ts-enc" style="display:none"></span>
+    <span id="ts-ofs" style="display:none"></span>
+    <!-- Clear buttons (kept) -->
     <div class="nav-btn" id="clear-ab-btn" onclick="clearAb()" title="Limpar base B2B Abertos" style="display:none;color:var(--red)"><i class="ti ti-trash"></i></div>
     <div class="nav-btn" id="clear-enc-btn" onclick="clearEnc()" title="Limpar base B2B Encerrados" style="display:none;color:var(--red)"><i class="ti ti-trash"></i></div>
     <div class="nav-btn" id="clear-rede-btn" onclick="clearRede()" title="Recarregar painel Rede" style="display:none;color:var(--orange)"><i class="ti ti-refresh"></i></div>
-    <div id="up-ofs" style="display:none;flex-direction:column;align-items:center;gap:1px">
-      <label class="upload-pill" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.3)" for="file-ofs"><i class="ti ti-upload"></i>OFS</label>
-      <span id="ts-ofs" style="font-size:9px;color:var(--tx3);white-space:nowrap;line-height:1.2;min-height:12px"></span>
-    </div>
     <div class="nav-btn" id="clear-ofs-btn" onclick="clearOfs()" title="Limpar base OFS" style="display:none;color:var(--red)"><i class="ti ti-trash"></i></div>
+    <!-- Central de Dados -->
+    <button class="nav-btn" onclick="openCentral()" title="Central de Dados" style="color:var(--blue)"><i class="ti ti-database"></i></button>
     <div class="nav-btn" onclick="openReportModal()" title="Gerar Relatório" style="color:var(--blue)"><i class="ti ti-file-text"></i></div>
     <div class="nav-btn admin-only" onclick="openUserPanel()" title="Usuários"><i class="ti ti-users"></i></div>
     <div class="nav-btn" onclick="toggleTheme()" title="Tema"><i class="ti ti-moon" id="ti-icon"></i></div>
@@ -1200,24 +1226,13 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
   <!-- ── PAINEL ABERTOS ── -->
   <div class="panel active" id="panel-abertos">
     <div id="empty-ab" class="empty">
-      <div class="empty-icon"><i class="ti ti-table-import"></i></div>
-      <h2>Base de abertos não carregada</h2>
-      <p>Faça upload do arquivo XLSX com a aba BASE para visualizar os chamados em aberto e indicadores de SLA em tempo real.</p>
-      <label class="empty-btn eb-ab" for="file-ab"><i class="ti ti-upload" style="font-size:14px"></i> Carregar Base Abertos</label>
+      <div class="empty-icon"><i class="ti ti-layout-dashboard"></i></div>
+      <h2>Chamados em aberto</h2>
+      <p>Carregue a base para ver SLA em tempo real.</p>
+      <button class="empty-btn eb-ab" onclick="openCentral('ab')"><i class="ti ti-database" style="font-size:14px"></i> Carregar na Central de Dados</button>
     </div>
     <div id="dash-ab" style="display:none">
-      <details class="mop-ref-card">
-        <summary><i class="ti ti-map-2"></i><span>Referência MOP/EPS — Cobertura por Região</span><i class="ti ti-chevron-down mop-ref-chev"></i></summary>
-        <div class="mop-ref-body">
-          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>MA CAP</strong><span>São Luís · Paço do Lumiar · São José de Ribamar</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-ma">MOP GIGA+ MA</span><strong>MA INT</strong><span>Demais cidades do Maranhão</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI CAP</strong><span>Teresina</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI INT</strong><span>Demais cidades do Piauí</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN PA</span><strong>PA CAP</strong><span>Belém · Ananindeua</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN PA</span><strong>PA INT</strong><span>Demais cidades do Pará (exceto Almeirim e Santarém)</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-adx">EPS-ADX</span><strong>AP / AM</strong><span>Todas as cidades de AP e AM · Santarém-PA · Almeirim-PA</span></div>
-        </div>
-      </details>
+      <button class="mop-ref-btn" onclick="document.getElementById('modal-mop').style.display='flex'"><i class="ti ti-map-2"></i> Cobertura por região</button>
       <div class="quick-mop" id="quick-mop-ab" aria-label="Filtros rápidos por MOP/EPS"></div>
       <div class="mrow" id="mrow-ab"></div>
       <div class="prow" id="prow-ab"></div>
@@ -1272,7 +1287,6 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <tbody id="tb-ab"></tbody>
         </table></div>
       </div>
-      <div class="pfooter">Direitos reservados a Wanderson Marcellus Penha Costa · <span id="ft-ab"></span></div>
     </div>
   </div>
 
@@ -1280,23 +1294,12 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
   <div class="panel" id="panel-encerrados">
     <div id="empty-enc" class="empty">
       <div class="empty-icon"><i class="ti ti-circle-check"></i></div>
-      <h2>Base de encerrados não carregada</h2>
-      <p>Faça upload do relatório executivo de chamados encerrados para visualizar performance e SLA por cluster.</p>
-      <label class="empty-btn eb-enc" for="file-enc"><i class="ti ti-upload" style="font-size:14px"></i> Carregar Encerrados</label>
+      <h2>Chamados encerrados</h2>
+      <p>Carregue a base para ver performance e SLA por cluster.</p>
+      <button class="empty-btn eb-enc" onclick="openCentral('enc')"><i class="ti ti-database" style="font-size:14px"></i> Carregar na Central de Dados</button>
     </div>
     <div id="dash-enc" style="display:none">
-      <details class="mop-ref-card">
-        <summary><i class="ti ti-map-2"></i><span>Referência MOP/EPS — Cobertura por Região</span><i class="ti ti-chevron-down mop-ref-chev"></i></summary>
-        <div class="mop-ref-body">
-          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>MA CAP</strong><span>São Luís · Paço do Lumiar · São José de Ribamar</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-ma">MOP GIGA+ MA</span><strong>MA INT</strong><span>Demais cidades do Maranhão</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI CAP</strong><span>Teresina</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI INT</strong><span>Demais cidades do Piauí</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN PA</span><strong>PA CAP</strong><span>Belém · Ananindeua</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN PA</span><strong>PA INT</strong><span>Demais cidades do Pará (exceto Almeirim e Santarém)</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-adx">EPS-ADX</span><strong>AP / AM</strong><span>Todas as cidades de AP e AM · Santarém-PA · Almeirim-PA</span></div>
-        </div>
-      </details>
+      <button class="mop-ref-btn" onclick="document.getElementById('modal-mop').style.display='flex'"><i class="ti ti-map-2"></i> Cobertura por região</button>
       <div id="week-banner-enc"></div>
       <div class="mrow" id="mrow-enc"></div>
       <div class="prow" id="prow-enc"></div>
@@ -1313,7 +1316,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         </div>
         <div class="card">
           <div class="card-hd"><span class="card-title">Distribuição por regra SLA</span></div>
-          <div class="cw"><canvas id="ch-enc" role="img" aria-label="Distribuição por regra de SLA encerrados">Gráfico.</canvas></div>
+          <div class="cw"><canvas id="ch-enc" role="img" aria-label="Distribuição por regra de SLA encerrados"></canvas></div>
         </div>
       </div>
       <div class="g2">
@@ -1323,7 +1326,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         </div>
         <div class="card">
           <div class="card-hd"><span class="card-title">Evolução por Semana</span></div>
-          <div class="cw"><canvas id="ch-sem" role="img" aria-label="Evolução por Semana" style="cursor:pointer">Gráfico.</canvas></div>
+          <div class="cw"><canvas id="ch-sem" role="img" aria-label="Evolução por Semana" style="cursor:pointer"></canvas></div>
         </div>
       </div>
       <div class="g2">
@@ -1368,7 +1371,6 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <tbody id="tb-enc"></tbody>
         </table></div>
       </div>
-      <div class="pfooter">Direitos reservados a Wanderson Marcellus Penha Costa · <span id="ft-enc"></span></div>
     </div>
   </div>
 
@@ -1377,9 +1379,9 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     <!-- Empty state -->
     <div id="rede-empty" class="empty">
       <div class="empty-icon"><i class="ti ti-router"></i></div>
-      <h2>Base Rede não carregada</h2>
-      <p>Faça upload do arquivo XLSX com os dados de Backbone e Acesso para visualizar os indicadores de rede.</p>
-      <label class="empty-btn" for="file-rede" style="background:var(--blue);color:#fff;border-color:var(--blue)"><i class="ti ti-upload" style="font-size:14px"></i> Carregar Base Rede</label>
+      <h2>Painel de Rede</h2>
+      <p>Carregue os dados de Backbone e Acesso para ver os indicadores.</p>
+      <button class="empty-btn" onclick="openCentral('rede')" style="background:var(--blue);color:#fff;border-color:var(--blue)"><i class="ti ti-database" style="font-size:14px"></i> Carregar na Central de Dados</button>
     </div>
     <!-- Dashboard -->
     <div id="rede-dash" style="display:none">
@@ -1490,17 +1492,17 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     <div class="g2-charts">
       <div class="card">
         <div class="card-hd"><span class="card-title">Consumo por condutor — mês atual vs. projeção e tendência</span></div>
-        <div class="cw"><canvas id="ch-fuel" role="img" aria-label="Consumo por condutor, projeção mensal e linha de tendência">Gráfico.</canvas></div>
+        <div class="cw"><canvas id="ch-fuel" role="img" aria-label="Consumo por condutor, projeção mensal e linha de tendência"></canvas></div>
       </div>
     </div>
     <div class="g3-charts">
       <div class="card">
         <div class="card-hd"><span class="card-title">Ranking maiores consumos</span></div>
-        <div class="cw"><canvas id="ch-fuel-top" role="img" aria-label="Ranking dos maiores consumos por condutor">Gráfico.</canvas></div>
+        <div class="cw"><canvas id="ch-fuel-top" role="img" aria-label="Ranking dos maiores consumos por condutor"></canvas></div>
       </div>
       <div class="card">
         <div class="card-hd"><span class="card-title">Projeção mês atual × próximo</span></div>
-        <div class="cw"><canvas id="ch-fuel-proj" role="img" aria-label="Projeção de consumo do mês atual para o próximo mês">Gráfico.</canvas></div>
+        <div class="cw"><canvas id="ch-fuel-proj" role="img" aria-label="Projeção de consumo do mês atual para o próximo mês"></canvas></div>
       </div>
       <div class="card">
         <div class="card-hd"><span class="card-title">Resumo por status de frota</span></div>
@@ -1604,7 +1606,6 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       <div class="tw"><table><thead><tr><th>Data</th><th>Valor</th><th>Motivo / destino</th><th class="admin-only">Ações</th></tr></thead><tbody id="tb-fuel-w"></tbody></table></div>
     </div>
 
-    <div class="pfooter">Direitos reservados a Wanderson Marcellus Penha Costa · <span id="ft-fuel"></span></div>
   </div>
 
   <!-- ── PAINEL MONITORAMENTO WHATSAPP ── -->
@@ -1624,9 +1625,9 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
   <div class="panel" id="panel-ofs">
     <div id="ofs-empty" class="empty">
       <div class="empty-icon"><i class="ti ti-chart-bar"></i></div>
-      <h2>Base OFS não carregada</h2>
-      <p>Faça upload do arquivo XLSX com o cronograma de recursos para visualizar a produtividade por técnico.</p>
-      <label class="empty-btn" for="file-ofs" style="background:#f97316;color:#fff;border-color:#f97316"><i class="ti ti-upload" style="font-size:14px"></i> Carregar Base OFS</label>
+      <h2>Produtividade OFS</h2>
+      <p>Carregue o cronograma de recursos para ver o desempenho por técnico.</p>
+      <button class="empty-btn" onclick="openCentral('ofs')" style="background:#f97316;color:#fff;border-color:#f97316"><i class="ti ti-database" style="font-size:14px"></i> Carregar na Central de Dados</button>
     </div>
     <div id="ofs-dash" style="display:none">
       <div class="ofs-hrow">
@@ -1818,7 +1819,6 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <span style="font-size:10px;opacity:.5">Clique em outro técnico ou feche com ✕</span>
         </div>
       </div>
-      <div class="pfooter">Direitos reservados a Wanderson Marcellus Penha Costa · <span id="ft-ofs"></span></div>
     </div>
   </div>
 
@@ -1826,23 +1826,12 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
   <div class="panel" id="panel-repetidos">
     <div id="empty-rep" class="empty">
       <div class="empty-icon"><i class="ti ti-repeat"></i></div>
-      <h2>Base de encerrados não carregada</h2>
-      <p>Carregue a base de encerrados para visualizar o ranking de clientes com chamados repetidos e todos os detalhes.</p>
-      <label class="empty-btn" for="file-enc" style="background:var(--purple);color:#fff;border-color:var(--purple)"><i class="ti ti-upload" style="font-size:14px"></i> Carregar Encerrados</label>
+      <h2>Chamados repetidos</h2>
+      <p>Carregue a base de encerrados para ver o ranking de clientes reincidentes.</p>
+      <button class="empty-btn" onclick="openCentral('enc')" style="background:var(--purple);color:#fff;border-color:var(--purple)"><i class="ti ti-database" style="font-size:14px"></i> Carregar na Central de Dados</button>
     </div>
     <div id="dash-rep" style="display:none">
-      <details class="mop-ref-card">
-        <summary><i class="ti ti-map-2"></i><span>Referência MOP/EPS — Cobertura por Região</span><i class="ti ti-chevron-down mop-ref-chev"></i></summary>
-        <div class="mop-ref-body">
-          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>MA CAP</strong><span>São Luís · Paço do Lumiar · São José de Ribamar</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-ma">MOP GIGA+ MA</span><strong>MA INT</strong><span>Demais cidades do Maranhão</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI CAP</strong><span>Teresina</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI INT</strong><span>Demais cidades do Piauí</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN PA</span><strong>PA CAP</strong><span>Belém · Ananindeua</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN PA</span><strong>PA INT</strong><span>Demais cidades do Pará (exceto Almeirim e Santarém)</span></div>
-          <div class="mop-ref-row"><span class="mop-ref-tag t-eps-adx">EPS-ADX</span><strong>AP / AM</strong><span>Todas as cidades de AP e AM · Santarém-PA · Almeirim-PA</span></div>
-        </div>
-      </details>
+      <button class="mop-ref-btn" onclick="document.getElementById('modal-mop').style.display='flex'"><i class="ti ti-map-2"></i> Cobertura por região</button>
       <!-- Filtros -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:var(--surface);border-radius:var(--rl);box-shadow:var(--shadow-sm);border:.5px solid var(--bd);margin-bottom:14px">
         <span style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-right:2px">Filtros</span>
@@ -1862,21 +1851,21 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
       <div class="g2" style="margin-bottom:16px">
         <div class="card" style="min-height:clamp(320px,42vh,500px);display:flex;flex-direction:column">
           <div class="card-hd"><span class="card-title"><i class="ti ti-chart-bar" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--purple)"></i>Top clientes — volume de chamados repetidos</span></div>
-          <div class="cw" style="flex:1;height:clamp(280px,38vh,460px)"><canvas id="ch-rep-clients" role="img" aria-label="Top clientes com chamados repetidos">Gráfico.</canvas></div>
+          <div class="cw" style="flex:1;height:clamp(280px,38vh,460px)"><canvas id="ch-rep-clients" role="img" aria-label="Top clientes com chamados repetidos"></canvas></div>
         </div>
         <div class="card" style="min-height:clamp(320px,42vh,500px);display:flex;flex-direction:column">
           <div class="card-hd"><span class="card-title"><i class="ti ti-tools" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--red)"></i>Causas dominantes dos chamados repetidos</span></div>
-          <div class="cw" style="flex:1;height:clamp(280px,38vh,460px)"><canvas id="ch-rep-causas" role="img" aria-label="Causas dos chamados repetidos">Gráfico.</canvas></div>
+          <div class="cw" style="flex:1;height:clamp(280px,38vh,460px)"><canvas id="ch-rep-causas" role="img" aria-label="Causas dos chamados repetidos"></canvas></div>
         </div>
       </div>
       <div class="g2" style="margin-bottom:16px">
         <div class="card" style="min-height:clamp(260px,34vh,420px);display:flex;flex-direction:column">
           <div class="card-hd"><span class="card-title"><i class="ti ti-chart-histogram" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--teal)"></i>Evolução semanal de reincidências</span></div>
-          <div class="cw" style="flex:1;height:clamp(200px,28vh,380px)"><canvas id="ch-rep-semana" role="img" aria-label="Evolução semanal de chamados repetidos">Gráfico.</canvas></div>
+          <div class="cw" style="flex:1;height:clamp(200px,28vh,380px)"><canvas id="ch-rep-semana" role="img" aria-label="Evolução semanal de chamados repetidos"></canvas></div>
         </div>
         <div class="card" style="min-height:clamp(260px,34vh,420px);display:flex;flex-direction:column">
           <div class="card-hd"><span class="card-title"><i class="ti ti-chart-donut" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--orange)"></i>Distribuição SLA dos chamados repetidos</span></div>
-          <div class="cw" style="flex:1;height:clamp(200px,28vh,380px)"><canvas id="ch-rep-sla" role="img" aria-label="Distribuição SLA dos chamados repetidos">Gráfico.</canvas></div>
+          <div class="cw" style="flex:1;height:clamp(200px,28vh,380px)"><canvas id="ch-rep-sla" role="img" aria-label="Distribuição SLA dos chamados repetidos"></canvas></div>
         </div>
       </div>
       <!-- Indicativo de Ofensor -->
@@ -1910,10 +1899,94 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <tbody id="tb-rep"></tbody>
         </table></div>
       </div>
-      <div class="pfooter">Direitos reservados a Wanderson Marcellus Penha Costa · <span id="ft-rep"></span></div>
     </div>
   </div>
 
+</div>
+<div class="pfooter pfooter-global">© 2026 · MCLL Monitoramento B2B · Wanderson Marcellus Penha Costa</div>
+
+<!-- ── MODAL: MOP/EPS ── -->
+<div class="modal-overlay" id="modal-mop" style="display:none" onclick="if(event.target===this)document.getElementById('modal-mop').style.display='none'">
+  <div class="modal-box" style="max-width:640px">
+    <div class="modal-hd">
+      <span class="modal-title"><i class="ti ti-map-2"></i> Referência MOP/EPS — Cobertura por Região</span>
+      <button class="modal-close" onclick="document.getElementById('modal-mop').style.display='none'"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="mop-ref-body" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:5px">
+        <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN</span><strong>MA CAP</strong><span>São Luís · Paço do Lumiar · São José de Ribamar</span></div>
+        <div class="mop-ref-row"><span class="mop-ref-tag t-mop-ma">MOP GIGA+ MA</span><strong>MA INT</strong><span>Demais cidades do Maranhão</span></div>
+        <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI CAP</strong><span>Teresina</span></div>
+        <div class="mop-ref-row"><span class="mop-ref-tag t-mop-pi">MOP GIGA+ PI</span><strong>PI INT</strong><span>Demais cidades do Piauí</span></div>
+        <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN PA</span><strong>PA CAP</strong><span>Belém · Ananindeua</span></div>
+        <div class="mop-ref-row"><span class="mop-ref-tag t-eps-sln">EPS-SLN PA</span><strong>PA INT</strong><span>Demais cidades do Pará (exceto Almeirim e Santarém)</span></div>
+        <div class="mop-ref-row"><span class="mop-ref-tag t-eps-adx">EPS-ADX</span><strong>AP / AM</strong><span>Todas as cidades de AP e AM · Santarém-PA · Almeirim-PA</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: CENTRAL DE DADOS ── -->
+<div class="modal-overlay" id="central-dados" style="display:none" onclick="if(event.target===this)document.getElementById('central-dados').style.display='none'">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-hd">
+      <span class="modal-title"><i class="ti ti-database" style="color:var(--blue)"></i> Central de Dados</span>
+      <button class="modal-close" onclick="document.getElementById('central-dados').style.display='none'"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--tx3);margin-bottom:16px">Gerencie aqui o carregamento de todas as bases de dados do painel.</p>
+      <!-- Abertos -->
+      <div class="cd-row" id="cd-row-ab">
+        <div class="cd-ico" style="background:var(--blue-bg);color:var(--blue)"><i class="ti ti-layout-dashboard"></i></div>
+        <div class="cd-name">
+          <div class="cd-lbl">B2B Abertos</div>
+          <div class="cd-ts" id="cd-ts-ab">Não carregado</div>
+        </div>
+        <span class="cd-dot cd-off" id="cd-dot-ab"></span>
+        <label class="cd-upload-btn" for="file-ab" style="background:var(--blue-bg);color:var(--blue);border-color:rgba(0,122,255,.25)" onclick="document.getElementById('central-dados').style.display='none'"><i class="ti ti-upload" style="font-size:13px"></i> Carregar</label>
+      </div>
+      <!-- Encerrados -->
+      <div class="cd-row" id="cd-row-enc">
+        <div class="cd-ico" style="background:var(--green-bg);color:var(--green-dk)"><i class="ti ti-circle-check"></i></div>
+        <div class="cd-name">
+          <div class="cd-lbl">B2B Encerrados</div>
+          <div class="cd-ts" id="cd-ts-enc">Não carregado</div>
+        </div>
+        <span class="cd-dot cd-off" id="cd-dot-enc"></span>
+        <label class="cd-upload-btn" for="file-enc" style="background:var(--green-bg);color:var(--green-dk);border-color:rgba(52,199,89,.25)" onclick="document.getElementById('central-dados').style.display='none'"><i class="ti ti-upload" style="font-size:13px"></i> Carregar</label>
+      </div>
+      <!-- Rede -->
+      <div class="cd-row" id="cd-row-rede">
+        <div class="cd-ico" style="background:var(--teal-bg);color:var(--teal-dk)"><i class="ti ti-router"></i></div>
+        <div class="cd-name">
+          <div class="cd-lbl">Rede</div>
+          <div class="cd-ts" id="cd-ts-rede">Não carregado</div>
+        </div>
+        <span class="cd-dot cd-off" id="cd-dot-rede"></span>
+        <label class="cd-upload-btn" for="file-rede" style="background:var(--teal-bg);color:var(--teal-dk);border-color:rgba(90,200,250,.25)" onclick="document.getElementById('central-dados').style.display='none'"><i class="ti ti-upload" style="font-size:13px"></i> Carregar</label>
+      </div>
+      <!-- OFS -->
+      <div class="cd-row" id="cd-row-ofs">
+        <div class="cd-ico" style="background:rgba(249,115,22,.12);color:#f97316"><i class="ti ti-chart-bar"></i></div>
+        <div class="cd-name">
+          <div class="cd-lbl">Produtividade OFS</div>
+          <div class="cd-ts" id="cd-ts-ofs">Não carregado</div>
+        </div>
+        <span class="cd-dot cd-off" id="cd-dot-ofs"></span>
+        <label class="cd-upload-btn" for="file-ofs" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.25)" onclick="document.getElementById('central-dados').style.display='none'"><i class="ti ti-upload" style="font-size:13px"></i> Carregar</label>
+      </div>
+      <!-- Combustíveis (admin-only) -->
+      <div class="cd-row admin-only" id="cd-row-fuel">
+        <div class="cd-ico" style="background:var(--yellow-bg);color:#805500"><i class="ti ti-gas-station"></i></div>
+        <div class="cd-name">
+          <div class="cd-lbl">Combustíveis (Alelo)</div>
+          <div class="cd-ts" id="cd-ts-fuel">Não carregado</div>
+        </div>
+        <span class="cd-dot cd-off" id="cd-dot-fuel"></span>
+        <label class="cd-upload-btn" for="file-fuel" style="background:var(--yellow-bg);color:#805500;border-color:rgba(255,204,0,.3)" onclick="document.getElementById('central-dados').style.display='none'"><i class="ti ti-upload" style="font-size:13px"></i> Carregar</label>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ── MODAL: RELATÓRIO ── -->
@@ -2530,12 +2603,53 @@ function clearRede(){
   rdeSelMonth='';rdeSelWeek='';rdeModo='m';rdeActiveView='bb';rdeTab='ACESSO';rdeGran='all';rdePeriod=null;rdeCluster='';
   Object.values(rdeCharts).forEach(ch=>{try{ch.destroy();}catch(e){}});rdeCharts={};
   [rdeLineCh2,rdeTimeCh2,rdeCauseCh2,rdeCityCh2].forEach(ch=>{if(ch)try{ch.destroy();}catch(e){}});rdeLineCh2=rdeTimeCh2=rdeCauseCh2=rdeCityCh2=null;
-  rdeShowDash();updateClearBtns();
+  rdeShowDash();updateClearBtns();updateCentralStatus();
 }
 function updateUploadTimes(){
   const sa=document.getElementById('ts-ab');if(sa)sa.textContent=lastAbAt?'Anexado '+lastAbAt:'';
   const se=document.getElementById('ts-enc');if(se)se.textContent=lastEncAt?'Anexado '+lastEncAt:'';
+  updateCentralStatus();
 }
+function updateCentralStatus(){
+  // Helper: set dot and timestamp
+  function setSlot(id,loaded,ts){
+    const dot=document.getElementById('cd-dot-'+id);
+    const tsEl=document.getElementById('cd-ts-'+id);
+    const chip=document.getElementById('chip-'+id);
+    const chipDot=document.getElementById('chip-'+id+'-dot');
+    if(dot){dot.className='cd-dot '+(loaded?'cd-on':'cd-off');}
+    if(tsEl){tsEl.textContent=loaded?(ts||'Carregado'):'Não carregado';}
+    if(chipDot){chipDot.className='nc-dot '+(loaded?'on':'off');}
+  }
+  const abTs=lastAbAt?'Carregado '+lastAbAt:'';
+  const encTs=lastEncAt?'Carregado '+lastEncAt:'';
+  const ofsTs=ofsMeta&&ofsMeta.uploadedAt?'Carregado '+ofsMeta.uploadedAt:'';
+  // Rede timestamp from ts-text element if available
+  const redeEl=document.getElementById('rede-ts-text');
+  const redeTs=redeEl?redeEl.textContent:'';
+  setSlot('ab',typeof dAb!=='undefined'&&dAb.length>0,abTs);
+  setSlot('enc',typeof dEnc!=='undefined'&&dEnc.length>0,encTs);
+  setSlot('rede',(typeof rdeBD!=='undefined'&&rdeBD.length>0)||(typeof rdeAD!=='undefined'&&rdeAD.length>0),redeTs);
+  setSlot('ofs',typeof ofsRows!=='undefined'&&ofsRows.length>0,ofsTs);
+  setSlot('fuel',typeof dFuelVehicles!=='undefined'&&dFuelVehicles.length>0,'');
+}
+function openCentral(slot){
+  const modal=document.getElementById('central-dados');
+  if(!modal)return;
+  modal.style.display='flex';
+  updateCentralStatus();
+  if(slot){
+    const row=document.getElementById('cd-row-'+slot);
+    if(row){setTimeout(()=>row.scrollIntoView({behavior:'smooth',block:'center'}),80);}
+  }
+}
+// Close modals on Escape
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    const mop=document.getElementById('modal-mop');if(mop&&mop.style.display==='flex')mop.style.display='none';
+    const cd=document.getElementById('central-dados');if(cd&&cd.style.display==='flex')cd.style.display='none';
+  }
+});
 function updateClearBtns(){
   const isAb=activeTab==='abertos',isEnc=activeTab==='encerrados',isRep=activeTab==='repetidos',isRede=activeTab==='rede',isOfs=activeTab==='ofs';
   const bAb=document.getElementById('clear-ab-btn');
@@ -3331,7 +3445,7 @@ function importFuelAlelo(text,fname){
     dFuelRequests.push({id,data,placa,condutor:v.condutor||driver,valor,obs:repairPtBR(`Importado da base Alelo - ${val(r,col.mercadoria)||tipo}`)});
     if(matchedByDriver)importedByDriver++;else imported++;
   });
-  renderFuel();saveState();
+  renderFuel();saveState();updateCentralStatus();
   alert(`Base Alelo importada: ${imported} compatibilizados por placa, ${importedByDriver} por condutor, ${dups} duplicadas, ${ignored} ignorados (placa/condutor não cadastrado).`);
 }
 function fuelProjection(){const by={};fuelValidRequests().forEach(r=>{const v=fuelVehicleByPlate(r.placa),name=v.condutor||r.condutor||r.placa;if(!by[name])by[name]={valor:0,count:0};by[name].valor+=Number(r.valor||0);by[name].count++});return Object.entries(by).sort((a,b)=>b[1].valor-a[1].valor)}
@@ -3688,7 +3802,7 @@ function renderPanelRepetidos(){
       <td><span class="badge b-teal">${eh(r.semana||'—')}</span></td>
     </tr>`;
   }).join('')||'<tr><td colspan="10" class="nores"><i class="ti ti-search-off"></i>Nenhum chamado repetido encontrado</td></tr>';
-  document.getElementById('ft-rep').textContent='Atualizado em '+now2();
+  const _ftrep=document.getElementById('ft-rep');if(_ftrep)_ftrep.textContent='Atualizado em '+now2();
 }
 function renderRepClientsChart(all,dk){
   const ctx=document.getElementById('ch-rep-clients');if(!ctx)return;
@@ -3994,6 +4108,7 @@ function procOfs(raw,fname){
   renderOfs();
   const nb=document.getElementById('nb-ofs');if(nb){nb.textContent=out.length;nb.style.display=out.length?'':'none';}
   const tsEl=document.getElementById('ts-ofs');if(tsEl)tsEl.textContent='Anexado '+_uat;
+  updateCentralStatus();
 }
 function saveOfsState(){
   try{localStorage.setItem(OFS_KEY,JSON.stringify({rows:ofsRows,meta:ofsMeta,filter:ofsFilter}));}
@@ -4021,7 +4136,7 @@ function clearOfs(){
   const nb=document.getElementById('nb-ofs');if(nb){nb.textContent='0';nb.style.display='none';}
   const dtS=document.getElementById('ofs-dt-start'),dtE=document.getElementById('ofs-dt-end');
   if(dtS)dtS.value='';if(dtE)dtE.value='';
-  renderOfs();updateClearBtns();
+  renderOfs();updateClearBtns();updateCentralStatus();
 }
 function ofsCalcTecnicos(rows){
   if(!rows)rows=ofsFilteredRows();
@@ -5013,7 +5128,7 @@ function rdeApplyRows(rows,fileName){
   try{localStorage.setItem(REDE_STORAGE,JSON.stringify({version:3,BD:rdeBD,AD:rdeAD,fileName,M:{mes:[...rdeM.mes],ml:[...rdeM.ml],sem:[...rdeM.sem],sl:[...rdeM.sl],ca:[...rdeM.ca],mo:[...rdeM.mo]},at:_now.toISOString()}));}catch(e){console.warn('rede save',e)}
   const fn=document.getElementById('rede-fname');if(fn)fn.textContent=fileName;
   const ts=document.getElementById('rede-ts-text');if(ts)ts.textContent='Anexado '+_now.toLocaleDateString('pt-BR')+' '+_now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  rdeSelMonth='';rdeSelWeek='';rdeModo='m';rdeTab='ACESSO';rdeGran='all';rdePeriod=null;rdeCluster='';rdeShowDash();rdeSyncControls();renderRede();updateClearBtns();
+  rdeSelMonth='';rdeSelWeek='';rdeModo='m';rdeTab='ACESSO';rdeGran='all';rdePeriod=null;rdeCluster='';rdeShowDash();rdeSyncControls();renderRede();updateClearBtns();updateCentralStatus();
 }
 function rdeHasDetail(rows,idx){return Array.isArray(rows)&&rows.some(r=>Array.isArray(r)&&r.length>idx&&r[idx]&&typeof r[idx]==='object')}
 function rdeRestoreM(saved){
@@ -5379,6 +5494,7 @@ if(new URLSearchParams(location.search).get('resetauth')==='1'){
 }
 initAuth();renderFuel();
 rdeRestoreBase();if(rdeBD.length||rdeAD.length){rdeRestoreUI();rdeSyncControls();renderRede();}
+updateCentralStatus();
 </script>
 </body>
 </html>
