@@ -1559,6 +1559,40 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         <div class="rede-cbx" style="min-height:260px"><canvas id="rde-city-ch"></canvas></div>
         <div class="rede-cbx" style="min-height:260px"><canvas id="rde-cause-ch"></canvas></div>
       </div>
+      <!-- Indicadores por Período -->
+      <div class="rede-section-title" style="margin-top:20px">Indicadores por Período</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="rde-ind-tabs">
+        <button class="rede-ctab on" data-chtab="qtd" onclick="rdeSetChTab('qtd')">Qtd Ocorrências</button>
+        <button class="rede-ctab" data-chtab="tme" onclick="rdeSetChTab('tme')">TME</button>
+        <button class="rede-ctab" data-chtab="prazo" onclick="rdeSetChTab('prazo')">Prazo</button>
+        <button class="rede-ctab" data-chtab="outlier" onclick="rdeSetChTab('outlier')">Outlier</button>
+      </div>
+      <div id="rde-ind-panels">
+        <div class="rede-cpanel on" data-chtab="qtd">
+          <div class="rede-charts-2">
+            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-qtd-m"></canvas></div>
+            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-qtd-d"></canvas></div>
+          </div>
+        </div>
+        <div class="rede-cpanel" data-chtab="tme">
+          <div class="rede-charts-2">
+            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-tme-m"></canvas></div>
+            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-tme-d"></canvas></div>
+          </div>
+        </div>
+        <div class="rede-cpanel" data-chtab="prazo">
+          <div class="rede-charts-2">
+            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-prazo-m"></canvas></div>
+            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-prazo-d"></canvas></div>
+          </div>
+        </div>
+        <div class="rede-cpanel" data-chtab="outlier">
+          <div class="rede-charts-2">
+            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-outlier-m"></canvas></div>
+            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-outlier-d"></canvas></div>
+          </div>
+        </div>
+      </div>
       <!-- Executive Report -->
       <div class="rede-section-title" style="margin-top:20px">Relatório Executivo</div>
       <div class="rede-report-box" id="rde-report"><span style="color:var(--tx3);font-size:11px">Carregue uma base para gerar o relatório automático.</span></div>
@@ -2730,6 +2764,7 @@ function clearRede(){
   rdeSelMonth='';rdeSelWeek='';rdeModo='m';rdeActiveView='bb';rdeTab='ACESSO';rdeGran='all';rdePeriod=null;rdeCluster='';
   Object.values(rdeCharts).forEach(ch=>{try{ch.destroy();}catch(e){}});rdeCharts={};
   [rdeLineCh2,rdeTimeCh2,rdeCauseCh2,rdeCityCh2].forEach(ch=>{if(ch)try{ch.destroy();}catch(e){}});rdeLineCh2=rdeTimeCh2=rdeCauseCh2=rdeCityCh2=null;
+  ['qtd-m','qtd-d','tme-m','tme-d','prazo-m','prazo-d','outlier-m','outlier-d'].forEach(k=>_rdeIndDestroy(k));rdeIndSelMonth=null;
   rdeShowDash();updateClearBtns();updateCentralStatus();
 }
 function updateUploadTimes(){
@@ -5426,6 +5461,7 @@ const RDE_CLS=["C","I","P","N"];
 const RDE_M89=85,RDE_MOUT=4.9,RDE_MTME=6.0;
 let rdeModo='m',rdeSelMonth='',rdeSelWeek='',rdeActiveView='bb',rdeCharts={};
 let rdeTab='ACESSO',rdeGran='all',rdePeriod=null,rdeCluster='',rdeCallsOnRender=false,rdeLineCh2=null,rdeTimeCh2=null,rdeCauseCh2=null,rdeCityCh2=null;
+let rdeChTab='qtd',rdeIndSelMonth=null;const _rdeIndCh={};
 const REDE_STORAGE='atrix:rede:bases:v2';
 const REDE_UI_KEY='atrix:rede:ui:v1';
 function rdeNk(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toUpperCase()}
@@ -5640,7 +5676,124 @@ function rdeSetKPI(id,s,isAC){
   else{h+=`<div class="rede-kpi"><div class="lb">TMR Médio</div><div class="vl">${s.tmr}h</div><div class="sb">${s.t} chamados</div></div>`;h+=`<div class="rede-kpi"><div class="lb">Total</div><div class="vl" style="font-size:20px">${s.t}</div><div class="sb">chamados</div></div>`;}
   el.innerHTML=h;
 }
-const rdeLabelPlugin={id:'rdeLabelPlugin',afterDatasetsDraw(chart){const{ctx,chartArea}=chart;chart.data.datasets.forEach((ds,i)=>{if(ds.type!=='line'||!ds.lineLabel)return;const meta=chart.getDatasetMeta(i);if(!meta.data.length)return;const p=meta.data[meta.data.length-1];ctx.save();ctx.font='700 10px sans-serif';ctx.fillStyle=ds.borderColor||'#555';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText(ds.lineLabel,Math.min(chartArea.right-4,p.x-4),p.y-4);ctx.restore();});}};
+const rdeLabelPlugin={id:'rdeLabelPlugin',afterDatasetsDraw(chart){const{ctx,chartArea}=chart;chart.data.datasets.forEach((ds,i)=>{if(ds.type!=='line'||!ds.lineLabel)return;const meta=chart.getDatasetMeta(i);if(!meta.data.length)return;const p=meta.data[meta.data.length-1];ctx.save();ctx.font='700 10px sans-serif';ctx.fillStyle=ds.borderColor||'#555';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText(ds.lineLabel,Math.min(chartArea.right-4,p.x-4),p.y-4);ctx.restore();});}}
+const rdeIndMetaPlugin={id:'rdeIndMetaPlugin',afterDraw(chart){const m=chart.options._meta;if(!m||!chart.chartArea)return;const{ctx,chartArea}=chart;ctx.save();ctx.textAlign='right';ctx.font='800 15px -apple-system,BlinkMacSystemFont,sans-serif';ctx.fillStyle=m.color||'#34c759';ctx.textBaseline='bottom';ctx.fillText(m.value,chartArea.right,chartArea.top-2);ctx.font='400 9px -apple-system,BlinkMacSystemFont,sans-serif';ctx.fillStyle='#8e8e93';ctx.textBaseline='top';ctx.fillText('Meta',chartArea.right,chartArea.top);ctx.restore();}};
+function rdeMlabel(m){const mo={'01':'jan','02':'fev','03':'mar','04':'abr','05':'mai','06':'jun','07':'jul','08':'ago','09':'set','10':'out','11':'nov','12':'dez'};const p=String(m||'').split('-');return`${mo[p[1]]||p[1]||m} - ${p[0]||''}`;}
+function _rdeIndDestroy(id){if(_rdeIndCh[id]){try{_rdeIndCh[id].destroy();}catch(e){}_rdeIndCh[id]=null;}}
+function rdeSetChTab(tab){
+  rdeChTab=tab;
+  document.querySelectorAll('#rde-ind-tabs .rede-ctab').forEach(b=>b.classList.toggle('on',b.dataset.chtab===tab));
+  document.querySelectorAll('#rde-ind-panels .rede-cpanel').forEach(p=>p.classList.toggle('on',p.dataset.chtab===tab));
+  renderRedeIndCharts();
+}
+function rdeIndFlat(){
+  let f=rdeGetAllFlat();
+  if(rdeCluster)f=f.filter(r=>r.cl===rdeCluster);
+  return f.map(r=>{
+    const isAC=r._scope==='ac';const det=r._raw[isAC?8:7];
+    let day=null,dateStr=null;
+    if(det&&typeof det==='object'){const pa=String(det.periodoAtendimento||'');const dm=pa.match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(dm){day=parseInt(dm[1]);dateStr=`${dm[1]}/${dm[2]}/${dm[3]}`;}}
+    return{...r,day,dateStr};
+  });
+}
+function rdeIndMAgg(flat){
+  const m={};
+  flat.forEach(r=>{if(!r.m)return;if(!m[r.m])m[r.m]={n:0,pN:0,oN:0,tS:0,tC:0};const b=m[r.m];b.n++;if(r.p===1)b.pN++;if(r.o===1)b.oN++;if(r.t>0){b.tS+=r.t;b.tC++;}});
+  return Object.entries(m).sort(([a],[b])=>a.localeCompare(b)).map(([mk,b])=>({m:mk,label:rdeMlabel(mk),n:b.n,prazo:b.n?b.pN/b.n*100:0,outlier:b.n?b.oN/b.n*100:0,tme:b.tC?b.tS/b.tC:0}));
+}
+function rdeIndDAgg(flat,selM){
+  const filtered=flat.filter(r=>r.m===selM&&r.day!==null);
+  const d={};
+  filtered.forEach(r=>{const k=r.dateStr||String(r.day).padStart(2,'0');if(!d[k])d[k]={day:r.day,label:r.dateStr||String(r.day),n:0,pN:0,oN:0,tS:0,tC:0};const b=d[k];b.n++;if(r.p===1)b.pN++;if(r.o===1)b.oN++;if(r.t>0){b.tS+=r.t;b.tC++;}});
+  return Object.values(d).sort((a,b)=>a.day-b.day).map(dd=>({day:dd.day,label:dd.label,n:dd.n,prazo:dd.n?dd.pN/dd.n*100:0,outlier:dd.n?dd.oN/dd.n*100:0,tme:dd.tC?dd.tS/dd.tC:0}));
+}
+function renderRedeIndCharts(){
+  const flat=rdeIndFlat(),mAgg=rdeIndMAgg(flat);
+  if(!mAgg.length)return;
+  if(!rdeIndSelMonth||!mAgg.find(x=>x.m===rdeIndSelMonth))rdeIndSelMonth=mAgg[mAgg.length-1].m;
+  const dAgg=rdeIndDAgg(flat,rdeIndSelMonth);
+  const selLabel=mAgg.find(x=>x.m===rdeIndSelMonth)?.label||rdeIndSelMonth;
+  const selIdx=mAgg.findIndex(x=>x.m===rdeIndSelMonth);
+  const txC=getComputedStyle(document.body).getPropertyValue('--tx3').trim()||'#8e8e93';
+  const gdC=getComputedStyle(document.body).getPropertyValue('--bd').trim()||'rgba(0,0,0,.07)';
+  const DL=typeof ChartDataLabels!=='undefined'?ChartDataLabels:null;
+  const PINK='rgba(235,87,111,0.82)',BLUE='rgba(0,122,255,0.85)',SEL='rgba(0,37,110,0.9)',GRN='#34c759',RED='#ff3b30';
+  const ptClr=(dArr,metric,goodFn)=>dArr.map(d=>goodFn(d[metric])?GRN:RED);
+  if(rdeChTab==='qtd'){
+    _rdeIndDestroy('qtd-m');
+    const cv=document.getElementById('rde-ind-qtd-m');
+    if(cv){
+      const vals=mAgg.map(m=>m.n),minN=Math.min(...vals),maxN=Math.max(...vals);
+      const grad=v=>{const t=maxN>minN?(v-minN)/(maxN-minN):0.5;return`rgba(${Math.round(160+(26-160)*t)},${Math.round(205+(58-205)*t)},${Math.round(240+(110-240)*t)},0.9)`;};
+      _rdeIndCh['qtd-m']=new Chart(cv,{type:'bar',plugins:DL?[DL]:[],data:{labels:mAgg.map(m=>m.label),datasets:[{label:'Qtd',data:vals,backgroundColor:mAgg.map((m,i)=>i===selIdx?SEL:grad(m.n)),borderRadius:4,borderSkipped:false}]},
+        options:{responsive:true,maintainAspectRatio:false,onClick:(e,els)=>{if(els&&els[0]){rdeIndSelMonth=mAgg[els[0].index].m;renderRedeIndCharts();}},
+          plugins:{title:{display:true,text:'Quantidade de Ocorrências por Mês',color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v,font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
+          scales:{y:{grid:{color:gdC},ticks:{color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'Qtd Ocorrência',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Periodo',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
+    }
+    _rdeIndDestroy('qtd-d');
+    const cvd=document.getElementById('rde-ind-qtd-d');
+    if(cvd){
+      const maxD=Math.max(...dAgg.map(d=>d.n),1);const ptQ=v=>{const t=v/maxD;return t<0.3?GRN:t<0.7?'#ff9500':RED;};
+      _rdeIndCh['qtd-d']=new Chart(cvd,{type:'line',plugins:DL?[DL]:[],data:{labels:dAgg.map(d=>d.label),datasets:[{label:'Qtd',data:dAgg.map(d=>d.n),borderColor:'#4d8ef0',borderDash:[5,4],borderWidth:2,tension:0.4,fill:false,pointBackgroundColor:dAgg.map(d=>ptQ(d.n)),pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:5}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:`Quantidade de Ocorrências por Dia | ${selLabel}`,color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
+          scales:{y:{grid:{color:gdC},ticks:{color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'Qtd Ocorrência',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Dia do Mês',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
+    }
+  }else if(rdeChTab==='tme'){
+    _rdeIndDestroy('tme-m');
+    const cv=document.getElementById('rde-ind-tme-m');
+    if(cv){
+      _rdeIndCh['tme-m']=new Chart(cv,{type:'bar',plugins:DL?[DL,rdeIndMetaPlugin]:[rdeIndMetaPlugin],data:{labels:mAgg.map(m=>m.label),datasets:[
+        {label:'TME',data:mAgg.map(m=>+m.tme.toFixed(2)),backgroundColor:mAgg.map((m,i)=>i===selIdx?SEL:m.tme<=RDE_MTME?BLUE:PINK),borderRadius:4},
+        {label:'Meta',data:mAgg.map(()=>RDE_MTME),type:'line',borderColor:'rgba(0,122,255,0.35)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}]},
+        options:{responsive:true,maintainAspectRatio:false,_meta:{value:RDE_MTME.toFixed(1).replace('.',','),color:GRN},onClick:(e,els)=>{if(els&&els[0]&&els[0].datasetIndex===0){rdeIndSelMonth=mAgg[els[0].index].m;renderRedeIndCharts();}},
+          plugins:{title:{display:true,text:'TME de Ocorrências por Mês',color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:(v,ctx)=>ctx.datasetIndex===0?v:'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
+          scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'h',color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'TME',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Periodo',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
+    }
+    _rdeIndDestroy('tme-d');
+    const cvd=document.getElementById('rde-ind-tme-d');
+    if(cvd){
+      _rdeIndCh['tme-d']=new Chart(cvd,{type:'line',plugins:DL?[DL]:[],data:{labels:dAgg.map(d=>d.day),datasets:[{label:'TME',data:dAgg.map(d=>+d.tme.toFixed(2)),borderColor:'#4d8ef0',borderDash:[5,4],borderWidth:2,tension:0.4,fill:false,pointBackgroundColor:ptClr(dAgg,'tme',v=>v<=RDE_MTME),pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:5}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:`TME de Ocorrências | ${selLabel}`,color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
+          scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'h',color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'TME',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Dia do Mês',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
+    }
+  }else if(rdeChTab==='prazo'){
+    _rdeIndDestroy('prazo-m');
+    const cv=document.getElementById('rde-ind-prazo-m');
+    if(cv){
+      _rdeIndCh['prazo-m']=new Chart(cv,{type:'bar',plugins:DL?[DL,rdeIndMetaPlugin]:[rdeIndMetaPlugin],data:{labels:mAgg.map(m=>m.label),datasets:[
+        {label:'Prazo %',data:mAgg.map(m=>+m.prazo.toFixed(1)),backgroundColor:mAgg.map((m,i)=>i===selIdx?SEL:m.prazo>=RDE_M89?BLUE:PINK),borderRadius:4},
+        {label:'Meta',data:mAgg.map(()=>RDE_M89),type:'line',borderColor:'rgba(0,122,255,0.35)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}]},
+        options:{responsive:true,maintainAspectRatio:false,_meta:{value:RDE_M89+'%',color:GRN},onClick:(e,els)=>{if(els&&els[0]&&els[0].datasetIndex===0){rdeIndSelMonth=mAgg[els[0].index].m;renderRedeIndCharts();}},
+          plugins:{title:{display:true,text:'Prazo de Ocorrências por Mês',color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:(v,ctx)=>ctx.datasetIndex===0?v+'%':'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
+          scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC,font:{size:9}},min:0,max:100,title:{display:true,text:'Prazo c/ P. Relógio',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Periodo',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
+    }
+    _rdeIndDestroy('prazo-d');
+    const cvd=document.getElementById('rde-ind-prazo-d');
+    if(cvd){
+      _rdeIndCh['prazo-d']=new Chart(cvd,{type:'line',plugins:DL?[DL]:[],data:{labels:dAgg.map(d=>d.day),datasets:[{label:'Prazo %',data:dAgg.map(d=>+d.prazo.toFixed(1)),borderColor:'#4d8ef0',borderDash:[5,4],borderWidth:2,tension:0.4,fill:false,pointBackgroundColor:ptClr(dAgg,'prazo',v=>v>=RDE_M89),pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:5}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:`Prazo de Ocorrências por Mês | ${selLabel}`,color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v+'%':'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
+          scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC,font:{size:9}},min:0,title:{display:true,text:'Prazo c/ P. Relógio',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Dia do Mês',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
+    }
+  }else if(rdeChTab==='outlier'){
+    _rdeIndDestroy('outlier-m');
+    const cv=document.getElementById('rde-ind-outlier-m');
+    if(cv){
+      _rdeIndCh['outlier-m']=new Chart(cv,{type:'bar',plugins:DL?[DL,rdeIndMetaPlugin]:[rdeIndMetaPlugin],data:{labels:mAgg.map(m=>m.label),datasets:[
+        {label:'Outlier %',data:mAgg.map(m=>+m.outlier.toFixed(1)),backgroundColor:mAgg.map((m,i)=>i===selIdx?SEL:m.outlier<=RDE_MOUT?BLUE:PINK),borderRadius:4},
+        {label:'Limite',data:mAgg.map(()=>RDE_MOUT),type:'line',borderColor:'rgba(255,59,48,0.35)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}]},
+        options:{responsive:true,maintainAspectRatio:false,_meta:{value:RDE_MOUT.toFixed(1).replace('.',',')+'%',color:GRN},onClick:(e,els)=>{if(els&&els[0]&&els[0].datasetIndex===0){rdeIndSelMonth=mAgg[els[0].index].m;renderRedeIndCharts();}},
+          plugins:{title:{display:true,text:'Outlier de Ocorrências por Mês',color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:(v,ctx)=>ctx.datasetIndex===0?v+'%':'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
+          scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'Outlier c/ P. Relógio',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Periodo',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
+    }
+    _rdeIndDestroy('outlier-d');
+    const cvd=document.getElementById('rde-ind-outlier-d');
+    if(cvd){
+      _rdeIndCh['outlier-d']=new Chart(cvd,{type:'line',plugins:DL?[DL]:[],data:{labels:dAgg.map(d=>d.day),datasets:[{label:'Outlier %',data:dAgg.map(d=>+d.outlier.toFixed(1)),borderColor:'#4d8ef0',borderDash:[5,4],borderWidth:2,tension:0.4,fill:false,pointBackgroundColor:ptClr(dAgg,'outlier',v=>v<=RDE_MOUT),pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:5}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:`Outlier de Ocorrências | ${selLabel}`,color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v+'%':'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
+          scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'Outlier c/ P. Relógio',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Dia do Mês',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
+    }
+  }
+};
 function rdeMkCh(id,lbs,ds,opts={}){
   const c=document.getElementById(id);if(!c)return;
   if(rdeCharts[id]){try{rdeCharts[id].destroy();}catch(e){}}
@@ -5831,6 +5984,7 @@ function renderRede(){
     const _lbl=rdePeriod?(gk==='w'?String(rdePeriod).replace(/^\d{4}-/,''):rdeMname(rdePeriod)):'Acumulado';
     rdeShowCalls('Chamados — '+_lbl,recs);
   }else if(_ce){_ce.style.display='none';}
+  renderRedeIndCharts();
 }
 function rdeShowCalls(title,flatRecs){
   const el=document.getElementById('rde-calls'),tbody=document.getElementById('rde-calls-body'),tit=document.getElementById('rde-calls-title');
