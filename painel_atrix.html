@@ -626,6 +626,8 @@ body {
 .tw { overflow-x: auto; }
 #tbl-enc-main { table-layout: fixed; width: 100%; }
 #tbl-enc-main th, #tbl-enc-main td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 0; }
+#tbl-enc-main .enc-r1 td { padding-bottom: 1px; border-bottom: none; }
+#tbl-enc-main .enc-r2 td { font-size: 10px; color: var(--tx3); padding-top: 1px; border-bottom: .5px solid var(--bd); }
 /* ── CARD LAYOUT B2B ABERTOS ── */
 .ab-sort-bar{display:flex;align-items:center;gap:6px;padding:4px 2px 10px;border-bottom:.5px solid var(--bd);margin-bottom:10px}
 .abs-label{font-size:10px;color:var(--tx3)}
@@ -1471,11 +1473,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
             <th onclick="sEnc('protocolo')">Protocolo</th>
             <th onclick="sEnc('cliente')">Cliente</th>
             <th onclick="sEnc('titulo')">Cliente Final</th>
-            <th onclick="sEnc('cidade')">UF/Cidade</th>
-            <th onclick="sEnc('cluster')">Cluster</th>
-            <th onclick="sEnc('tempoTotal')">Tempo SLA ↕</th>
-            <th>Faixa SLA</th><th>Dentro 8h</th><th>Outlier +24h</th>
-            <th onclick="sEnc('causaRaiz')">Causa Raiz</th>
+            <th onclick="sEnc('faixa')">Faixa SLA</th>
             <th onclick="sEnc('semana')">Semana</th>
           </tr></thead>
           <tbody id="tb-enc"></tbody>
@@ -2462,6 +2460,7 @@ function titleCasePT(s){if(!s)return s;const sm=new Set(['DE','DA','DO','DAS','D
 function fmtMesLabel(mes){if(!mes)return'';const[y,m]=mes.split('-');return new Date(Number(y),Number(m)-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}
 function pp(v){return v.toFixed(1).replace('.',',')}
 function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmtFuelDatetime(v){if(!v)return'—';const s=String(v);const m=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/);if(!m)return s;const[,y,mo,d,h='00',mi='00',se='00']=m;return`${d}/${mo}/${y} ${h}:${mi}:${se}`;}
 function encRuleStats(d){
   const total=d.length||0;
   const prazo=d.filter(x=>encBucket(x.tempoTotal)==='prazo').length;
@@ -3576,8 +3575,10 @@ function renderTEnc(){
     const cidadeUf=d.cidade?`${d.uf}/${d.cidade}`:d.uf||'—';
     const cliTC=titleCasePT(d.cliente)||d.cliente;
     const cfTC=d.titulo?titleCasePT(d.titulo)||d.titulo:'—';
-    return`<tr><td class="tid">${d.protocolo}</td><td style="color:var(--tx)" title="${eh(cliTC)}">${cliTC}</td><td style="color:var(--tx2)" title="${eh(cfTC)}">${cfTC}</td><td title="${cidadeUf}">${cidadeUf}</td><td><span style="display:inline-flex;align-items:center;gap:4px;overflow:hidden"><span style="width:6px;height:6px;border-radius:50%;background:${CCLR[d.cluster]||'#8e8e93'};flex-shrink:0"></span>${d.cluster}</span></td><td style="${sc}">${fh(d.tempoTotal)}</td><td><span class="badge ${bc}">${d.faixa}</span></td><td>${d8}</td><td>${ol}</td><td title="${causa}">${causa||'—'}</td><td><span class="badge b-teal">${d.semana||'—'}</span></td></tr>`;
-  }).join('')||'<tr><td colspan="11" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
+    const r1=`<tr class="enc-r1"><td class="tid">${d.protocolo}</td><td style="color:var(--tx)" title="${eh(cliTC)}">${cliTC}</td><td style="color:var(--tx2)" title="${eh(cfTC)}">${cfTC}</td><td><span class="badge ${bc}">${d.faixa}</span></td><td><span class="badge b-teal">${d.semana||'—'}</span></td></tr>`;
+    const r2=`<tr class="enc-r2"><td title="${cidadeUf}">${cidadeUf}</td><td><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:5px;height:5px;border-radius:50%;background:${CCLR[d.cluster]||'#8e8e93'};flex-shrink:0"></span>${d.cluster||'—'}</span></td><td style="${sc}">${fh(d.tempoTotal)}</td><td style="display:flex;gap:3px;align-items:center;flex-wrap:wrap">${d8} ${ol}</td><td title="${causa}">${causa||'—'}</td></tr>`;
+    return r1+r2;
+  }).join('')||'<tr><td colspan="5" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
 }
 function sEnc(c){scEnc===c?sdEnc*=-1:(scEnc=c,sdEnc=-1);renderTEnc()}
 
@@ -3664,15 +3665,18 @@ function deleteFuelVehicle(){
 function updateFuelStatus(placa,status){if(!canEdit())return;const v=fuelVehicleByPlate(placa);if(!v.placa)return;v.status=FUEL_STATUS.includes(status)?status:'Ativo';renderFuel();saveState()}
 function updateFuelCardType(placa,tipoCartao){if(!canEdit())return;const v=fuelVehicleByPlate(placa);if(!v.placa)return;v.tipoCartao=tipoCartao==='Coringa'?'Coringa':'Próprio';renderFuel();saveState()}
 function clearFuelRequestForm(){editingFuelRequestId='';document.getElementById('fuel-req-placa').value='';document.getElementById('fuel-req-data').value='';document.getElementById('fuel-req-valor').value='';document.getElementById('fuel-req-obs').value='';document.getElementById('fuel-request-action').textContent='Registrar'}
-function editFuelRequest(id){if(!canEdit())return;const r=dFuelRequests.find(x=>x.id===id);if(!r)return;editingFuelRequestId=id;document.getElementById('fuel-req-placa').value=r.placa;document.getElementById('fuel-req-data').value=r.data;document.getElementById('fuel-req-valor').value=r.valor;document.getElementById('fuel-req-obs').value=r.obs||'';document.getElementById('fuel-request-action').textContent='Salvar edição'}
+function editFuelRequest(id){if(!canEdit())return;const r=dFuelRequests.find(x=>x.id===id);if(!r)return;editingFuelRequestId=id;document.getElementById('fuel-req-placa').value=r.placa;document.getElementById('fuel-req-data').value=String(r.data||'').slice(0,10);document.getElementById('fuel-req-valor').value=r.valor;document.getElementById('fuel-req-obs').value=r.obs||'';document.getElementById('fuel-request-action').textContent='Salvar edição'}
 function deleteFuelRequest(id){if(!canEdit())return;if(!confirm('Excluir esta solicitação?'))return;const old=dFuelRequests.find(r=>r.id===id);restoreFuelCardBalance(old&&old.valor);dFuelRequests=dFuelRequests.filter(r=>r.id!==id);clearFuelRequestForm();renderFuel();saveState()}
 function addFuelRequest(){
   if(!canEdit())return;
   const placa=document.getElementById('fuel-req-placa').value;
-  const data=document.getElementById('fuel-req-data').value;
+  const dateVal=document.getElementById('fuel-req-data').value;
   const valor=Number(document.getElementById('fuel-req-valor').value||0);
-  if(!placa||!data||!valor){alert('Informe placa, data e valor da solicitação.');return}
+  if(!placa||!dateVal||!valor){alert('Informe placa, data e valor da solicitação.');return}
   const v=fuelVehicleByPlate(placa);
+  let data;
+  if(editingFuelRequestId){const prev=dFuelRequests.find(r=>r.id===editingFuelRequestId);data=dateVal+(prev&&prev.data&&prev.data.length>10?prev.data.slice(10):'T00:00:00');}
+  else{const n=new Date();const p=x=>String(x).padStart(2,'0');data=dateVal+`T${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
   const item={id:editingFuelRequestId||('REQ'+Date.now()),data,placa,condutor:v.condutor||'',valor,obs:repairPtBR(document.getElementById('fuel-req-obs').value.trim())};
   if(editingFuelRequestId){const idx=dFuelRequests.findIndex(r=>r.id===editingFuelRequestId);if(idx>=0){const prev=Number(dFuelRequests[idx].valor||0);dFuelRequests[idx]=item;reduceFuelCardBalance(valor-prev)}}else{dFuelRequests.push(item);reduceFuelCardBalance(valor)}
   clearFuelRequestForm();
@@ -3940,7 +3944,7 @@ function renderFuel(){
   const showAlelo=document.getElementById('show-alelo-imports')&&document.getElementById('show-alelo-imports').checked;
   const displayRequests=showAlelo?validRequests:validRequests.filter(r=>!String(r.obs||'').includes('Importado da base Alelo'));
   document.getElementById('cnt-fuel-r').textContent=validRequests.length+' solicitações'+(showAlelo?'':` (${displayRequests.length} manuais, ${validRequests.length-displayRequests.length} Alelo ocultos)`);
-  document.getElementById('tb-fuel-r').innerHTML=displayRequests.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td class="tid">${eh(r.placa)}</td><td>${eh(r.condutor||fuelVehicleByPlate(r.placa).condutor||'-')}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(repairPtBR(r.obs||''))}</td><td class="admin-only"><span class="card-action" onclick="editFuelRequest('${eh(r.id)}')">Editar</span><span class="card-action" onclick="deleteFuelRequest('${eh(r.id)}')">Excluir</span></td></tr>`).join('')||'<tr><td colspan="6" class="nores">Nenhuma solicitação registrada</td></tr>';
+  document.getElementById('tb-fuel-r').innerHTML=displayRequests.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td style="white-space:nowrap">${fmtFuelDatetime(r.data)}</td><td class="tid">${eh(r.placa)}</td><td>${eh(r.condutor||fuelVehicleByPlate(r.placa).condutor||'-')}</td><td>${brl(Number(r.valor||0))}</td><td>${eh(repairPtBR(r.obs||''))}</td><td class="admin-only"><span class="card-action" onclick="editFuelRequest('${eh(r.id)}')">Editar</span><span class="card-action" onclick="deleteFuelRequest('${eh(r.id)}')">Excluir</span></td></tr>`).join('')||'<tr><td colspan="6" class="nores">Nenhuma solicitação registrada</td></tr>';
   const capEl=document.getElementById('cnt-fuel-ap');if(capEl)capEl.textContent=dFuelAportes.length+' aporte'+(dFuelAportes.length!==1?'s':'');
   const tbAp=document.getElementById('tb-fuel-ap');if(tbAp)tbAp.innerHTML=dFuelAportes.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).map(r=>`<tr><td>${eh(r.data)}</td><td>${brl(r.valor)}</td><td>${eh(r.desc||'')}</td><td class="admin-only"><span class="card-action" onclick="deleteFuelAporte('${eh(r.id)}')">Excluir</span></td></tr>`).join('')||'<tr><td colspan="4" class="nores">Nenhum aporte registrado</td></tr>';
   document.getElementById('cnt-fuel-w').textContent=dFuelWithdrawals.length+' retiradas';
@@ -5159,7 +5163,7 @@ function rptBuildCombustiveis(){
     <td style="color:#22c55e;font-weight:600">${v.status}</td>
   </tr>`);
   const rRows=dFuelRequests.slice(0,300).map(r=>`<tr>
-    <td style="white-space:nowrap">${r.data||'—'}</td>
+    <td style="white-space:nowrap">${fmtFuelDatetime(r.data)}</td>
     <td style="font-family:monospace;font-weight:700;white-space:nowrap">${r.placa||'—'}</td>
     <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.condutor||'—'}</td>
     <td style="text-align:right;font-weight:700;color:#ef4444;white-space:nowrap">${brl(r.valor)}</td>
