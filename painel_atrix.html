@@ -1521,6 +1521,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
             <button class="rede-sgbtn" data-cl="I" onclick="rdeSetCluster('I')">MA INT <span class="rede-cnt" id="rde-cnt-I">0</span></button>
             <button class="rede-sgbtn" data-cl="P" onclick="rdeSetCluster('P')">PI <span class="rede-cnt" id="rde-cnt-P">0</span></button>
             <button class="rede-sgbtn" data-cl="N" onclick="rdeSetCluster('N')">NORTE <span class="rede-cnt" id="rde-cnt-N">0</span></button>
+            <button class="rede-sgbtn" data-cl="EPS" onclick="rdeSetCluster('EPS')">Ger EPS <span class="rede-cnt" id="rde-cnt-EPS">0</span></button>
           </div>
         </div>
         <div class="rede-ctrlrow">
@@ -5599,12 +5600,13 @@ function rdePKey(){return rdeGran==='w'?'w':'m';}
 function rdeToFlat(rows,kind){const isAC=kind==='AC';return rows.map(r=>{const det=r[isAC?8:7];const cidade=(det&&typeof det==='object')?String(det.cidade||'').trim():'';return{m:rdeM.mes[r[1]]||'',w:rdeM.sem[r[2]]||'',cl:r[0],p:r[3],o:r[4],t:r[5],c:isAC?(rdeM.mo[r[7]]||'Não informado'):(rdeM.ca[r[6]]||'Não informado'),cidade,_raw:r,_scope:isAC?'ac':'bb'};}).filter(r=>r.m||r.w);}
 function rdeGetAllFlat(){if(rdeTab==='ACESSO')return rdeToFlat(rdeAD,'AC');if(rdeTab==='BACKBONE')return rdeToFlat(rdeBD,'BB');return[...rdeToFlat(rdeAD,'AC'),...rdeToFlat(rdeBD,'BB')];}
 function rdeGetPreClusterRecs(){const flat=rdeGetAllFlat();const gk=rdePKey();return(rdeGran!=='all'&&rdePeriod)?flat.filter(r=>r[gk]===rdePeriod):flat;}
-function rdeGetDisplayRecs(){let recs=rdeGetPreClusterRecs();if(rdeCluster)recs=recs.filter(r=>r.cl===rdeCluster);return recs;}
+function rdeGetDisplayRecs(){let recs=rdeGetPreClusterRecs();if(rdeCluster)recs=recs.filter(r=>rdeClFilter(r.cl));return recs;}
 function rdeAgg2(recs){const n=recs.length;if(!n)return{n:0,prazo:0,outlier:0,tAvg:0,tMed:0};const p=recs.filter(r=>r.p===1).length,o=recs.filter(r=>r.o===1).length;const ts=recs.map(r=>r.t).filter(t=>t>0).sort((a,b)=>a-b);const tAvg=ts.length?ts.reduce((a,b)=>a+b,0)/ts.length:0;const tMed=ts.length?(ts.length%2?ts[(ts.length-1)/2]:(ts[ts.length/2-1]+ts[ts.length/2])/2):0;return{n,prazo:p/n*100,outlier:o/n*100,tAvg,tMed};}
 function rdeChipHtml(a){if(!a.n)return'<span class="rede-chip">—</span>';if(a.prazo>=RDE_M89&&a.outlier<=RDE_MOUT&&a.tAvg<=RDE_MTME)return'<span class="rede-chip ok">na meta</span>';return(a.prazo<75||a.outlier>15)?'<span class="rede-chip bd">crítico</span>':'<span class="rede-chip wn">atenção</span>';}
 function rdeSetTab(tab){rdeTab=tab;rdePeriod=null;if(rdeGran!=='all'){const flat=rdeGetAllFlat();const keys=[...new Set(flat.map(r=>r[rdePKey()]))].filter(Boolean).sort();rdePeriod=keys[keys.length-1]||null;}document.querySelectorAll('#panel-rede .rede-tab-btn').forEach(b=>b.classList.toggle('on',b.dataset.rdetab===tab));rdeSyncControls();renderRede();rdeSaveUI();}
 function rdeSetGran(gran){rdeGran=gran;if(gran==='all'){rdePeriod=null;}else{const flat=rdeGetAllFlat();const keys=[...new Set(flat.map(r=>r[rdePKey()]))].filter(Boolean).sort();rdePeriod=keys[keys.length-1]||null;}rdeSyncControls();renderRede();rdeSaveUI();}
 function rdePeriodClick(p){rdePeriod=p;rdeCallsOnRender=true;rdeSyncControls();renderRede();rdeSaveUI();}
+function rdeClFilter(cl){if(!rdeCluster)return true;if(rdeCluster==='EPS')return cl==='C'||cl==='N';return cl===rdeCluster;}
 function rdeSetCluster(cl){rdeCluster=cl;rdeSyncControls();renderRede();rdeSaveUI();}
 function rdeSyncControls(){
   document.querySelectorAll('#panel-rede .rede-tab-btn').forEach(b=>b.classList.toggle('on',b.dataset.rdetab===rdeTab));
@@ -5614,7 +5616,8 @@ function rdeSyncControls(){
   const clCnts={};preRecs.forEach(r=>{clCnts[r.cl]=(clCnts[r.cl]||0)+1;});
   document.querySelectorAll('#rde-cl-seg .rede-sgbtn').forEach(b=>{
     const cl=b.dataset.cl;b.classList.toggle('on',cl===rdeCluster);
-    const cnt=b.querySelector('.rede-cnt');if(cnt)cnt.textContent=cl===''?preRecs.length:(clCnts[cl]||0);
+    const cnt=b.querySelector('.rede-cnt');
+    if(cnt)cnt.textContent=cl===''?preRecs.length:cl==='EPS'?(clCnts['C']||0)+(clCnts['N']||0):(clCnts[cl]||0);
   });
   // Period row
   const pr=document.getElementById('rde-period-row');if(!pr)return;
@@ -5625,7 +5628,7 @@ function rdeSyncControls(){
   const seg=document.getElementById('rde-period-seg');
   if(seg)seg.innerHTML=keys.map(x=>{
     const sub=flat.filter(r=>r[gk]===x);
-    const cnt=rdeCluster?sub.filter(r=>r.cl===rdeCluster).length:sub.length;
+    const cnt=rdeCluster?sub.filter(r=>rdeClFilter(r.cl)).length:sub.length;
     const lab=(gk==='w'?String(x).replace(/^\d{4}-/,''):rdeMname(x))+` <span class="rede-cnt">${cnt}</span>`;
     return`<button class="rede-sgbtn rede-pbtn${x===rdePeriod?' on':''}" onclick="rdePeriodClick('${eh(x)}')">${lab}</button>`;
   }).join('');
@@ -5702,7 +5705,7 @@ function rdeSetChTab(tab){
 }
 function rdeIndFlat(){
   let f=rdeGetAllFlat();
-  if(rdeCluster)f=f.filter(r=>r.cl===rdeCluster);
+  if(rdeCluster)f=f.filter(r=>rdeClFilter(r.cl));
   return f.map(r=>{
     const isAC=r._scope==='ac';const det=r._raw[isAC?8:7];
     let day=null,dateStr=null;
@@ -5734,7 +5737,7 @@ function renderRedeIndCharts(){
   const DL=typeof ChartDataLabels!=='undefined'?ChartDataLabels:null;
   const PINK='rgba(235,87,111,0.82)',BLUE='rgba(0,122,255,0.85)',SEL='rgba(0,37,110,0.9)',GRN='#34c759',RED='#ff3b30';
   const ptClr=(dArr,metric,goodFn)=>dArr.map(d=>goodFn(d[metric])?GRN:RED);
-  const togM=idx=>{const _m=mAgg[idx].m;rdeIndSelMonth=rdeIndSelMonth===_m?null:_m;renderRedeIndCharts();};
+  const togM=idx=>{const _m=mAgg[idx].m;rdeIndSelMonth=rdeIndSelMonth===_m?null:_m;const _sy=window.scrollY;renderRedeIndCharts();requestAnimationFrame(()=>window.scrollTo({top:_sy,behavior:'instant'}));};
   const noSelTxt=txt=>selLabel?`${txt} | ${selLabel}`:`${txt} — clique em uma barra para selecionar o mês`;
   if(rdeChTab==='qtd'){
     _rdeIndDestroy('qtd-m');
@@ -5850,13 +5853,16 @@ function rdeMkCh(id,lbs,ds,opts={}){
   const c=document.getElementById(id);if(!c)return;
   if(rdeCharts[id]){try{rdeCharts[id].destroy();}catch(e){}}
   const txClr=getComputedStyle(document.body).getPropertyValue('--tx3').trim()||'#8e8e93';
+  const lblClr=getComputedStyle(document.body).getPropertyValue('--tx').trim()||'#1c1c1e';
   const gdClr=getComputedStyle(document.body).getPropertyValue('--bd').trim()||'rgba(0,0,0,.07)';
+  const DL2=typeof ChartDataLabels!=='undefined'?ChartDataLabels:null;
   const o={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:10},color:txClr}}},scales:{x:{ticks:{color:txClr,font:{size:10},maxRotation:rdeModo==='s'?60:0,minRotation:rdeModo==='s'?60:0},grid:{display:false}},y:{ticks:{color:txClr,font:{size:10}},grid:{color:gdClr}}},spanGaps:true};
   if(opts.max)o.scales.y.max=opts.max;
   if(opts.min!==undefined)o.scales.y.min=opts.min;
   if(opts.percent){o.scales.y.ticks.callback=v=>v+'%';o.plugins.tooltip={callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}%`}};}
   if(opts.onBarClick){o.onHover=(ev,els)=>{if(ev.native&&ev.native.target)ev.native.target.style.cursor=els.length?'pointer':'default'};o.onClick=(ev,els,chart)=>{const hit=(els||[]).find(e=>{const d=chart.data.datasets[e.datasetIndex]||{};return d.type!=='line'||String(d.label||'').toLowerCase().includes('tme')});if(hit)opts.onBarClick(hit,chart);};}
-  rdeCharts[id]=new Chart(c,{type:opts.type||'bar',data:{labels:lbs,datasets:ds},options:o,plugins:[rdeLabelPlugin]});
+  if(DL2){o.plugins.datalabels={display:(ctx)=>{const d=ctx.chart.data.datasets[ctx.datasetIndex];return d.type!=='line'&&!String(d.label||'').match(/meta|limite/i);},anchor:'end',align:'top',formatter:v=>(v===null||v===undefined)?'':opts.percent?v+'%':v,font:{size:10,weight:'700'},color:lblClr,clip:false,padding:{bottom:1}};o.layout={padding:{top:26}};}
+  rdeCharts[id]=new Chart(c,{type:opts.type||'bar',data:{labels:lbs,datasets:ds},options:o,plugins:DL2?[rdeLabelPlugin,DL2]:[rdeLabelPlugin]});
 }
 function rdeBarEv(id,ts,ctx={}){
   rdeMkCh(id+'-p',ts.lbs,[{label:'No Prazo %',data:ts.pp,backgroundColor:'rgba(77,142,240,.8)',borderRadius:3,order:1,hoverBackgroundColor:'#4d8ef0'},{label:'Meta 89%',lineLabel:'Meta 89%',data:ts.lbs.map(()=>RDE_M89),type:'line',borderColor:'#f0a14d',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}],{max:100,percent:true,onBarClick:(hit)=>{const rows=rdeDetailByMetric(ts.rowsByPeriod[hit.index]||[],'prazo');rdeShowDetail(`Chamados — ${ctx.title||''}`,`No Prazo em ${ts.lbs[hit.index]||'período'}${ctx.sub?' — '+ctx.sub:''}`,rows,ctx.scope||'bb');}});
@@ -6005,7 +6011,7 @@ function renderRede(){
   const rptEl=document.getElementById('rde-report');
   if(rptEl&&a.n>0){
     const scopeTxt=rdeGran==='all'?'Acumulado':(rdeGran==='w'?'Semana '+(rdePeriod||''):rdeMname(rdePeriod||''));
-    const clNames={'C':'MA CAP','I':'MA INT','P':'PI','N':'NORTE (PA/AM/AP)'};
+    const clNames={'C':'MA CAP','I':'MA INT','P':'PI','N':'NORTE (PA/AM/AP)','EPS':'Ger EPS (MA CAP + NORTE)'};
     const tabTxt=rdeTab==='AMBOS'?'Backbone + Acesso':rdeTab==='ACESSO'?'Acesso':'Backbone';
     const clTxt=rdeCluster?` · ${clNames[rdeCluster]||rdeCluster}`:'';
     const prazoStatus=a.prazo>=RDE_M89?'ok':'bd',outlierStatus=a.outlier<=RDE_MOUT?'ok':'bd',tmeStatus=a.tAvg<=RDE_MTME?'ok':'bd';
