@@ -624,10 +624,12 @@ body {
 @keyframes fuelWaveAlt { from { transform: translateX(10%) scaleY(.85); } to { transform: translateX(-10%) scaleY(1.08); } }
 @keyframes fuelBubbles { from { transform: translateY(20%); } to { transform: translateY(-28%); } }
 .tw { overflow-x: auto; }
-#tbl-enc-main { table-layout: fixed; width: 100%; }
-#tbl-enc-main th, #tbl-enc-main td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 0; }
-#tbl-enc-main .enc-r1 td { padding-bottom: 1px; border-bottom: none; }
-#tbl-enc-main .enc-r2 td { font-size: 10px; color: var(--tx3); padding-top: 1px; border-bottom: .5px solid var(--bd); }
+#tbl-enc-main { table-layout: auto; width: 100%; }
+#tbl-enc-main th { white-space: nowrap; }
+#tbl-enc-main td { word-break: break-word; vertical-align: middle; }
+#tbl-enc-main .enc-r1 td { padding-bottom: 2px; border-bottom: none; }
+#tbl-enc-main .enc-r2 td { font-size: 10px; color: var(--tx3); padding-top: 2px; border-bottom: .5px solid var(--bd); white-space: nowrap; }
+#tbl-enc-main .enc-r2 td:last-child { white-space: normal; }
 /* ── CARD LAYOUT B2B ABERTOS ── */
 .ab-sort-bar{display:flex;align-items:center;gap:6px;padding:4px 2px 10px;border-bottom:.5px solid var(--bd);margin-bottom:10px}
 .abs-label{font-size:10px;color:var(--tx3)}
@@ -2460,7 +2462,7 @@ function titleCasePT(s){if(!s)return s;const sm=new Set(['DE','DA','DO','DAS','D
 function fmtMesLabel(mes){if(!mes)return'';const[y,m]=mes.split('-');return new Date(Number(y),Number(m)-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}
 function pp(v){return v.toFixed(1).replace('.',',')}
 function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2})}
-function fmtFuelDatetime(v){if(!v)return'—';const s=String(v);const m=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/);if(!m)return s;const[,y,mo,d,h='00',mi='00',se='00']=m;return`${d}/${mo}/${y} ${h}:${mi}:${se}`;}
+function fmtFuelDatetime(v){if(!v)return'—';const s=String(v);const m=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/);if(!m)return s;const[,y,mo,d,h,mi,se]=m;return h?`${d}/${mo}/${y} ${h}:${mi||'00'}:${se||'00'}`:`${d}/${mo}/${y}`;}
 function encRuleStats(d){
   const total=d.length||0;
   const prazo=d.filter(x=>encBucket(x.tempoTotal)==='prazo').length;
@@ -3576,7 +3578,7 @@ function renderTEnc(){
     const cliTC=titleCasePT(d.cliente)||d.cliente;
     const cfTC=d.titulo?titleCasePT(d.titulo)||d.titulo:'—';
     const r1=`<tr class="enc-r1"><td class="tid">${d.protocolo}</td><td style="color:var(--tx)" title="${eh(cliTC)}">${cliTC}</td><td style="color:var(--tx2)" title="${eh(cfTC)}">${cfTC}</td><td><span class="badge ${bc}">${d.faixa}</span></td><td><span class="badge b-teal">${d.semana||'—'}</span></td></tr>`;
-    const r2=`<tr class="enc-r2"><td title="${cidadeUf}">${cidadeUf}</td><td><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:5px;height:5px;border-radius:50%;background:${CCLR[d.cluster]||'#8e8e93'};flex-shrink:0"></span>${d.cluster||'—'}</span></td><td style="${sc}">${fh(d.tempoTotal)}</td><td style="display:flex;gap:3px;align-items:center;flex-wrap:wrap">${d8} ${ol}</td><td title="${causa}">${causa||'—'}</td></tr>`;
+    const r2=`<tr class="enc-r2"><td>${cidadeUf}</td><td><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:5px;height:5px;border-radius:50%;background:${CCLR[d.cluster]||'#8e8e93'};flex-shrink:0"></span>${d.cluster||'—'}</span></td><td style="${sc}">${fh(d.tempoTotal)}</td><td>${d8}&nbsp;${ol}</td><td title="${causa}">${causa||'—'}</td></tr>`;
     return r1+r2;
   }).join('')||'<tr><td colspan="5" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
 }
