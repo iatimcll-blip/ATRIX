@@ -5710,15 +5710,17 @@ function rdeIndDAgg(flat,selM){
 function renderRedeIndCharts(){
   const flat=rdeIndFlat(),mAgg=rdeIndMAgg(flat);
   if(!mAgg.length)return;
-  if(!rdeIndSelMonth||!mAgg.find(x=>x.m===rdeIndSelMonth))rdeIndSelMonth=mAgg[mAgg.length-1].m;
-  const dAgg=rdeIndDAgg(flat,rdeIndSelMonth);
-  const selLabel=mAgg.find(x=>x.m===rdeIndSelMonth)?.label||rdeIndSelMonth;
-  const selIdx=mAgg.findIndex(x=>x.m===rdeIndSelMonth);
+  if(rdeIndSelMonth&&!mAgg.find(x=>x.m===rdeIndSelMonth))rdeIndSelMonth=null;
+  const dAgg=rdeIndSelMonth?rdeIndDAgg(flat,rdeIndSelMonth):[];
+  const selLabel=rdeIndSelMonth?(mAgg.find(x=>x.m===rdeIndSelMonth)?.label||rdeIndSelMonth):null;
+  const selIdx=rdeIndSelMonth?mAgg.findIndex(x=>x.m===rdeIndSelMonth):-1;
   const txC=getComputedStyle(document.body).getPropertyValue('--tx3').trim()||'#8e8e93';
   const gdC=getComputedStyle(document.body).getPropertyValue('--bd').trim()||'rgba(0,0,0,.07)';
   const DL=typeof ChartDataLabels!=='undefined'?ChartDataLabels:null;
   const PINK='rgba(235,87,111,0.82)',BLUE='rgba(0,122,255,0.85)',SEL='rgba(0,37,110,0.9)',GRN='#34c759',RED='#ff3b30';
   const ptClr=(dArr,metric,goodFn)=>dArr.map(d=>goodFn(d[metric])?GRN:RED);
+  const togM=idx=>{const _m=mAgg[idx].m;rdeIndSelMonth=rdeIndSelMonth===_m?null:_m;renderRedeIndCharts();};
+  const noSelTxt=txt=>selLabel?`${txt} | ${selLabel}`:`${txt} — clique em uma barra para selecionar o mês`;
   if(rdeChTab==='qtd'){
     _rdeIndDestroy('qtd-m');
     const cv=document.getElementById('rde-ind-qtd-m');
@@ -5726,7 +5728,7 @@ function renderRedeIndCharts(){
       const vals=mAgg.map(m=>m.n),minN=Math.min(...vals),maxN=Math.max(...vals);
       const grad=v=>{const t=maxN>minN?(v-minN)/(maxN-minN):0.5;return`rgba(${Math.round(160+(26-160)*t)},${Math.round(205+(58-205)*t)},${Math.round(240+(110-240)*t)},0.9)`;};
       _rdeIndCh['qtd-m']=new Chart(cv,{type:'bar',plugins:DL?[DL]:[],data:{labels:mAgg.map(m=>m.label),datasets:[{label:'Qtd',data:vals,backgroundColor:mAgg.map((m,i)=>i===selIdx?SEL:grad(m.n)),borderRadius:4,borderSkipped:false}]},
-        options:{responsive:true,maintainAspectRatio:false,onClick:(e,els)=>{if(els&&els[0]){rdeIndSelMonth=mAgg[els[0].index].m;renderRedeIndCharts();}},
+        options:{responsive:true,maintainAspectRatio:false,onClick:(e,els)=>{if(els&&els[0])togM(els[0].index);},
           plugins:{title:{display:true,text:'Quantidade de Ocorrências por Mês',color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v,font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
           scales:{y:{grid:{color:gdC},ticks:{color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'Qtd Ocorrência',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Periodo',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
     }
@@ -5735,7 +5737,7 @@ function renderRedeIndCharts(){
     if(cvd){
       const maxD=Math.max(...dAgg.map(d=>d.n),1);const ptQ=v=>{const t=v/maxD;return t<0.3?GRN:t<0.7?'#ff9500':RED;};
       _rdeIndCh['qtd-d']=new Chart(cvd,{type:'line',plugins:DL?[DL]:[],data:{labels:dAgg.map(d=>d.label),datasets:[{label:'Qtd',data:dAgg.map(d=>d.n),borderColor:'#4d8ef0',borderDash:[5,4],borderWidth:2,tension:0.4,fill:false,pointBackgroundColor:dAgg.map(d=>ptQ(d.n)),pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:5}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:`Quantidade de Ocorrências por Dia | ${selLabel}`,color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:noSelTxt('Quantidade de Ocorrências por Dia'),color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
           scales:{y:{grid:{color:gdC},ticks:{color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'Qtd Ocorrência',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Dia do Mês',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
     }
   }else if(rdeChTab==='tme'){
@@ -5745,7 +5747,7 @@ function renderRedeIndCharts(){
       _rdeIndCh['tme-m']=new Chart(cv,{type:'bar',plugins:DL?[DL,rdeIndMetaPlugin]:[rdeIndMetaPlugin],data:{labels:mAgg.map(m=>m.label),datasets:[
         {label:'TME',data:mAgg.map(m=>+m.tme.toFixed(2)),backgroundColor:mAgg.map((m,i)=>i===selIdx?SEL:m.tme<=RDE_MTME?BLUE:PINK),borderRadius:4},
         {label:'Meta',data:mAgg.map(()=>RDE_MTME),type:'line',borderColor:'rgba(0,122,255,0.35)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}]},
-        options:{responsive:true,maintainAspectRatio:false,_meta:{value:RDE_MTME.toFixed(1).replace('.',','),color:GRN},onClick:(e,els)=>{if(els&&els[0]&&els[0].datasetIndex===0){rdeIndSelMonth=mAgg[els[0].index].m;renderRedeIndCharts();}},
+        options:{responsive:true,maintainAspectRatio:false,_meta:{value:RDE_MTME.toFixed(1).replace('.',','),color:GRN},onClick:(e,els)=>{if(els&&els[0]&&els[0].datasetIndex===0)togM(els[0].index);},
           plugins:{title:{display:true,text:'TME de Ocorrências por Mês',color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:(v,ctx)=>ctx.datasetIndex===0?v:'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
           scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'h',color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'TME',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Periodo',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
     }
@@ -5753,7 +5755,7 @@ function renderRedeIndCharts(){
     const cvd=document.getElementById('rde-ind-tme-d');
     if(cvd){
       _rdeIndCh['tme-d']=new Chart(cvd,{type:'line',plugins:DL?[DL]:[],data:{labels:dAgg.map(d=>d.day),datasets:[{label:'TME',data:dAgg.map(d=>+d.tme.toFixed(2)),borderColor:'#4d8ef0',borderDash:[5,4],borderWidth:2,tension:0.4,fill:false,pointBackgroundColor:ptClr(dAgg,'tme',v=>v<=RDE_MTME),pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:5}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:`TME de Ocorrências | ${selLabel}`,color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:noSelTxt('TME de Ocorrências'),color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
           scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'h',color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'TME',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Dia do Mês',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
     }
   }else if(rdeChTab==='prazo'){
@@ -5763,7 +5765,7 @@ function renderRedeIndCharts(){
       _rdeIndCh['prazo-m']=new Chart(cv,{type:'bar',plugins:DL?[DL,rdeIndMetaPlugin]:[rdeIndMetaPlugin],data:{labels:mAgg.map(m=>m.label),datasets:[
         {label:'Prazo %',data:mAgg.map(m=>+m.prazo.toFixed(1)),backgroundColor:mAgg.map((m,i)=>i===selIdx?SEL:m.prazo>=RDE_M89?BLUE:PINK),borderRadius:4},
         {label:'Meta',data:mAgg.map(()=>RDE_M89),type:'line',borderColor:'rgba(0,122,255,0.35)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}]},
-        options:{responsive:true,maintainAspectRatio:false,_meta:{value:RDE_M89+'%',color:GRN},onClick:(e,els)=>{if(els&&els[0]&&els[0].datasetIndex===0){rdeIndSelMonth=mAgg[els[0].index].m;renderRedeIndCharts();}},
+        options:{responsive:true,maintainAspectRatio:false,_meta:{value:RDE_M89+'%',color:GRN},onClick:(e,els)=>{if(els&&els[0]&&els[0].datasetIndex===0)togM(els[0].index);},
           plugins:{title:{display:true,text:'Prazo de Ocorrências por Mês',color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:(v,ctx)=>ctx.datasetIndex===0?v+'%':'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
           scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC,font:{size:9}},min:0,max:100,title:{display:true,text:'Prazo c/ P. Relógio',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Periodo',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
     }
@@ -5771,7 +5773,7 @@ function renderRedeIndCharts(){
     const cvd=document.getElementById('rde-ind-prazo-d');
     if(cvd){
       _rdeIndCh['prazo-d']=new Chart(cvd,{type:'line',plugins:DL?[DL]:[],data:{labels:dAgg.map(d=>d.day),datasets:[{label:'Prazo %',data:dAgg.map(d=>+d.prazo.toFixed(1)),borderColor:'#4d8ef0',borderDash:[5,4],borderWidth:2,tension:0.4,fill:false,pointBackgroundColor:ptClr(dAgg,'prazo',v=>v>=RDE_M89),pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:5}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:`Prazo de Ocorrências por Mês | ${selLabel}`,color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v+'%':'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:noSelTxt('Prazo de Ocorrências por Dia'),color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v+'%':'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
           scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC,font:{size:9}},min:0,title:{display:true,text:'Prazo c/ P. Relógio',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Dia do Mês',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
     }
   }else if(rdeChTab==='outlier'){
@@ -5781,7 +5783,7 @@ function renderRedeIndCharts(){
       _rdeIndCh['outlier-m']=new Chart(cv,{type:'bar',plugins:DL?[DL,rdeIndMetaPlugin]:[rdeIndMetaPlugin],data:{labels:mAgg.map(m=>m.label),datasets:[
         {label:'Outlier %',data:mAgg.map(m=>+m.outlier.toFixed(1)),backgroundColor:mAgg.map((m,i)=>i===selIdx?SEL:m.outlier<=RDE_MOUT?BLUE:PINK),borderRadius:4},
         {label:'Limite',data:mAgg.map(()=>RDE_MOUT),type:'line',borderColor:'rgba(255,59,48,0.35)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}]},
-        options:{responsive:true,maintainAspectRatio:false,_meta:{value:RDE_MOUT.toFixed(1).replace('.',',')+'%',color:GRN},onClick:(e,els)=>{if(els&&els[0]&&els[0].datasetIndex===0){rdeIndSelMonth=mAgg[els[0].index].m;renderRedeIndCharts();}},
+        options:{responsive:true,maintainAspectRatio:false,_meta:{value:RDE_MOUT.toFixed(1).replace('.',',')+'%',color:GRN},onClick:(e,els)=>{if(els&&els[0]&&els[0].datasetIndex===0)togM(els[0].index);},
           plugins:{title:{display:true,text:'Outlier de Ocorrências por Mês',color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:(v,ctx)=>ctx.datasetIndex===0?v+'%':'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
           scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'Outlier c/ P. Relógio',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Periodo',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
     }
@@ -5789,7 +5791,7 @@ function renderRedeIndCharts(){
     const cvd=document.getElementById('rde-ind-outlier-d');
     if(cvd){
       _rdeIndCh['outlier-d']=new Chart(cvd,{type:'line',plugins:DL?[DL]:[],data:{labels:dAgg.map(d=>d.day),datasets:[{label:'Outlier %',data:dAgg.map(d=>+d.outlier.toFixed(1)),borderColor:'#4d8ef0',borderDash:[5,4],borderWidth:2,tension:0.4,fill:false,pointBackgroundColor:ptClr(dAgg,'outlier',v=>v<=RDE_MOUT),pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:5}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:`Outlier de Ocorrências | ${selLabel}`,color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v+'%':'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:noSelTxt('Outlier de Ocorrências por Dia'),color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v+'%':'',font:{size:9,weight:'600'},color:txC,clip:false}:{display:false}},
           scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'Outlier c/ P. Relógio',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Dia do Mês',color:txC,font:{size:10}}}},layout:{padding:{top:18}}}});
     }
   }
