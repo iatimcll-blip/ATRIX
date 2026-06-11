@@ -624,6 +624,8 @@ body {
 @keyframes fuelWaveAlt { from { transform: translateX(10%) scaleY(.85); } to { transform: translateX(-10%) scaleY(1.08); } }
 @keyframes fuelBubbles { from { transform: translateY(20%); } to { transform: translateY(-28%); } }
 .tw { overflow-x: auto; }
+#tbl-enc-main { table-layout: fixed; width: 100%; }
+#tbl-enc-main th, #tbl-enc-main td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 0; }
 /* ── CARD LAYOUT B2B ABERTOS ── */
 .ab-sort-bar{display:flex;align-items:center;gap:6px;padding:4px 2px 10px;border-bottom:.5px solid var(--bd);margin-bottom:10px}
 .abs-label{font-size:10px;color:var(--tx3)}
@@ -1464,7 +1466,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <select class="fsel" id="fe-seg" onchange="renderTEnc()"><option value="">Todos segmentos</option></select>
           <input class="finput" id="f-srch-enc" placeholder="Buscar cliente ou protocolo…" oninput="renderTEnc()">
         </div>
-        <div class="tw"><table>
+        <div class="tw"><table id="tbl-enc-main">
           <thead><tr>
             <th onclick="sEnc('protocolo')">Protocolo</th>
             <th onclick="sEnc('cliente')">Cliente</th>
@@ -3435,7 +3437,7 @@ function rChEnc(d){
   const BASE=['#34c759','#ff9500','#ff3b30'];
   const BUCKETS=['prazo','inter','outlier'];
   const bgColors=encChartBucket?BASE.map((c,i)=>BUCKETS[i]===encChartBucket?c:'rgba(150,150,150,.22)'):BASE;
-  chEnc=new Chart(ctx,{type:'bar',plugins:DL?[DL]:[],data:{labels:['Prazo ≤8h','8h a 24h','Outlier >24h'],datasets:[{data:[s.prazo,s.intermediario,s.outlier],backgroundColor:bgColors,borderRadius:8,borderSkipped:false,cursor:'pointer'}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>c2.label+': '+c2.parsed.y+' chamados'}},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:11,weight:'bold'},color:dk?'#ccc':'#444',clip:false}:{display:false}},onClick:(ev,els)=>{if(!els||!els.length)return;const b=BUCKETS[els[0].index];encChartBucket=(encChartBucket===b?'':b);renderAllEnc();_scrollToEncTable();},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93'}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:1}}}}});
+  chEnc=new Chart(ctx,{type:'bar',plugins:DL?[DL]:[],data:{labels:['Prazo ≤8h','8h a 24h','Outlier >24h'],datasets:[{data:[s.prazo,s.intermediario,s.outlier],backgroundColor:bgColors,borderRadius:8,borderSkipped:false,cursor:'pointer'}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>c2.label+': '+c2.parsed.y+' chamados'}},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:11,weight:'bold'},color:dk?'#ccc':'#444',clip:false}:{display:false}},onClick:(ev,els)=>{if(!els||!els.length)return;const b=BUCKETS[els[0].index];encChartBucket=(encChartBucket===b?'':b);renderAllEnc();},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93'}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:1}}}}});
 }
 
 function rChSem(){
@@ -3449,7 +3451,7 @@ function rChSem(){
   const ctx=document.getElementById('ch-sem');if(!ctx)return;
   const dk=document.body.dataset.theme==='dark';
   const DL=typeof ChartDataLabels!=='undefined'?ChartDataLabels:null;
-  chSem=new Chart(ctx,{type:'bar',plugins:DL?[DL]:[],data:{labels,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>'Semana '+c2.label+': '+c2.parsed.y+' chamados'}},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:11,weight:'bold'},color:dk?'#ccc':'#444',clip:false}:{display:false}},onClick:(ev,els)=>{if(!els||!els.length)return;const week=labels[els[0].index];selWeek=(selWeek===week?'':week);const sel=document.getElementById('week-selector');if(sel)sel.value=selWeek;renderAllEnc();_scrollToEncTable();},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:dk?'#636366':'#8e8e93',maxRotation:45,autoSkip:false}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:10}}}}});
+  chSem=new Chart(ctx,{type:'bar',plugins:DL?[DL]:[],data:{labels,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c2=>'Semana '+c2.label+': '+c2.parsed.y+' chamados'}},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:11,weight:'bold'},color:dk?'#ccc':'#444',clip:false}:{display:false}},onClick:(ev,els)=>{if(!els||!els.length)return;const week=labels[els[0].index];selWeek=(selWeek===week?'':week);const sel=document.getElementById('week-selector');if(sel)sel.value=selWeek;renderAllEnc();},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:dk?'#636366':'#8e8e93',maxRotation:45,autoSkip:false}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:dk?'#636366':'#8e8e93',stepSize:10}}}}});
 }
 
 function rSegEnc(d){
@@ -3572,8 +3574,9 @@ function renderTEnc(){
     const ol=d.outlier24h?'<span class="badge b-red">Sim</span>':'<span style="color:var(--tx3)">—</span>';
     const causa=fmtCausaRaiz(d.causaRaiz);
     const cidadeUf=d.cidade?`${d.uf}/${d.cidade}`:d.uf||'—';
-    const cf=d.titulo||'—';
-    return`<tr><td class="tid">${d.protocolo}</td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)" title="${d.cliente}">${d.cliente}</td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx2)" title="${cf}">${cf}</td><td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${cidadeUf}">${cidadeUf}</td><td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${CCLR[d.cluster]||'#8e8e93'};flex-shrink:0"></span>${d.cluster}</span></td><td style="${sc}">${fh(d.tempoTotal)}</td><td><span class="badge ${bc}">${d.faixa}</span></td><td>${d8}</td><td>${ol}</td><td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${causa}">${causa||'—'}</td><td><span class="badge b-teal">${d.semana||'—'}</span></td></tr>`;
+    const cliTC=titleCasePT(d.cliente)||d.cliente;
+    const cfTC=d.titulo?titleCasePT(d.titulo)||d.titulo:'—';
+    return`<tr><td class="tid">${d.protocolo}</td><td style="color:var(--tx)" title="${eh(cliTC)}">${cliTC}</td><td style="color:var(--tx2)" title="${eh(cfTC)}">${cfTC}</td><td title="${cidadeUf}">${cidadeUf}</td><td><span style="display:inline-flex;align-items:center;gap:4px;overflow:hidden"><span style="width:6px;height:6px;border-radius:50%;background:${CCLR[d.cluster]||'#8e8e93'};flex-shrink:0"></span>${d.cluster}</span></td><td style="${sc}">${fh(d.tempoTotal)}</td><td><span class="badge ${bc}">${d.faixa}</span></td><td>${d8}</td><td>${ol}</td><td title="${causa}">${causa||'—'}</td><td><span class="badge b-teal">${d.semana||'—'}</span></td></tr>`;
   }).join('')||'<tr><td colspan="11" class="nores"><i class="ti ti-search-off"></i>Nenhum resultado</td></tr>';
 }
 function sEnc(c){scEnc===c?sdEnc*=-1:(scEnc=c,sdEnc=-1);renderTEnc()}
