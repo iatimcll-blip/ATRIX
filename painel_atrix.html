@@ -377,6 +377,7 @@ body {
 .mc-val { font-size: clamp(18px,2vw,26px); font-weight: 300; color: var(--tx); letter-spacing: -.02em; line-height: 1.08; overflow-wrap: anywhere; }
 .mc-val b { font-weight: 600; }
 .mc-sub { font-size: 10px; color: var(--tx3); margin-top: 6px; }
+#mrow-ab .mc-label, #mrow-ab .mc-sub { color: var(--tx); }
 .mc-sub .tag {
   display: inline-flex; align-items: center; gap: 3px;
   padding: 1px 6px; border-radius: 5px; font-size: 10px; font-weight: 600;
@@ -991,11 +992,11 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
   .login-card{padding:20px;width:min(360px,100%)}
   .login-logo{height:180px}
 }
-@media(max-width:1300px){
+@media(max-width:1440px){
   /* chips: esconde texto, mantém só o dot */
   .nav-chip .nc-text{display:none}
   .nav-chip{padding:4px 5px;gap:0}
-  /* tabs: ícones ocultos, fonte e padding menores — libera ~150px */
+  /* tabs: ícones ocultos, fonte e padding menores — libera espaço em telas 1366-1440px */
   .ntab i{display:none}
   .ntab{font-size:10px;padding:5px 7px;gap:2px}
   .nav-logo{width:clamp(72px,7.5vw,110px);height:38px}
