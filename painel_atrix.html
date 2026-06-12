@@ -1166,6 +1166,50 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
 .rr-ok{color:#34c759;font-weight:600}.rr-wn{color:#ff9500;font-weight:600}.rr-bd{color:#ff3b30;font-weight:600}
 @media(max-width:720px){.rede-kpi-grid{grid-template-columns:1fr}.rede-charts-2{grid-template-columns:1fr}}
 @media(max-width:600px){.rede-krow{grid-template-columns:1fr}.rede-sgrid{grid-template-columns:1fr}.rede-meta-info{grid-template-columns:1fr}}
+
+/* ─── FILTROS TABELA VEÍCULOS ─── */
+.fv-frow th{top:30px;z-index:1;background:var(--surface2);padding:4px 6px;cursor:default;border-bottom:.5px solid var(--bd)}
+.fv-finput,.fv-fsel{width:100%;min-width:0;font-size:10px;font-family:inherit;border:.5px solid var(--bd2);border-radius:5px;background:var(--surface);color:var(--tx);padding:3px 6px;outline:none;box-sizing:border-box}
+.fv-fsel{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%238e8e93' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 5px center;padding-right:16px}
+.fv-finput::placeholder{color:var(--tx3)}
+.fv-finput:focus,.fv-fsel:focus{border-color:var(--blue)}
+
+/* ─── RESPONSIVE ENHANCEMENTS (all panels) ─── */
+/* Tablet ≤860px: fuel split stacks vertically */
+@media(max-width:860px){
+  .fuel-split{flex-direction:column;gap:12px}
+  .fuel-split-pane{flex:none!important;width:100%;min-height:220px}
+  .fuel-split-handle{display:none}
+  .rede-hrow{flex-wrap:wrap;gap:8px}
+}
+/* Mobile ≤760px: B2B card row stacks, Rede header column */
+@media(max-width:760px){
+  .abc-r3{flex-direction:column;gap:8px}
+  .abc-prof{flex:none;width:100%}
+  .abc-divr{display:none}
+  .rede-hrow{flex-direction:column;align-items:flex-start}
+  .rede-ctrlrow{gap:6px}
+  .rede-tab-btn{padding:5px 12px;font-size:10px}
+  #panel-combustivel .cw{height:clamp(220px,32vh,380px);min-height:220px}
+  .g3-charts .cw{height:clamp(200px,28vh,340px);min-height:200px}
+  #panel-combustivel .card{min-height:0}
+  .g3-charts .card{min-height:0}
+}
+/* Small mobile ≤520px: compact Rede controls, smaller chart values */
+@media(max-width:520px){
+  .rede-clbl{min-width:60px;font-size:9px}
+  .rede-sgbtn{padding:4px 8px;font-size:10px}
+  .rde-seg-periods .rede-sgbtn{padding:3px 6px;font-size:9px}
+  .rede-kpi-card .rkv{font-size:20px}
+  .rede-section-title{font-size:12px}
+  #panel-combustivel .cw{height:clamp(180px,26vh,280px);min-height:180px}
+  .g3-charts .cw{height:clamp(160px,24vh,260px);min-height:160px}
+  .ofs-kpis .ofs-kpi-card .kv{font-size:18px}
+  .ab-card{padding:10px 12px}
+  .abc-cliente{font-size:13px}
+  .rede-ctrlrow{gap:4px}
+  .panel{padding:12px 10px 20px}
+}
 </style>
 </head>
 <body data-theme="light">
@@ -1414,6 +1458,8 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     <div id="dash-enc" style="display:none">
       <button class="mop-ref-btn" onclick="document.getElementById('modal-mop').style.display='flex'"><i class="ti ti-map-2"></i> Cobertura por região</button>
       <div id="week-banner-enc"></div>
+      <div id="exec-report"></div>
+      <div id="repetidos-enc"></div>
       <div class="mrow" id="mrow-enc"></div>
       <div class="prow" id="prow-enc"></div>
       <div class="section-hd">Performance por cluster <span class="sh-line"></span></div>
@@ -1452,7 +1498,6 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
           <div id="uf-enc"></div>
         </div>
       </div>
-      <div id="exec-report"></div>
       <div class="tsec">
         <div class="tsec-hd">
           <span class="tsec-title">Chamados encerrados</span>
@@ -1750,7 +1795,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     <div class="fuel-split" id="fuel-split">
       <div class="fuel-split-pane" id="fuel-split-left">
         <div class="tsec-hd" style="padding:12px 16px;border-bottom:.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between"><span class="tsec-title">Veículos e condutores</span><span id="cnt-fuel-v" style="color:var(--tx3);font-size:11px"></span></div>
-        <div class="tw"><table><thead><tr><th>Placa</th><th>Modelo</th><th>Ano</th><th>Condutor</th><th>Setor</th><th>Superior</th><th>Tipo cartão</th><th>Status</th><th>Obs</th><th class="admin-only">Ações</th></tr></thead><tbody id="tb-fuel-v"></tbody></table></div>
+        <div class="tw"><table><thead><tr><th>Placa</th><th>Modelo</th><th>Ano</th><th>Condutor</th><th>Setor</th><th>Superior</th><th>Tipo cartão</th><th>Status</th><th>Obs</th><th class="admin-only">Ações</th></tr><tr class="fv-frow"><th><input class="fv-finput" id="fv-f-placa" placeholder="🔍" oninput="setFuelVF('placa',this.value)"></th><th></th><th></th><th><input class="fv-finput" id="fv-f-condutor" placeholder="🔍" oninput="setFuelVF('condutor',this.value)"></th><th><select class="fv-fsel" id="fv-f-setor" onchange="setFuelVF('setor',this.value)"><option value="">Todos</option></select></th><th><select class="fv-fsel" id="fv-f-superior" onchange="setFuelVF('superior',this.value)"><option value="">Todos</option></select></th><th><select class="fv-fsel" id="fv-f-tipoCartao" onchange="setFuelVF('tipoCartao',this.value)"><option value="">Todos</option><option value="Próprio">Próprio</option><option value="Coringa">Coringa</option></select></th><th><select class="fv-fsel" id="fv-f-status" onchange="setFuelVF('status',this.value)"><option value="">Todos</option><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option><option value="Oficina">Oficina</option><option value="Bloqueado">Bloqueado</option></select></th><th></th><th class="admin-only"></th></tr></thead><tbody id="tb-fuel-v"></tbody></table></div>
       </div>
       <div class="fuel-split-handle" id="fuel-split-handle" title="Arraste para redimensionar os painéis"></div>
       <div class="fuel-split-pane" id="fuel-split-right">
@@ -2315,6 +2360,8 @@ let dAb=[],dEnc=[];
 let aleloCardImage=null,aleloCardImageAt='';
 let dFuelVehicles=[],dFuelRequests=[],dFuelWithdrawals=[],dFuelAportes=[],fuelBalanceTotal=0,fuelCardBalance=null,fuelCycleStartDay=16,fuelCycleEndDay=15,fuelCycleStartDate='',fuelCycleEndDate='',fuelCalendarEditing=false;
 let editingFuelPlate='',editingFuelRequestId='',editingFuelWithdrawalId='',selectedFuelDriver='';
+let fuelVFilter={placa:'',condutor:'',setor:'',superior:'',tipoCartao:'',status:''};
+function setFuelVF(k,v){fuelVFilter[k]=String(v||'').trim();_renderFuelVTable();}
 let scAb='slaH',sdAb=-1,scEnc='tempoTotal',sdEnc=-1;
 let chAb=null,chEnc=null,chSem=null,chFuel=null,chFuelProj=null,chFuelTop=null;
 let selWeek='';
@@ -3373,9 +3420,9 @@ function renderAbResumo(){
 /* ─── RENDER ENCERRADOS ─── */
 function renderAllEnc(){
   const d=encScope();
-  rBanner(d);rMetEnc(d);rPillEnc(d);rClusterCards(d);
+  rBanner(d);renderExecReport(d);renderRepetidosEnc(d);rMetEnc(d);rPillEnc(d);rClusterCards(d);
   rSlaEnc(d);rCausaEnc(d);rMeta8(d);rChEnc(d);rChSem();
-  rSegEnc(d);rUfEnc(d);renderExecReport(d);renderTEnc();
+  rSegEnc(d);rUfEnc(d);renderTEnc();
 }
 
 function rBanner(d){
@@ -3393,12 +3440,16 @@ function rMetEnc(d){
   const s=encRuleStats(d);
   const vs=d.map(x=>x.tempoTotal).filter(v=>v>0);
   const avg=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:0;
+  const cliMap={};d.forEach(r=>{const k=r.clienteId||r.numplan||r.cliente||'';if(k)cliMap[k]=(cliMap[k]||0)+1});
+  const repClientes=Object.values(cliMap).filter(n=>n>1).length;
+  const repChamados=Object.values(cliMap).filter(n=>n>1).reduce((a,b)=>a+b,0);
   document.getElementById('mrow-enc').innerHTML=`
     <div class="mc c-teal"><div class="mc-label">Total encerrados</div><div class="mc-val" style="color:var(--teal-dk)"><b>${s.total}</b></div><div class="mc-sub">chamados fechados</div></div>
     <div class="mc c-green"><div class="mc-label">Prazo ≤8h</div><div class="mc-val" style="color:var(--green-dk)"><b>${s.prazo}</b></div><div class="mc-sub"><span class="tag tag-green">${pp(s.pPrazo)}%</span> ${s.gapPrazo?pp(s.gapPrazo)+' p.p. fora da meta':'meta atingida'}</div></div>
     <div class="mc c-orange"><div class="mc-label">8h a 24h</div><div class="mc-val" style="color:var(--orange)"><b>${s.intermediario}</b></div><div class="mc-sub"><span class="tag tag-orange">${pp(s.pInter)}%</span> fora da meta 8h</div></div>
     <div class="mc c-red"><div class="mc-label">Outlier &gt;24h</div><div class="mc-val" style="color:var(--red)"><b>${s.outlier}</b></div><div class="mc-sub"><span class="tag tag-red">${pp(s.pOut)}%</span> ${s.excessoOutlier?pp(s.excessoOutlier)+' p.p. acima do máx. 1,98%':'dentro do máx. 1,98%'}</div></div>
-    <div class="mc c-orange"><div class="mc-label">Tempo médio</div><div class="mc-val" style="color:var(--orange)">${fh(avg)}</div><div class="mc-sub">tempo total médio</div></div>`;
+    <div class="mc c-orange"><div class="mc-label">Tempo médio</div><div class="mc-val" style="color:var(--orange)">${fh(avg)}</div><div class="mc-sub">tempo total médio</div></div>
+    <div class="mc c-blue"><div class="mc-label">Repetições</div><div class="mc-val" style="color:var(--blue)">${repClientes}</div><div class="mc-sub">${repChamados} chamados de clientes recorrentes</div></div>`;
 }
 
 function rPillEnc(d){
@@ -3614,6 +3665,55 @@ function bestClientName(nome,clienteId,numplan){
   if(!isGeneric(numplan))return{display:numplan,id:nome||''};
   return{display:nome||clienteId||numplan||'—',id:''};
 }
+function renderRepetidosEnc(d){
+  const el=document.getElementById('repetidos-enc');if(!el)return;
+  if(!d||!d.length){el.innerHTML='';return}
+  /* agrupar por clienteId (fallback: numplan, depois cliente) */
+  const map={};
+  d.forEach(r=>{
+    const key=r.clienteId||r.numplan||r.cliente||'';
+    if(!key)return;
+    if(!map[key])map[key]={count:0,chamados:[],nome:'',numplan:r.numplan||'',clienteId:r.clienteId||''};
+    map[key].count++;
+    map[key].chamados.push(r.protocolo||r.os||'');
+    const bn=bestClientName(r.cliente||r.titulo||'',r.clienteId||'',r.numplan||'');
+    if(!map[key].nome&&bn.display&&bn.display!=='—')map[key].nome=bn.display;
+  });
+  const repetidos=Object.values(map).filter(x=>x.count>1).sort((a,b)=>b.count-a.count).slice(0,20);
+  if(!repetidos.length){el.innerHTML='';return}
+  const total=d.length;
+  const totalRep=repetidos.reduce((s,x)=>s+x.count,0);
+  el.innerHTML=`<div class="tsec" style="margin-bottom:16px">
+    <div class="tsec-hd">
+      <span class="tsec-title"><i class="ti ti-repeat" style="font-size:13px;vertical-align:-1px;margin-right:4px;color:var(--orange)"></i>Clientes Repetidos</span>
+      <span style="font-size:10px;color:var(--tx3)">${repetidos.length} cliente${repetidos.length!==1?'s':''} com chamados recorrentes · ${totalRep} de ${total} chamados</span>
+    </div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>#</th>
+        <th>Cliente / Título</th>
+        <th>ID</th>
+        <th style="text-align:center">Chamados</th>
+        <th style="text-align:center">% do período</th>
+      </tr></thead>
+      <tbody>
+        ${repetidos.map((x,i)=>{
+          const nome=x.nome||x.clienteId||x.numplan||'—';
+          const id=x.clienteId||x.numplan||'—';
+          const pct=pp(x.count/total*100);
+          const clr=x.count>=5?'color:var(--red);font-weight:700':x.count>=3?'color:var(--orange);font-weight:600':'color:var(--tx)';
+          return`<tr>
+            <td style="color:var(--tx3);font-size:11px">${i+1}º</td>
+            <td style="color:var(--tx)">${eh(titleCasePT(nome)||nome)}</td>
+            <td style="color:var(--tx3);font-size:11px">${eh(id)}</td>
+            <td style="text-align:center;${clr}">${x.count}</td>
+            <td style="text-align:center;color:var(--tx3);font-size:11px">${pct}%</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>
+  </div>`;
+}
 function renderTEnc(){
   const f=gFEnc();
   document.getElementById('cnt-enc').textContent=f.length+' de '+encScope().length+' chamados';
@@ -3688,7 +3788,7 @@ function fuelVehicleByPlate(placa){const k=String(placa||'').toUpperCase().trim(
 function fuelValidRequests(){return normalizeFuelRequests(dFuelRequests)}
 function fuelSpent(){return fuelValidRequests().reduce((s,r)=>s+Number(r.valor||0),0)}
 function fuelWithdrawn(){return dFuelWithdrawals.reduce((s,r)=>s+Number(r.valor||0),0)}
-function fuelBalance(){const total=Number(fuelBalanceTotal||0),spent=fuelSpent(),withdrawn=fuelWithdrawn(),moved=withdrawn-spent,computed=Math.max(0,total-spent-withdrawn),available=fuelCardBalance===null||fuelCardBalance===undefined?computed:Math.max(0,Number(fuelCardBalance||0));return{total,spent,withdrawn,moved,available,computed,manual:fuelCardBalance!==null&&fuelCardBalance!==undefined}}
+function fuelBalance(){const total=Number(fuelBalanceTotal||0),spent=fuelSpent(),withdrawn=fuelWithdrawn(),moved=withdrawn-spent,computed=Math.max(0,total-spent-withdrawn),available=fuelCardBalance===null||fuelCardBalance===undefined?computed:Math.max(0,Number(fuelCardBalance||0)),saldoGeral=Math.max(0,total-withdrawn);return{total,spent,withdrawn,moved,available,computed,saldoGeral,manual:fuelCardBalance!==null&&fuelCardBalance!==undefined}}
 function reduceFuelCardBalance(valor){if(fuelCardBalance!==null&&fuelCardBalance!==undefined)fuelCardBalance=Math.max(0,Number(fuelCardBalance||0)-Number(valor||0))}
 function restoreFuelCardBalance(valor){if(fuelCardBalance!==null&&fuelCardBalance!==undefined)fuelCardBalance=Number(fuelCardBalance||0)+Number(valor||0)}
 function clearFuelVehicleForm(){editingFuelPlate='';['fuel-placa','fuel-modelo','fuel-ano','fuel-condutor','fuel-setor','fuel-superior'].forEach(id=>document.getElementById(id).value='');document.getElementById('fuel-status-new').value='Ativo';document.getElementById('fuel-tipo').value='Gasolina';document.getElementById('fuel-tipo-cartao').value='Próprio';document.getElementById('fuel-placa').disabled=false;document.getElementById('fuel-vehicle-action').textContent='Adicionar';document.getElementById('fuel-delete-action').style.display='none'}
@@ -3884,8 +3984,9 @@ function renderFuelExtraProjection(){
   const remaining=Math.max(0,win.totalDays-win.elapsed);
   const dailyRate=win.elapsed>0?bal.spent/win.elapsed:0;
   const projRemaining=dailyRate*remaining;
-  const extra=Math.max(0,projRemaining-bal.available);
-  const surplus=Math.max(0,bal.available-projRemaining);
+  const balizador=Math.max(0,bal.saldoGeral-bal.spent);
+  const extra=Math.max(0,projRemaining-balizador);
+  const surplus=Math.max(0,balizador-projRemaining);
   const pct=Math.round(win.elapsed/win.totalDays*100);
   const ok=extra===0;
   const clr=ok?'#22c55e':'#ef4444';
@@ -3940,8 +4041,8 @@ function renderAleloPanel(){
   const bal=fuelBalance();
   const active=dFuelVehicles.filter(v=>v.status==='Ativo');
   const projection=fuelMonthProjection();
-  const sugg=active.length>0?bal.available/active.length:0;
-  const cards=active.length?`<div class="mc c-blue"><div class="mc-label">Saldo disponível</div><div class="mc-val">${brl(bal.available)}</div><div class="mc-sub">base para rateio</div></div><div class="mc c-green"><div class="mc-label">Veículos ativos</div><div class="mc-val">${active.length}</div><div class="mc-sub">participam do rateio</div></div><div class="mc c-orange"><div class="mc-label">Rateio sugerido</div><div class="mc-val">${brl(sugg)}</div><div class="mc-sub">por veículo ativo</div></div>`:'';
+  const sugg=active.length>0?bal.saldoGeral/active.length:0;
+  const cards=active.length?`<div class="mc c-blue"><div class="mc-label">Saldo Geral</div><div class="mc-val">${brl(bal.saldoGeral)}</div><div class="mc-sub">base para rateio</div></div><div class="mc c-green"><div class="mc-label">Veículos ativos</div><div class="mc-val">${active.length}</div><div class="mc-sub">participam do rateio</div></div><div class="mc c-orange"><div class="mc-label">Rateio sugerido</div><div class="mc-val">${brl(sugg)}</div><div class="mc-sub">por veículo ativo</div></div>`:'';
   const rows=active.map(v=>{
     const p=projection.find(x=>x.placa===v.placa)||{atual:0};
     const diff=sugg-p.atual;
@@ -3972,16 +4073,37 @@ function copyAleloRemanejo(placa,condutor,sugg,diff){
   const text=`Placa: ${placa}\nCondutor: ${condutor}\nRateio sugerido: ${fmtBRL(sugg)}\nAção sugerida: ${acao} ${fmtBRL(diff)}\nDiferença: ${diffFmt}`;
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(()=>{alert('Dados copiados!\n\n'+text);}).catch(()=>{prompt('Copie os dados:',text)});}else{prompt('Copie os dados:',text);}
 }
+function _renderFuelVTable(){
+  const _fvSel=(id,vals)=>{const el=document.getElementById(id);if(!el)return;const prev=fuelVFilter[id.replace('fv-f-','')];el.innerHTML='<option value="">Todos</option>'+vals.map(u=>`<option value="${eh(u)}"${u===prev?' selected':''}>${eh(u)}</option>`).join('');if([...el.options].some(o=>o.value===prev))el.value=prev;};
+  _fvSel('fv-f-setor',[...new Set(dFuelVehicles.map(v=>repairPtBR(v.setor)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')));
+  _fvSel('fv-f-superior',[...new Set(dFuelVehicles.map(v=>v.superior).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')));
+  let rows=dFuelVehicles;
+  if(fuelVFilter.placa)rows=rows.filter(v=>v.placa.toUpperCase().includes(fuelVFilter.placa.toUpperCase()));
+  if(fuelVFilter.condutor)rows=rows.filter(v=>(v.condutor||'').toLowerCase().includes(fuelVFilter.condutor.toLowerCase()));
+  if(fuelVFilter.setor)rows=rows.filter(v=>repairPtBR(v.setor)===fuelVFilter.setor);
+  if(fuelVFilter.superior)rows=rows.filter(v=>v.superior===fuelVFilter.superior);
+  if(fuelVFilter.tipoCartao)rows=rows.filter(v=>(v.tipoCartao||'Próprio')===fuelVFilter.tipoCartao);
+  if(fuelVFilter.status)rows=rows.filter(v=>v.status===fuelVFilter.status);
+  const cntEl=document.getElementById('cnt-fuel-v');if(cntEl)cntEl.textContent=rows.length===dFuelVehicles.length?dFuelVehicles.length+' veículos':rows.length+' de '+dFuelVehicles.length+' veículos';
+  const tbody=document.getElementById('tb-fuel-v');if(!tbody)return;
+  tbody.innerHTML=rows.map(v=>{
+    const isOf=v.status==='Oficina',isCo=v.tipoCartao==='Coringa',isAP=v.status==='Ativo'&&(v.tipoCartao||'Próprio')==='Próprio';
+    const rowClr=isOf?'background:rgba(239,68,68,0.18);border-left:3px solid var(--red)':isCo?'background:rgba(249,115,22,0.18);border-left:3px solid var(--orange)':isAP?'background:rgba(52,199,89,0.12);border-left:3px solid var(--green)':'';
+    const needObs=v.status==='Inativo'||v.status==='Oficina';
+    const obsCell=needObs?(canEdit()?`<input type="text" class="substatus-select" value="${eh(v.obsStatus||'')}" placeholder="Nº chamado" style="min-width:90px" onchange="updateFuelObsStatus('${eh(v.placa)}',this.value)" onblur="updateFuelObsStatus('${eh(v.placa)}',this.value)">`:`<span style="font-size:11px;color:var(--tx3)">${eh(v.obsStatus||'—')}</span>`):'<span style="color:var(--bd)">—</span>';
+    return`<tr style="${rowClr}"><td class="tid">${eh(v.placa)}</td><td>${eh(v.modelo)}</td><td>${eh(v.ano)}</td><td>${eh(v.condutor)}</td><td>${eh(repairPtBR(v.setor))}</td><td>${eh(v.superior)}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelCardType('${eh(v.placa)}',this.value)"><option value="Próprio"${(v.tipoCartao||'Próprio')==='Próprio'?' selected':''}>Próprio</option><option value="Coringa"${v.tipoCartao==='Coringa'?' selected':''}>Coringa</option></select>`:eh(v.tipoCartao||'Próprio')}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelStatus('${eh(v.placa)}',this.value)">${FUEL_STATUS.map(s=>`<option value="${s}"${s===v.status?' selected':''}>${s}</option>`).join('')}</select>`:eh(v.status)}</td><td>${obsCell}</td><td class="admin-only"><span class="card-action" onclick="editFuelVehicle('${eh(v.placa)}')">Editar</span></td></tr>`;
+  }).join('');
+}
 function renderFuel(){
   ensureFuelData();
   const validRequests=fuelValidRequests();
-  const bal=fuelBalance(),levelBase=bal.total||bal.available,level=levelBase?Math.max(0,Math.min(100,bal.available/levelBase*100)):0,color=level>60?'#7ee787':level>30?'#ffcc66':'#ff6b6b';
+  const bal=fuelBalance(),levelBase=bal.saldoGeral||bal.available,level=levelBase?Math.max(0,Math.min(100,bal.available/levelBase*100)):0,color=level>60?'#7ee787':level>30?'#ffcc66':'#ff6b6b';
   const fuelCycle=fuelCycleWindow();
   const totalValor=bal.spent,active=dFuelVehicles.filter(v=>v.status==='Ativo').length;
   document.getElementById('fuel-fill').style.setProperty('--fuel-level',level+'%');document.getElementById('fuel-fill').style.setProperty('--fuel-color',color);
   const cycleEditor=fuelCalendarEditing?`<div style="display:grid;grid-template-columns:repeat(2,minmax(118px,1fr));gap:6px;margin-top:8px"><input class="finput" id="fuel-cycle-start" type="date" value="${fuelCycle.startDate}" title="Data inicial do ciclo"><input class="finput" id="fuel-cycle-end" type="date" value="${fuelCycle.endDate}" title="Data final do ciclo"><span class="card-action" onclick="setFuelCycleCalendar()">Salvar</span><span class="card-action" onclick="resetFuelCycleCalendar()">Padrão 16-15</span></div>`:'';
   const cycleAction=canEdit()?`<span class="card-action" onclick="toggleFuelCalendarEdit()">${fuelCalendarEditing?'Fechar':'Editar calendário'}</span>`:'';
-  document.getElementById('fuel-balance-summary').innerHTML=`<div class="mc c-blue"><div class="mc-label">Saldo Geral Solicitado</div><div class="mc-val">${brl(bal.total)}</div><div class="mc-sub">aporte editável do ciclo</div></div><div class="mc c-green"><div class="mc-label">Saldo Disponível</div><div class="mc-val" style="color:${color}">${brl(bal.available)}</div><div class="mc-sub">reflete o saldo combustível/cartão</div></div><div class="mc c-orange"><div class="mc-label">Período de renovação</div><div class="mc-val" style="font-size:15px">${eh(fuelCycle.label)}</div><div class="mc-sub">${fuelCycle.manual?'calendário manual':'ciclo automático 16-15'} ${cycleAction}</div>${cycleEditor}</div>`;
+  document.getElementById('fuel-balance-summary').innerHTML=`<div class="mc c-blue"><div class="mc-label">Saldo Geral</div><div class="mc-val">${brl(bal.saldoGeral)}</div><div class="mc-sub">aportes − retiradas</div></div><div class="mc c-green"><div class="mc-label">Saldo Disponível</div><div class="mc-val" style="color:${color}">${brl(bal.available)}</div><div class="mc-sub">reflete o saldo combustível/cartão</div></div><div class="mc c-orange"><div class="mc-label">Período de renovação</div><div class="mc-val" style="font-size:15px">${eh(fuelCycle.label)}</div><div class="mc-sub">${fuelCycle.manual?'calendário manual':'ciclo automático 16-15'} ${cycleAction}</div>${cycleEditor}</div>`;
   document.getElementById('mrow-fuel').innerHTML=`<div class="mc c-blue"><div class="mc-label">Veículos</div><div class="mc-val"><b>${dFuelVehicles.length}</b></div><div class="mc-sub">${active} ativos</div></div><div class="mc c-green"><div class="mc-label">Solicitações</div><div class="mc-val" style="color:var(--green-dk)"><b>${validRequests.length}</b></div><div class="mc-sub">histórico validado</div></div><div class="mc c-orange"><div class="mc-label">Consumido registrado</div><div class="mc-val" style="color:var(--orange)">${brl(totalValor)}</div><div class="mc-sub">total das solicitações válidas</div></div><div class="mc c-red"><div class="mc-label">Retiradas</div><div class="mc-val" style="color:var(--red)">${brl(bal.withdrawn)}</div><div class="mc-sub">empréstimos/outros fins</div></div><div class="mc c-blue"><div class="mc-label">Total movimentado</div><div class="mc-val">${brl(bal.moved)}</div><div class="mc-sub">retiradas - solicitações</div></div>`;
   const top=fuelProjection()[0]||['-',{valor:0,litros:0,count:0}];
   const nextSuggestion=fuelNextMonthSuggestion();
@@ -3994,13 +4116,7 @@ function renderFuel(){
   document.getElementById('fuel-status').innerHTML=listRows(se(cnt(dFuelVehicles,'status')),k=>({Ativo:'var(--green)',Inativo:'var(--tx3)',Oficina:'var(--orange)',Bloqueado:'var(--red)'}[k]||'var(--blue)'));
   const sel=document.getElementById('fuel-req-placa');if(sel){const cur=sel.value;const _ord={Ativo:0,Oficina:1,Inativo:2,Bloqueado:3};const _vs=[...dFuelVehicles].sort((a,b)=>(_ord[a.status]??9)-(_ord[b.status]??9)||a.condutor.localeCompare(b.condutor,'pt-BR'));sel.innerHTML='<option value="">Selecionar placa</option>'+_vs.map(v=>`<option value="${eh(v.placa)}">${eh(v.placa)} — ${eh(v.condutor)}${v.status!=='Ativo'?' ('+eh(v.status)+')':''}</option>`).join('');sel.value=[...sel.options].some(o=>o.value===cur)?cur:''}
   ['fuel-withdraw-date'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)});
-  document.getElementById('cnt-fuel-v').textContent=dFuelVehicles.length+' veículos';
-  document.getElementById('tb-fuel-v').innerHTML=dFuelVehicles.map(v=>{
-    const rowClr=v.status==='Oficina'?'background:rgba(239,68,68,0.07);border-left:3px solid var(--red)':v.tipoCartao==='Coringa'?'background:rgba(249,115,22,0.07);border-left:3px solid var(--orange)':'';
-    const needObs=v.status==='Inativo'||v.status==='Oficina';
-    const obsCell=needObs?(canEdit()?`<input type="text" class="substatus-select" value="${eh(v.obsStatus||'')}" placeholder="Nº chamado" style="min-width:90px" onchange="updateFuelObsStatus('${eh(v.placa)}',this.value)" onblur="updateFuelObsStatus('${eh(v.placa)}',this.value)">`:`<span style="font-size:11px;color:var(--tx3)">${eh(v.obsStatus||'—')}</span>`):'<span style="color:var(--bd)">—</span>';
-    return`<tr style="${rowClr}"><td class="tid">${eh(v.placa)}</td><td>${eh(v.modelo)}</td><td>${eh(v.ano)}</td><td>${eh(v.condutor)}</td><td>${eh(repairPtBR(v.setor))}</td><td>${eh(v.superior)}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelCardType('${eh(v.placa)}',this.value)"><option value="Próprio"${(v.tipoCartao||'Próprio')==='Próprio'?' selected':''}>Próprio</option><option value="Coringa"${v.tipoCartao==='Coringa'?' selected':''}>Coringa</option></select>`:eh(v.tipoCartao||'Próprio')}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelStatus('${eh(v.placa)}',this.value)">${FUEL_STATUS.map(s=>`<option value="${s}"${s===v.status?' selected':''}>${s}</option>`).join('')}</select>`:eh(v.status)}</td><td>${obsCell}</td><td class="admin-only"><span class="card-action" onclick="editFuelVehicle('${eh(v.placa)}')">Editar</span></td></tr>`;
-  }).join('');
+  _renderFuelVTable();
   const showAlelo=document.getElementById('show-alelo-imports')&&document.getElementById('show-alelo-imports').checked;
   const displayRequests=showAlelo?validRequests:validRequests.filter(r=>!String(r.obs||'').includes('Importado da base Alelo'));
   document.getElementById('cnt-fuel-r').textContent=validRequests.length+' solicitações'+(showAlelo?'':` (${displayRequests.length} manuais, ${validRequests.length-displayRequests.length} Alelo ocultos)`);
