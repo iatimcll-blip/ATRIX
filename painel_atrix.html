@@ -377,7 +377,6 @@ body {
 .mc-val { font-size: clamp(18px,2vw,26px); font-weight: 300; color: var(--tx); letter-spacing: -.02em; line-height: 1.08; overflow-wrap: anywhere; }
 .mc-val b { font-weight: 600; }
 .mc-sub { font-size: 10px; color: var(--tx3); margin-top: 6px; }
-#mrow-ab .mc-label, #mrow-ab .mc-sub { color: var(--tx); }
 .mc-sub .tag {
   display: inline-flex; align-items: center; gap: 3px;
   padding: 1px 6px; border-radius: 5px; font-size: 10px; font-weight: 600;
@@ -669,10 +668,10 @@ body {
 .ab-copy-btn:hover:not(:disabled){background:var(--surface3);color:var(--tx)}
 .ab-copy-btn:disabled{opacity:.4;cursor:default}
 .ab-pivot-scroll{overflow-x:auto;margin-bottom:4px}
-.ab-pivot{width:100%;border-collapse:collapse;font-size:12px;min-width:380px}
-.ab-pivot th{padding:7px 10px;background:var(--blue-bg);color:var(--blue);font-weight:600;text-align:right;white-space:nowrap}
+.ab-pivot{width:100%;border-collapse:collapse;font-size:10.5px;min-width:300px}
+.ab-pivot th{padding:4px 6px;background:var(--blue-bg);color:var(--blue);font-weight:600;text-align:right;white-space:nowrap}
 .ab-pivot th.l{text-align:left}
-.ab-pivot td{padding:5px 10px;text-align:right;border-bottom:.5px solid var(--bd);color:var(--tx2)}
+.ab-pivot td{padding:3px 6px;text-align:right;border-bottom:.5px solid var(--bd);color:var(--tx2)}
 .ab-pivot td.l{text-align:left}
 .ab-pivot tr.apg td{background:var(--blue-bg);color:var(--blue);font-weight:600;border-bottom:none}
 .ab-pivot tr.aps td.l{padding-left:22px;color:var(--tx2)}
@@ -1048,11 +1047,6 @@ body.is-admin .fuel-forms-admin { display: grid; grid-template-columns: 1fr 1fr;
 .rede-mnote{font-size:10px;color:var(--tx3);line-height:1.4;margin-top:4px}
 .rede-mvalue{display:inline-flex;align-items:center;gap:5px;font-size:18px;font-weight:800;letter-spacing:-.02em;margin-bottom:5px}
 .rede-mdot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-.rede-ctabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
-.rede-ctab{padding:7px 16px;font-size:11px;font-weight:600;border:.5px solid var(--bd);border-radius:20px;cursor:pointer;background:var(--surface);color:var(--tx2);transition:all .12s;letter-spacing:.02em;box-shadow:var(--shadow-sm)}
-.rede-ctab:hover{border-color:var(--bd2);color:var(--tx)}
-.rede-ctab.on{background:var(--blue);color:#fff;border-color:var(--blue)}
-.rede-cpanel{display:none}.rede-cpanel.on{display:block}
 .rede-sec{margin-bottom:24px}
 .rede-shead{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:8px;border-bottom:.5px solid var(--bd)}
 .rede-shead h2{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx2);margin:0}
@@ -1605,52 +1599,6 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
         <div class="rede-cbx" style="min-height:260px"><canvas id="rde-city-ch"></canvas></div>
         <div class="rede-cbx" style="min-height:260px"><canvas id="rde-cause-ch"></canvas></div>
       </div>
-      <!-- Indicadores por Período -->
-      <div class="rede-section-title" style="margin-top:20px">Indicadores por Período</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="rde-ind-tabs">
-        <button class="rede-ctab on" data-chtab="qtd" onclick="rdeSetChTab('qtd')">Qtd Ocorrências</button>
-        <button class="rede-ctab" data-chtab="tme" onclick="rdeSetChTab('tme')">TME</button>
-        <button class="rede-ctab" data-chtab="prazo" onclick="rdeSetChTab('prazo')">Prazo</button>
-        <button class="rede-ctab" data-chtab="outlier" onclick="rdeSetChTab('outlier')">Outlier</button>
-      </div>
-      <div id="rde-ind-panels">
-        <div class="rede-cpanel on" data-chtab="qtd">
-          <div class="rede-charts-2">
-            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-qtd-m"></canvas></div>
-            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-qtd-d"></canvas></div>
-          </div>
-        </div>
-        <div class="rede-cpanel" data-chtab="tme">
-          <div class="rede-charts-2">
-            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-tme-m"></canvas></div>
-            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-tme-d"></canvas></div>
-          </div>
-        </div>
-        <div class="rede-cpanel" data-chtab="prazo">
-          <div class="rede-charts-2">
-            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-prazo-m"></canvas></div>
-            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-prazo-d"></canvas></div>
-          </div>
-        </div>
-        <div class="rede-cpanel" data-chtab="outlier">
-          <div class="rede-charts-2">
-            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-outlier-m"></canvas></div>
-            <div class="rede-cbx" style="min-height:260px"><canvas id="rde-ind-outlier-d"></canvas></div>
-          </div>
-        </div>
-      </div>
-      <!-- Análise Evolutiva Comparativa -->
-      <div id="rde-evo-cmp-wrap" style="display:none;margin-top:20px">
-        <div class="rede-section-title">Análise Evolutiva — Comparação com Mês Anterior</div>
-        <div class="rede-charts-2">
-          <div class="rede-cbx" style="min-height:200px"><canvas id="rde-ecmp-qtd"></canvas></div>
-          <div class="rede-cbx" style="min-height:200px"><canvas id="rde-ecmp-tme"></canvas></div>
-        </div>
-        <div class="rede-charts-2" style="margin-top:8px">
-          <div class="rede-cbx" style="min-height:200px"><canvas id="rde-ecmp-prazo"></canvas></div>
-          <div class="rede-cbx" style="min-height:200px"><canvas id="rde-ecmp-outlier"></canvas></div>
-        </div>
-      </div>
       <!-- Executive Report -->
       <div class="rede-section-title" style="margin-top:20px">Relatório Executivo</div>
       <div class="rede-report-box" id="rde-report"><span style="color:var(--tx3);font-size:11px">Carregue uma base para gerar o relatório automático.</span></div>
@@ -1794,7 +1742,7 @@ function doGet(){return ContentService.createTextOutput(JSON.stringify({status:'
     <div class="section-hd">Dados da Frota <span class="sh-line"></span></div>
     <div class="fuel-split" id="fuel-split">
       <div class="fuel-split-pane" id="fuel-split-left">
-        <div class="tsec-hd" style="padding:12px 16px;border-bottom:.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between"><span class="tsec-title">Veículos e condutores</span><span id="cnt-fuel-v" style="color:var(--tx3);font-size:11px"></span></div>
+        <div class="tsec-hd" style="padding:12px 16px;border-bottom:.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between"><span class="tsec-title">Veículos e condutores</span><div style="display:flex;align-items:center;gap:10px"><span id="cnt-fuel-v" style="color:var(--tx3);font-size:11px"></span><button class="card-action" onclick="copiarFuelVTable(this)" title="Copiar tabela como imagem"><i class="ti ti-clipboard" style="font-size:11px;vertical-align:-1px"></i> Copiar</button></div></div>
         <div class="tw"><table><thead><tr><th>Placa</th><th>Modelo</th><th>Ano</th><th>Condutor</th><th>Setor</th><th>Superior</th><th>Tipo cartão</th><th>Status</th><th>Obs</th><th class="admin-only">Ações</th></tr><tr class="fv-frow"><th><input class="fv-finput" id="fv-f-placa" placeholder="🔍" oninput="setFuelVF('placa',this.value)"></th><th></th><th></th><th><input class="fv-finput" id="fv-f-condutor" placeholder="🔍" oninput="setFuelVF('condutor',this.value)"></th><th><select class="fv-fsel" id="fv-f-setor" onchange="setFuelVF('setor',this.value)"><option value="">Todos</option></select></th><th><select class="fv-fsel" id="fv-f-superior" onchange="setFuelVF('superior',this.value)"><option value="">Todos</option></select></th><th><select class="fv-fsel" id="fv-f-tipoCartao" onchange="setFuelVF('tipoCartao',this.value)"><option value="">Todos</option><option value="Próprio">Próprio</option><option value="Coringa">Coringa</option></select></th><th><select class="fv-fsel" id="fv-f-status" onchange="setFuelVF('status',this.value)"><option value="">Todos</option><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option><option value="Oficina">Oficina</option><option value="Bloqueado">Bloqueado</option></select></th><th></th><th class="admin-only"></th></tr></thead><tbody id="tb-fuel-v"></tbody></table></div>
       </div>
       <div class="fuel-split-handle" id="fuel-split-handle" title="Arraste para redimensionar os painéis"></div>
@@ -2825,8 +2773,6 @@ function clearRede(){
   rdeSelMonth='';rdeSelWeek='';rdeModo='m';rdeActiveView='bb';rdeTab='ACESSO';rdeGran='all';rdePeriod=null;rdeCluster='';
   Object.values(rdeCharts).forEach(ch=>{try{ch.destroy();}catch(e){}});rdeCharts={};
   [rdeLineCh2,rdeTimeCh2,rdeCauseCh2,rdeCityCh2].forEach(ch=>{if(ch)try{ch.destroy();}catch(e){}});rdeLineCh2=rdeTimeCh2=rdeCauseCh2=rdeCityCh2=null;
-  ['qtd-m','qtd-d','tme-m','tme-d','prazo-m','prazo-d','outlier-m','outlier-d'].forEach(k=>_rdeIndDestroy(k));rdeIndSelMonth=null;
-  ['qtd','tme','prazo','outlier'].forEach(k=>_rdeEvoDestroy(k));const _ew=document.getElementById('rde-evo-cmp-wrap');if(_ew)_ew.style.display='none';
   rdeShowDash();updateClearBtns();updateCentralStatus();
 }
 function updateUploadTimes(){
@@ -3984,9 +3930,8 @@ function renderFuelExtraProjection(){
   const remaining=Math.max(0,win.totalDays-win.elapsed);
   const dailyRate=win.elapsed>0?bal.spent/win.elapsed:0;
   const projRemaining=dailyRate*remaining;
-  const balizador=Math.max(0,bal.saldoGeral-bal.spent);
-  const extra=Math.max(0,projRemaining-balizador);
-  const surplus=Math.max(0,balizador-projRemaining);
+  const extra=Math.max(0,projRemaining-bal.available);
+  const surplus=Math.max(0,bal.available-projRemaining);
   const pct=Math.round(win.elapsed/win.totalDays*100);
   const ok=extra===0;
   const clr=ok?'#22c55e':'#ef4444';
@@ -4091,8 +4036,15 @@ function _renderFuelVTable(){
     const rowClr=isOf?'background:rgba(239,68,68,0.18);border-left:3px solid var(--red)':isCo?'background:rgba(249,115,22,0.18);border-left:3px solid var(--orange)':isAP?'background:rgba(52,199,89,0.12);border-left:3px solid var(--green)':'';
     const needObs=v.status==='Inativo'||v.status==='Oficina';
     const obsCell=needObs?(canEdit()?`<input type="text" class="substatus-select" value="${eh(v.obsStatus||'')}" placeholder="Nº chamado" style="min-width:90px" onchange="updateFuelObsStatus('${eh(v.placa)}',this.value)" onblur="updateFuelObsStatus('${eh(v.placa)}',this.value)">`:`<span style="font-size:11px;color:var(--tx3)">${eh(v.obsStatus||'—')}</span>`):'<span style="color:var(--bd)">—</span>';
-    return`<tr style="${rowClr}"><td class="tid">${eh(v.placa)}</td><td>${eh(v.modelo)}</td><td>${eh(v.ano)}</td><td>${eh(v.condutor)}</td><td>${eh(repairPtBR(v.setor))}</td><td>${eh(v.superior)}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelCardType('${eh(v.placa)}',this.value)"><option value="Próprio"${(v.tipoCartao||'Próprio')==='Próprio'?' selected':''}>Próprio</option><option value="Coringa"${v.tipoCartao==='Coringa'?' selected':''}>Coringa</option></select>`:eh(v.tipoCartao||'Próprio')}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelStatus('${eh(v.placa)}',this.value)">${FUEL_STATUS.map(s=>`<option value="${s}"${s===v.status?' selected':''}>${s}</option>`).join('')}</select>`:eh(v.status)}</td><td>${obsCell}</td><td class="admin-only"><span class="card-action" onclick="editFuelVehicle('${eh(v.placa)}')">Editar</span></td></tr>`;
+    return`<tr style="${rowClr}"><td class="tid" style="font-weight:700;color:#1c1c1e">${eh(v.placa)}</td><td>${eh(v.modelo)}</td><td>${eh(v.ano)}</td><td>${eh(v.condutor)}</td><td>${eh(repairPtBR(v.setor))}</td><td>${eh(v.superior)}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelCardType('${eh(v.placa)}',this.value)"><option value="Próprio"${(v.tipoCartao||'Próprio')==='Próprio'?' selected':''}>Próprio</option><option value="Coringa"${v.tipoCartao==='Coringa'?' selected':''}>Coringa</option></select>`:eh(v.tipoCartao||'Próprio')}</td><td>${canEdit()?`<select class="substatus-select" onchange="updateFuelStatus('${eh(v.placa)}',this.value)">${FUEL_STATUS.map(s=>`<option value="${s}"${s===v.status?' selected':''}>${s}</option>`).join('')}</select>`:eh(v.status)}</td><td>${obsCell}</td><td class="admin-only"><span class="card-action" onclick="editFuelVehicle('${eh(v.placa)}')">Editar</span></td></tr>`;
   }).join('');
+}
+function copiarFuelVTable(btn){
+  const el=document.getElementById('fuel-split-left');if(!el)return;
+  const orig=btn.innerHTML;btn.innerHTML='<i class="ti ti-loader-2" style="font-size:11px;vertical-align:-1px"></i> Copiando…';btn.disabled=true;
+  html2canvas(el,{scale:2,useCORS:true,backgroundColor:getComputedStyle(document.body).getPropertyValue('--surface')||'#fff'}).then(cv=>{
+    cv.toBlob(blob=>{if(blob&&navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(()=>{btn.innerHTML='<i class="ti ti-check" style="font-size:11px;vertical-align:-1px"></i> Copiado!';setTimeout(()=>{btn.innerHTML=orig;btn.disabled=false;},2000);}).catch(()=>{btn.innerHTML=orig;btn.disabled=false;alert('Não foi possível copiar para a área de transferência.');});}else{btn.innerHTML=orig;btn.disabled=false;alert('Navegador não suporta cópia de imagem.');}});
+  }).catch(()=>{btn.innerHTML=orig;btn.disabled=false;});
 }
 function renderFuel(){
   ensureFuelData();
@@ -4558,11 +4510,15 @@ const OFS_STATUS_COLORS={'concluído':'#22c55e','iniciado':'#3b82f6','pendente':
 const OFS_EXCLUDED=['almoço','almoco','checklist'];
 const OFS_DIAS_SEM=['segunda-feira','terca-feira','quarta-feira','quinta-feira','sexta-feira','sabado','domingo','segunda','terca','quarta','quinta','sexta','sabado'];
 const OFS_UF_NAMES={
-  MA:['anderson ravelly da silva santos','balbino silva rosa','cleimilton mendes da silva','clemilton mendes da silva','igor leonardo duarte basola','jeandersson dos santos campos','joardson foerzia de assis castro','joardson foreliza de assis castro','marcos yuri bulhao silva','moises amorim viana','thaylson pereira rial'],
+  MA:['anderson ravelly da silva santos','balbino silva rosa','clemilton mendes da silva','igor leonardo duarte basola','jeandersson dos santos campos','joardson foreliza de assis castro','marcos yuri bulhao silva','moises amorim viana','thaylson pereira rial'],
   PA:['arllon souza','renato augusto rodrigues dias','valdez coelho ferreira filho','william alves santos','derick willam alcantara silva','rodrigo piaui de carvalho','adriano da silva braga','gefferson de lima belisario','vagner goncalves das neves','vitor manoel santan']
 };
-const OFS_MOP_NAMES=['moises amorim viana','clemilton mendes da silva','cleimilton mendes da silva'];
+const OFS_MOP_NAMES=['moises amorim viana','clemilton mendes da silva'];
 function normN(s){return String(s||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');}
+const OFS_NAME_ALIASES={
+  'cleimilton mendes da silva':'clemilton mendes da silva',
+  'joardson foerzia de assis castro':'joardson foreliza de assis castro',
+};
 function isOfsExcluded(t){return OFS_EXCLUDED.some(e=>normN(t).includes(e));}
 function isOfsWeekday(s){const n=normN(s);return OFS_DIAS_SEM.some(d=>n===normN(d));}
 function ofsStatusKey(s){
@@ -4602,8 +4558,9 @@ function ofsTecRemove(idx){ofsTecCustom.splice(idx,1);ofsTecSave();ofsTecRenderL
 const _ofsTecDisp=new Map();
 function canonicTec(raw){
   const key=normN(raw);
-  if(!_ofsTecDisp.has(key)){const d=raw.trim().split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase());['Da','De','Do','Dos','Das','E','A'].forEach(w=>{const i=d.indexOf(w);if(i>0)d[i]=d[i].toLowerCase();});_ofsTecDisp.set(key,d.join(' '));}
-  return _ofsTecDisp.get(key);
+  const canonical=OFS_NAME_ALIASES[key]||key;
+  if(!_ofsTecDisp.has(canonical)){const src=OFS_NAME_ALIASES[key]?OFS_NAME_ALIASES[key].replace(/\b\w/g,c=>c.toUpperCase()):raw.trim();const d=src.trim().split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase());['Da','De','Do','Dos','Das','E','A'].forEach(w=>{const i=d.indexOf(w);if(i>0)d[i]=d[i].toLowerCase();});_ofsTecDisp.set(canonical,d.join(' '));}
+  return _ofsTecDisp.get(canonical);
 }
 function ofsFilteredRows(){
   let r=ofsRows;
@@ -5600,7 +5557,6 @@ const RDE_CLS=["C","I","P","N"];
 const RDE_M89=85,RDE_MOUT=4.9,RDE_MTME=6.0;
 let rdeModo='m',rdeSelMonth='',rdeSelWeek='',rdeActiveView='bb',rdeCharts={};
 let rdeTab='ACESSO',rdeGran='all',rdePeriod=null,rdeCluster='',rdeCallsOnRender=false,rdeLineCh2=null,rdeTimeCh2=null,rdeCauseCh2=null,rdeCityCh2=null;
-let rdeChTab='qtd',rdeIndSelMonth=null;const _rdeIndCh={},_rdeEvoCh={};
 const REDE_STORAGE='atrix:rede:bases:v2';
 const REDE_UI_KEY='atrix:rede:ui:v1';
 function rdeNk(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toUpperCase()}
@@ -5818,162 +5774,7 @@ function rdeSetKPI(id,s,isAC){
   el.innerHTML=h;
 }
 const rdeLabelPlugin={id:'rdeLabelPlugin',afterDatasetsDraw(chart){const{ctx,chartArea}=chart;chart.data.datasets.forEach((ds,i)=>{if(ds.type!=='line'||!ds.lineLabel)return;const meta=chart.getDatasetMeta(i);if(!meta.data.length)return;const p=meta.data[meta.data.length-1];ctx.save();ctx.font='700 10px sans-serif';ctx.fillStyle=ds.borderColor||'#555';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText(ds.lineLabel,Math.min(chartArea.right-4,p.x-4),p.y-4);ctx.restore();});}}
-const rdeIndMetaPlugin={id:'rdeIndMetaPlugin',afterDraw(chart){const m=chart.options._meta;if(!m||!chart.chartArea)return;const{ctx,chartArea}=chart;ctx.save();ctx.textAlign='right';ctx.font='800 15px -apple-system,BlinkMacSystemFont,sans-serif';ctx.fillStyle=m.color||'#34c759';ctx.textBaseline='bottom';ctx.fillText(m.value,chartArea.right,chartArea.top-2);ctx.font='400 9px -apple-system,BlinkMacSystemFont,sans-serif';ctx.fillStyle='#8e8e93';ctx.textBaseline='top';ctx.fillText('Meta',chartArea.right,chartArea.top);ctx.restore();}};
 function rdeMlabel(m){const mo={'01':'jan','02':'fev','03':'mar','04':'abr','05':'mai','06':'jun','07':'jul','08':'ago','09':'set','10':'out','11':'nov','12':'dez'};const p=String(m||'').split('-');return`${mo[p[1]]||p[1]||m} - ${p[0]||''}`;}
-function _rdeIndDestroy(id){if(_rdeIndCh[id]){try{_rdeIndCh[id].destroy();}catch(e){}_rdeIndCh[id]=null;}}
-function _rdeEvoDestroy(id){if(_rdeEvoCh[id]){try{_rdeEvoCh[id].destroy();}catch(e){}_rdeEvoCh[id]=null;}}
-function rdeSetChTab(tab){
-  rdeChTab=tab;
-  document.querySelectorAll('#rde-ind-tabs .rede-ctab').forEach(b=>b.classList.toggle('on',b.dataset.chtab===tab));
-  document.querySelectorAll('#rde-ind-panels .rede-cpanel').forEach(p=>p.classList.toggle('on',p.dataset.chtab===tab));
-  renderRedeIndCharts();
-}
-function rdeIndFlat(){
-  let f=rdeGetAllFlat();
-  if(rdeCluster)f=f.filter(r=>rdeClFilter(r.cl));
-  return f.map(r=>{
-    const isAC=r._scope==='ac';const det=r._raw[isAC?8:7];
-    let day=null,dateStr=null;
-    if(det&&typeof det==='object'){const pa=String(det.periodoAtendimento||'');const dm=pa.match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(dm){day=parseInt(dm[1]);dateStr=`${dm[1]}/${dm[2]}/${dm[3]}`;}}
-    return{...r,day,dateStr};
-  });
-}
-function rdeIndMAgg(flat){
-  const m={};
-  flat.forEach(r=>{if(!r.m)return;if(!m[r.m])m[r.m]={n:0,pN:0,oN:0,tS:0,tC:0};const b=m[r.m];b.n++;if(r.p===1)b.pN++;if(r.o===1)b.oN++;if(r.t>0){b.tS+=r.t;b.tC++;}});
-  return Object.entries(m).sort(([a],[b])=>a.localeCompare(b)).map(([mk,b])=>({m:mk,label:rdeMlabel(mk),n:b.n,prazo:b.n?b.pN/b.n*100:0,outlier:b.n?b.oN/b.n*100:0,tme:b.tC?b.tS/b.tC:0}));
-}
-function rdeIndDAgg(flat,selM){
-  const filtered=flat.filter(r=>r.m===selM&&r.day!==null);
-  const d={};
-  filtered.forEach(r=>{const k=r.dateStr||String(r.day).padStart(2,'0');if(!d[k])d[k]={day:r.day,label:r.dateStr||String(r.day),n:0,pN:0,oN:0,tS:0,tC:0};const b=d[k];b.n++;if(r.p===1)b.pN++;if(r.o===1)b.oN++;if(r.t>0){b.tS+=r.t;b.tC++;}});
-  return Object.values(d).sort((a,b)=>a.day-b.day).map(dd=>({day:dd.day,label:dd.label,n:dd.n,prazo:dd.n?dd.pN/dd.n*100:0,outlier:dd.n?dd.oN/dd.n*100:0,tme:dd.tC?dd.tS/dd.tC:0}));
-}
-function renderRedeIndCharts(){
-  const flat=rdeIndFlat(),mAgg=rdeIndMAgg(flat);
-  if(!mAgg.length)return;
-  if(rdeIndSelMonth&&!mAgg.find(x=>x.m===rdeIndSelMonth))rdeIndSelMonth=null;
-  const dAgg=rdeIndSelMonth?rdeIndDAgg(flat,rdeIndSelMonth):[];
-  const selLabel=rdeIndSelMonth?(mAgg.find(x=>x.m===rdeIndSelMonth)?.label||rdeIndSelMonth):null;
-  const selIdx=rdeIndSelMonth?mAgg.findIndex(x=>x.m===rdeIndSelMonth):-1;
-  const txC=getComputedStyle(document.body).getPropertyValue('--tx3').trim()||'#8e8e93';
-  const lblC=getComputedStyle(document.body).getPropertyValue('--tx').trim()||'#1c1c1e';
-  const gdC=getComputedStyle(document.body).getPropertyValue('--bd').trim()||'rgba(0,0,0,.07)';
-  const DL=typeof ChartDataLabels!=='undefined'?ChartDataLabels:null;
-  const PINK='rgba(235,87,111,0.82)',BLUE='rgba(0,122,255,0.85)',SEL='rgba(0,37,110,0.9)',GRN='#34c759',RED='#ff3b30';
-  const ptClr=(dArr,metric,goodFn)=>dArr.map(d=>goodFn(d[metric])?GRN:RED);
-  const togM=idx=>{const _m=mAgg[idx].m;rdeIndSelMonth=rdeIndSelMonth===_m?null:_m;const _sy=window.scrollY;renderRedeIndCharts();requestAnimationFrame(()=>window.scrollTo({top:_sy,behavior:'instant'}));};
-  const noSelTxt=txt=>selLabel?`${txt} | ${selLabel}`:`${txt} — clique em uma barra para selecionar o mês`;
-  if(rdeChTab==='qtd'){
-    _rdeIndDestroy('qtd-m');
-    const cv=document.getElementById('rde-ind-qtd-m');
-    if(cv){
-      const vals=mAgg.map(m=>m.n),minN=Math.min(...vals),maxN=Math.max(...vals);
-      const grad=v=>{const t=maxN>minN?(v-minN)/(maxN-minN):0.5;return`rgba(${Math.round(160+(26-160)*t)},${Math.round(205+(58-205)*t)},${Math.round(240+(110-240)*t)},0.9)`;};
-      _rdeIndCh['qtd-m']=new Chart(cv,{type:'bar',plugins:DL?[DL]:[],data:{labels:mAgg.map(m=>m.label),datasets:[{label:'Qtd',data:vals,backgroundColor:mAgg.map((m,i)=>i===selIdx?SEL:grad(m.n)),borderRadius:4,borderSkipped:false}]},
-        options:{responsive:true,maintainAspectRatio:false,onClick:(e,els)=>{if(els&&els[0])togM(els[0].index);},
-          plugins:{title:{display:true,text:'Quantidade de Ocorrências por Mês',color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v,font:{size:11,weight:'700'},color:lblC,clip:false,padding:{bottom:2}}:{display:false}},
-          scales:{y:{grid:{color:gdC},ticks:{color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'Qtd Ocorrência',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Periodo',color:txC,font:{size:10}}}},layout:{padding:{top:28}}}});
-    }
-    _rdeIndDestroy('qtd-d');
-    const cvd=document.getElementById('rde-ind-qtd-d');
-    if(cvd){
-      const maxD=Math.max(...dAgg.map(d=>d.n),1);const ptQ=v=>{const t=v/maxD;return t<0.3?GRN:t<0.7?'#ff9500':RED;};
-      _rdeIndCh['qtd-d']=new Chart(cvd,{type:'line',plugins:DL?[DL]:[],data:{labels:dAgg.map(d=>d.label),datasets:[{label:'Qtd',data:dAgg.map(d=>d.n),borderColor:'#4d8ef0',borderDash:[5,4],borderWidth:2,tension:0.4,fill:false,pointBackgroundColor:dAgg.map(d=>ptQ(d.n)),pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:5}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:noSelTxt('Quantidade de Ocorrências por Dia'),color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v:'',font:{size:11,weight:'700'},color:lblC,clip:false,padding:{bottom:2}}:{display:false}},
-          scales:{y:{grid:{color:gdC},ticks:{color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'Qtd Ocorrência',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Dia do Mês',color:txC,font:{size:10}}}},layout:{padding:{top:28}}}});
-    }
-  }else if(rdeChTab==='tme'){
-    _rdeIndDestroy('tme-m');
-    const cv=document.getElementById('rde-ind-tme-m');
-    if(cv){
-      _rdeIndCh['tme-m']=new Chart(cv,{type:'bar',plugins:DL?[DL,rdeIndMetaPlugin]:[rdeIndMetaPlugin],data:{labels:mAgg.map(m=>m.label),datasets:[
-        {label:'TME',data:mAgg.map(m=>+m.tme.toFixed(2)),backgroundColor:mAgg.map((m,i)=>i===selIdx?SEL:m.tme<=RDE_MTME?BLUE:PINK),borderRadius:4},
-        {label:'Meta',data:mAgg.map(()=>RDE_MTME),type:'line',borderColor:'rgba(0,122,255,0.35)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}]},
-        options:{responsive:true,maintainAspectRatio:false,_meta:{value:RDE_MTME.toFixed(1).replace('.',','),color:GRN},onClick:(e,els)=>{if(els&&els[0]&&els[0].datasetIndex===0)togM(els[0].index);},
-          plugins:{title:{display:true,text:'TME de Ocorrências por Mês',color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:(v,ctx)=>ctx.datasetIndex===0?v+'h':'',font:{size:11,weight:'700'},color:lblC,clip:false,padding:{bottom:2}}:{display:false}},
-          scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'h',color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'TME',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Periodo',color:txC,font:{size:10}}}},layout:{padding:{top:28}}}});
-    }
-    _rdeIndDestroy('tme-d');
-    const cvd=document.getElementById('rde-ind-tme-d');
-    if(cvd){
-      _rdeIndCh['tme-d']=new Chart(cvd,{type:'line',plugins:DL?[DL]:[],data:{labels:dAgg.map(d=>d.day),datasets:[{label:'TME',data:dAgg.map(d=>+d.tme.toFixed(2)),borderColor:'#4d8ef0',borderDash:[5,4],borderWidth:2,tension:0.4,fill:false,pointBackgroundColor:ptClr(dAgg,'tme',v=>v<=RDE_MTME),pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:5}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:noSelTxt('TME de Ocorrências'),color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v+'h':'',font:{size:11,weight:'700'},color:lblC,clip:false,padding:{bottom:2}}:{display:false}},
-          scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'h',color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'TME',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Dia do Mês',color:txC,font:{size:10}}}},layout:{padding:{top:28}}}});
-    }
-  }else if(rdeChTab==='prazo'){
-    _rdeIndDestroy('prazo-m');
-    const cv=document.getElementById('rde-ind-prazo-m');
-    if(cv){
-      _rdeIndCh['prazo-m']=new Chart(cv,{type:'bar',plugins:DL?[DL,rdeIndMetaPlugin]:[rdeIndMetaPlugin],data:{labels:mAgg.map(m=>m.label),datasets:[
-        {label:'Prazo %',data:mAgg.map(m=>+m.prazo.toFixed(1)),backgroundColor:mAgg.map((m,i)=>i===selIdx?SEL:m.prazo>=RDE_M89?BLUE:PINK),borderRadius:4},
-        {label:'Meta',data:mAgg.map(()=>RDE_M89),type:'line',borderColor:'rgba(0,122,255,0.35)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}]},
-        options:{responsive:true,maintainAspectRatio:false,_meta:{value:RDE_M89+'%',color:GRN},onClick:(e,els)=>{if(els&&els[0]&&els[0].datasetIndex===0)togM(els[0].index);},
-          plugins:{title:{display:true,text:'Prazo de Ocorrências por Mês',color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:(v,ctx)=>ctx.datasetIndex===0?v+'%':'',font:{size:11,weight:'700'},color:lblC,clip:false,padding:{bottom:2}}:{display:false}},
-          scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC,font:{size:9}},min:0,max:100,title:{display:true,text:'Prazo c/ P. Relógio',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Periodo',color:txC,font:{size:10}}}},layout:{padding:{top:28}}}});
-    }
-    _rdeIndDestroy('prazo-d');
-    const cvd=document.getElementById('rde-ind-prazo-d');
-    if(cvd){
-      _rdeIndCh['prazo-d']=new Chart(cvd,{type:'line',plugins:DL?[DL]:[],data:{labels:dAgg.map(d=>d.day),datasets:[{label:'Prazo %',data:dAgg.map(d=>+d.prazo.toFixed(1)),borderColor:'#4d8ef0',borderDash:[5,4],borderWidth:2,tension:0.4,fill:false,pointBackgroundColor:ptClr(dAgg,'prazo',v=>v>=RDE_M89),pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:5}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:noSelTxt('Prazo de Ocorrências por Dia'),color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v+'%':'',font:{size:11,weight:'700'},color:lblC,clip:false,padding:{bottom:2}}:{display:false}},
-          scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC,font:{size:9}},min:0,title:{display:true,text:'Prazo c/ P. Relógio',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Dia do Mês',color:txC,font:{size:10}}}},layout:{padding:{top:28}}}});
-    }
-  }else if(rdeChTab==='outlier'){
-    _rdeIndDestroy('outlier-m');
-    const cv=document.getElementById('rde-ind-outlier-m');
-    if(cv){
-      _rdeIndCh['outlier-m']=new Chart(cv,{type:'bar',plugins:DL?[DL,rdeIndMetaPlugin]:[rdeIndMetaPlugin],data:{labels:mAgg.map(m=>m.label),datasets:[
-        {label:'Outlier %',data:mAgg.map(m=>+m.outlier.toFixed(1)),backgroundColor:mAgg.map((m,i)=>i===selIdx?SEL:m.outlier<=RDE_MOUT?BLUE:PINK),borderRadius:4},
-        {label:'Limite',data:mAgg.map(()=>RDE_MOUT),type:'line',borderColor:'rgba(255,59,48,0.35)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}]},
-        options:{responsive:true,maintainAspectRatio:false,_meta:{value:RDE_MOUT.toFixed(1).replace('.',',')+'%',color:GRN},onClick:(e,els)=>{if(els&&els[0]&&els[0].datasetIndex===0)togM(els[0].index);},
-          plugins:{title:{display:true,text:'Outlier de Ocorrências por Mês',color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:(v,ctx)=>ctx.datasetIndex===0?v+'%':'',font:{size:11,weight:'700'},color:lblC,clip:false,padding:{bottom:2}}:{display:false}},
-          scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'Outlier c/ P. Relógio',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Periodo',color:txC,font:{size:10}}}},layout:{padding:{top:28}}}});
-    }
-    _rdeIndDestroy('outlier-d');
-    const cvd=document.getElementById('rde-ind-outlier-d');
-    if(cvd){
-      _rdeIndCh['outlier-d']=new Chart(cvd,{type:'line',plugins:DL?[DL]:[],data:{labels:dAgg.map(d=>d.day),datasets:[{label:'Outlier %',data:dAgg.map(d=>+d.outlier.toFixed(1)),borderColor:'#4d8ef0',borderDash:[5,4],borderWidth:2,tension:0.4,fill:false,pointBackgroundColor:ptClr(dAgg,'outlier',v=>v<=RDE_MOUT),pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:5}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:noSelTxt('Outlier de Ocorrências por Dia'),color:txC,font:{size:12,weight:'600'}},legend:{display:false},datalabels:DL?{anchor:'end',align:'top',formatter:v=>v>0?v+'%':'',font:{size:11,weight:'700'},color:lblC,clip:false,padding:{bottom:2}}:{display:false}},
-          scales:{y:{grid:{color:gdC},ticks:{callback:v=>v+'%',color:txC,font:{size:9}},beginAtZero:true,title:{display:true,text:'Outlier c/ P. Relógio',color:txC,font:{size:10}}},x:{grid:{display:false},ticks:{color:txC,font:{size:9}},title:{display:true,text:'Dia do Mês',color:txC,font:{size:10}}}},layout:{padding:{top:28}}}});
-    }
-  }
-  renderRedeEvoCmpChart();
-};
-function renderRedeEvoCmpChart(){
-  const wrap=document.getElementById('rde-evo-cmp-wrap');
-  ['qtd','tme','prazo','outlier'].forEach(k=>_rdeEvoDestroy(k));
-  if(!rdeIndSelMonth){if(wrap)wrap.style.display='none';return;}
-  const flat=rdeIndFlat(),mAgg=rdeIndMAgg(flat);
-  const selIdx=mAgg.findIndex(x=>x.m===rdeIndSelMonth);
-  if(selIdx<=0){if(wrap)wrap.style.display='none';return;}
-  const cur=mAgg[selIdx],prev=mAgg[selIdx-1];
-  if(wrap)wrap.style.display='block';
-  const txC=getComputedStyle(document.body).getPropertyValue('--tx3').trim()||'#8e8e93';
-  const lblC=getComputedStyle(document.body).getPropertyValue('--tx').trim()||'#1c1c1e';
-  const gdC=getComputedStyle(document.body).getPropertyValue('--bd').trim()||'rgba(0,0,0,.07)';
-  const DL=typeof ChartDataLabels!=='undefined'?ChartDataLabels:null;
-  const GRN='rgba(52,199,89,0.85)',RED='rgba(255,59,48,0.85)',PREV='rgba(142,142,147,0.50)',BLUE='rgba(0,122,255,0.85)';
-  function mkCmp(id,title,pv,cv,unit,betterFn){
-    const el=document.getElementById('rde-ecmp-'+id);if(!el)return;
-    const improved=betterFn?betterFn(cv,pv):null;
-    const pct=pv!==0?((cv-pv)/Math.abs(pv)*100):null;
-    const arrow=pct===null?'':pct>0.05?` ▲${Math.abs(pct).toFixed(1)}%`:pct<-0.05?` ▼${Math.abs(pct).toFixed(1)}%`:' —';
-    const titleColor=improved===null?txC:improved?'#34c759':'#ff3b30';
-    const barColor=improved===null?BLUE:improved?GRN:RED;
-    _rdeEvoCh[id]=new Chart(el,{type:'bar',plugins:DL?[DL]:[],
-      data:{labels:[prev.label,cur.label],datasets:[{data:[pv,cv],backgroundColor:[PREV,barColor],borderRadius:6,borderSkipped:false}]},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{title:{display:true,text:title+arrow,color:titleColor,font:{size:12,weight:'700'}},legend:{display:false},
-          datalabels:DL?{anchor:'end',align:'top',formatter:v=>v+unit,font:{size:13,weight:'700'},color:lblC,clip:false,padding:{bottom:2}}:{display:false}},
-        scales:{y:{display:false,beginAtZero:true},x:{grid:{display:false},ticks:{color:txC,font:{size:11,weight:'600'}}}},
-        layout:{padding:{top:34,left:8,right:8}}}});
-  }
-  mkCmp('qtd','Qtd Ocorrências',prev.n,cur.n,'',null);
-  mkCmp('tme','TME',+prev.tme.toFixed(2),+cur.tme.toFixed(2),'h',(c,p)=>c<=p);
-  mkCmp('prazo','Prazo',+prev.prazo.toFixed(1),+cur.prazo.toFixed(1),'%',(c,p)=>c>=p);
-  mkCmp('outlier','Outlier',+prev.outlier.toFixed(1),+cur.outlier.toFixed(1),'%',(c,p)=>c<=p);
-}
 function rdeMkCh(id,lbs,ds,opts={}){
   const c=document.getElementById(id);if(!c)return;
   if(rdeCharts[id]){try{rdeCharts[id].destroy();}catch(e){}}
@@ -6167,7 +5968,6 @@ function renderRede(){
     const _lbl=rdePeriod?(gk==='w'?String(rdePeriod).replace(/^\d{4}-/,''):rdeMname(rdePeriod)):'Acumulado';
     rdeShowCalls('Chamados — '+_lbl,recs);
   }else if(_ce){_ce.style.display='none';}
-  renderRedeIndCharts();
 }
 function rdeShowCalls(title,flatRecs){
   const el=document.getElementById('rde-calls'),tbody=document.getElementById('rde-calls-body'),tit=document.getElementById('rde-calls-title');
